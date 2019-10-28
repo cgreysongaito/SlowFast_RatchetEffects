@@ -1,0 +1,9 @@
+#Useful packages
+using Parameters
+using LinearAlgebra
+using Calculus
+using DifferentialEquations
+using ForwardDiff
+#using DynamicalSystems
+using SymPy
+using Plots
