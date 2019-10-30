@@ -1,6 +1,7 @@
 #Script for slow fast examination of time delays
 
 include("packages.jl")
+using SymPy
 
 #Non-dimensionalized
 @with_kw mutable struct RozMacPar
@@ -14,6 +15,7 @@ include("packages.jl")
     ε = 0.1
 end
 
+par_rozmac = RozMacPar()
 function roz_mac_II!(du, u, p, t,)
     @unpack r, K, a, h, e, m = p
     R, C = u
@@ -29,8 +31,32 @@ function roz_mac_II(u, par)
 end
 
 # Find equilibria - should be same as normal but also with ε = 0
+x, y, r, k, a, m, e, h = symbols("x, y, r, k, a, m, e, h", real = true)
 
+f(x, y) = r * x * (1 - x / k) - a * x * y / (1 + a * h * x)
+g(x ,y) = e * a * x * y / (1 + a * h * x) - m * y
+
+SymPy.solve(f(x,y),x)
+SymPy.solve(f(x,y),y)
+SymPy.solve(g(x,y),x)
+SymPy.solve(g(x,y),y)
 # Find isoclines
+function con_iso(p)
+    @unpack m, a, e, h = p
+    m / (a * (e - h * m))
+end
+
+function res_iso(x, p)
+    @unpack a, k, r, h = p
+    r * (a * h * k * x - a * h * x^2 + k - x) / (a * k)
+end
+
+vline(0.4 / (1.1 * (0.7 - 0.8 * 0.4)))
+
+plot(x^2,0,4)
+let
+    plot(con_iso(par_rozmac), 0, 4, label = "Consumer Isocline")
+end
 
 # Create vector fields
 # - Before hopf fixed point
