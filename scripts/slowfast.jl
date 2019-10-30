@@ -1,12 +1,11 @@
 #Script for slow fast examination of time delays
 
 include("packages.jl")
-using SymPy
 
 #Non-dimensionalized
 @with_kw mutable struct RozMacPar
     r = 2.0
-    K = 3.0
+    k = 3.0
     a = 1.1
     h = 0.8
     e = 0.7
@@ -51,14 +50,55 @@ function res_iso(x, p)
     r * (a * h * k * x - a * h * x^2 + k - x) / (a * k)
 end
 
-vline(0.4 / (1.1 * (0.7 - 0.8 * 0.4)))
-
-plot(x^2,0,4)
 let
-    plot(con_iso(par_rozmac), 0, 4, label = "Consumer Isocline")
+    Plot.plot(x -> res_iso(x ,par_rozmac), 0, 4, label = "Resource Isocline")
+    vline!([con_iso(par_rozmac)], label = "Consumer Isocline")
 end
 
 # Create vector fields
+using PyPlot
+
+minval = 0
+maxval = 3
+steps = 100
+R = repeat(range(minval,stop=maxval,length=steps)',steps)
+C = repeat(range(minval,stop=maxval,length=steps),1,steps)
+U = 2.0 .* R .* (1 .- R ./ 3.0) .- 1.1 .* R .* C ./ (1 .+ 1.1 * 0.8 .* R)
+V = 1 .* ( 0.7 .* 1.1 .* R .* C ./ (1 .+ 1.1 .* 0.8 .* R) .- 0.7 .* C )
+speed = sqrt.(U.^2 .+ V.^2)
+lw = 5 .* speed ./ maximum(speed) # Line Widths
+
+let
+    figure()
+    streamplot(R,C,U,V,density=0.6,color="k",linewidth=lw)
+    gcf()
+end
+
+
+function roz_mac_res(du, u, p, t,)
+    @unpack r, K, a, h, e, m = p
+    R, C = u
+    du[1] = r * R * (1 - R / K) - a * R * C / (1 + a * h * R)
+    du[2] = ε ( e * a * R * C / (1 + a * h * R) - m * C )
+    return
+end
+
+
+minval = 0
+maxval = 3
+steps = 100
+R = repeat(range(minval,stop=maxval,length=steps)',steps)
+C = repeat(range(minval,stop=maxval,length=steps),1,steps)
+U = 2.0 .* R .* (1 .- R ./ 3.0) .- 1.1 .* R .* C ./ (1 .+ 1.1 * 0.8 .* R)
+V = 1 .* ( 0.7 .* 1.1 .* R .* C ./ (1 .+ 1.1 .* 0.8 .* R) .- 0.7 .* C )
+speed = sqrt.(U.^2 .+ V.^2)
+lw = 5 .* speed ./ maximum(speed) # Line Widths
+
+let
+    figure()
+    streamplot(R,C,U,V,density=0.6,color="k",linewidth=lw)
+    gcf()
+end
 # - Before hopf fixed point
 
 # - Before hopf damped oscillations
