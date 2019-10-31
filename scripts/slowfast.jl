@@ -15,6 +15,7 @@ include("packages.jl")
 end
 
 par_rozmac = RozMacPar()
+
 function roz_mac_II!(du, u, p, t,)
     @unpack r, K, a, h, e, m = p
     R, C = u
@@ -39,74 +40,80 @@ SymPy.solve(f(x,y),x)
 SymPy.solve(f(x,y),y)
 SymPy.solve(g(x,y),x)
 SymPy.solve(g(x,y),y)
-# Find isoclines
-function con_iso(p)
-    @unpack m, a, e, h = p
-    m / (a * (e - h * m))
-end
-
-function res_iso(x, p)
-    @unpack a, k, r, h = p
-    r * (a * h * k * x - a * h * x^2 + k - x) / (a * k)
-end
-
-let
-    Plot.plot(x -> res_iso(x ,par_rozmac), 0, 4, label = "Resource Isocline")
-    vline!([con_iso(par_rozmac)], label = "Consumer Isocline")
-end
-
-# Create vector fields
+# Plot isoclines and vector fields
 using PyPlot
 
-minval = 0
-maxval = 3
-steps = 100
-R = repeat(range(minval,stop=maxval,length=steps)',steps)
-C = repeat(range(minval,stop=maxval,length=steps),1,steps)
-U = 2.0 .* R .* (1 .- R ./ 3.0) .- 1.1 .* R .* C ./ (1 .+ 1.1 * 0.8 .* R)
-V = 1 .* ( 0.7 .* 1.1 .* R .* C ./ (1 .+ 1.1 .* 0.8 .* R) .- 0.7 .* C )
-speed = sqrt.(U.^2 .+ V.^2)
-lw = 5 .* speed ./ maximum(speed) # Line Widths
-
-let
-    figure()
-    streamplot(R,C,U,V,density=0.6,color="k",linewidth=lw)
-    gcf()
+function roz_mac_res(R, C, p)
+    @unpack r, k, h, a, m = p
+    return r * R * (1 - R / k) - (a * R * C / (1 + a * h * R) )
 end
 
-
-function roz_mac_res(du, u, p, t,)
-    @unpack r, K, a, h, e, m = p
-    R, C = u
-    du[1] = r * R * (1 - R / K) - a * R * C / (1 + a * h * R)
-    du[2] = ε ( e * a * R * C / (1 + a * h * R) - m * C )
-    return
+function roz_mac_con(R, C, eff, ep, p)
+    @unpack h, a, m = p
+    return ep * ( ( eff * a * R * C ) / (1 + a * h * R) - m * C )
 end
 
-
-minval = 0
-maxval = 3
-steps = 100
-R = repeat(range(minval,stop=maxval,length=steps)',steps)
-C = repeat(range(minval,stop=maxval,length=steps),1,steps)
-U = 2.0 .* R .* (1 .- R ./ 3.0) .- 1.1 .* R .* C ./ (1 .+ 1.1 * 0.8 .* R)
-V = 1 .* ( 0.7 .* 1.1 .* R .* C ./ (1 .+ 1.1 .* 0.8 .* R) .- 0.7 .* C )
-speed = sqrt.(U.^2 .+ V.^2)
-lw = 5 .* speed ./ maximum(speed) # Line Widths
-
-let
-    figure()
-    streamplot(R,C,U,V,density=0.6,color="k",linewidth=lw)
-    gcf()
+function con_iso(eff, p)
+    @unpack m, a, h = p
+    m / (a * (eff - h * m))
 end
+
+function res_iso(R, p)
+    @unpack a, k, r, h = p
+    r * (a * h * k * R - a * h * R^2 + k - R) / (a * k)
+end
+
+function roz_mac_plot(eff, ep)
+    minval = 0
+    maxval = 3
+    steps = 100
+    resconrange = range(minval,stop=maxval,length=steps)
+
+    U = [roz_mac_res(R, C, par_rozmac) for C in resconrange, R in resconrange]
+    V = [roz_mac_con(R, C, eff, ep, par_rozmac) for C in resconrange, R in resconrange]
+    speed = sqrt.(U.^2 .+ V.^2)
+    lw = 5 .* speed ./ maximum(speed) # Line Widths
+    streamplot(collect(resconrange), collect(resconrange), U, V, density = 0.6, color = "k", linewidth = lw)
+    PyPlot.plot(collect(resconrange), [res_iso(R, par_rozmac) for R in resconrange])
+    return PyPlot.plot(repeat([con_iso(eff, par_rozmac)],100),collect(resconrange))
+end
+
 # - Before hopf fixed point
-
+let
+    figure()
+    subplot(211)
+    roz_mac_plot(0.45, 1)
+    subplot(212)
+    roz_mac_plot(0.45, 0.1)
+    gcf()
+end
 # - Before hopf damped oscillations
-
+let
+    figure()
+    subplot(211)
+    roz_mac_plot(0.6, 1)
+    subplot(212)
+    roz_mac_plot(0.6, 0.1)
+    gcf()
+end
 # - At hopf
-
+let
+    figure()
+    subplot(211)
+    roz_mac_plot(0.73, 1) #need to differentiate and find max
+    subplot(212)
+    roz_mac_plot(0.73, 0.1)
+    gcf()
+end
 # - After hopf (limit cycle)
-
+let
+    figure()
+    subplot(211)
+    roz_mac_plot(0.9, 1)
+    subplot(212)
+    roz_mac_plot(0.9, 0.1)
+    gcf()
+end
 
 ## Dimensionalized
 #Setup
