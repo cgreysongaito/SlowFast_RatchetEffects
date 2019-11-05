@@ -17,10 +17,10 @@ end
 par_rozmac = RozMacPar()
 
 function roz_mac_II!(du, u, p, t,)
-    @unpack r, K, a, h, e, m = p
+    @unpack r, k, a, h, e, m, ε = p
     R, C = u
-    du[1] = r * R * (1 - R / K) - a * R * C / (1 + a * h * R)
-    du[2] = ε ( e * a * R * C / (1 + a * h * R) - m * C )
+    du[1] = r * R * (1 - R / k) - a * R * C / (1 + a * h * R)
+    du[2] = ε * ( e * a * R * C / (1 + a * h * R) - m * C )
     return
 end
 
@@ -114,6 +114,64 @@ let
     roz_mac_plot(0.9, 0.1)
     gcf()
 end
+
+# Plot transients and measure length of transients
+function roz_mac_ep_plot(eff,ep)
+    par = RozMacPar()
+    par.ε = ep
+    par.e = eff
+    u0 = [2.5, 1.5]
+    tspan = (0.0, 5000.0)
+    tstart = 0
+    tend = 5000
+    tstep = 0.1
+    tvals = tstart:tstep:tend
+
+    prob = ODEProblem(roz_mac_II!, u0, tspan, par)
+    sol = DifferentialEquations.solve(prob, reltol = 1e-8)
+    return PyPlot.plot(sol.t, sol.u)
+end
+
+let
+    figure()
+    subplot(211)
+    roz_mac_ep_plot(0.45, 1)
+    subplot(212)
+    roz_mac_ep_plot(0.45, 0.1)
+    gcf()
+end
+
+let
+    figure()
+    subplot(211)
+    roz_mac_ep_plot(0.6, 1)
+    subplot(212)
+    roz_mac_ep_plot(0.6, 0.1)
+    gcf()
+end
+
+let
+    figure()
+    subplot(211)
+    roz_mac_ep_plot(0.73, 1)
+    subplot(212)
+    roz_mac_ep_plot(0.73, 0.1)
+    gcf()
+end
+
+
+let
+    figure()
+    subplot(211)
+    roz_mac_ep_plot(0.9, 1)
+    subplot(212)
+    roz_mac_ep_plot(0.9, 0.1)
+    gcf()
+end
+
+#0.1 epsilon decreases length of transients after hopf but no perceptible difference before hopf. after hopf less variability in the cycles
+
+#measure length of transients (before hopf) - know equilibria values but then need to check stay at those values for more than one timestep. also starting conditions should be random
 
 ## Dimensionalized
 #Setup

@@ -6,4 +6,4 @@ using DifferentialEquations
 using ForwardDiff
 #using DynamicalSystems
 using SymPy
-using Plots
+using PyPlot
