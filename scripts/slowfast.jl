@@ -24,12 +24,6 @@ function roz_mac_II!(du, u, p, t,)
     return
 end
 
-function roz_mac_II(u, par)
-    du = similar(u)
-    roz_mac_II!(du, u, par, 0.0)
-    return du
-end
-
 # Find equilibria - should be same as normal but also with ε = 0
 x, y, r, k, a, m, e, h = symbols("x, y, r, k, a, m, e, h", real = true)
 
@@ -40,8 +34,11 @@ SymPy.solve(f(x,y),x)
 SymPy.solve(f(x,y),y)
 SymPy.solve(g(x,y),x)
 SymPy.solve(g(x,y),y)
+
+c(e) = ( 0.4 / (1.1 * (e - 0.8 * 0.4)) ) - 3
+
+SymPy.solve(c(e),e)
 # Plot isoclines and vector fields
-using PyPlot
 
 function roz_mac_res(R, C, p)
     @unpack r, k, h, a, m = p
@@ -80,39 +77,24 @@ end
 
 # - Before hopf fixed point
 let
-    figure()
-    subplot(211)
+    figure(figsize = (8,10))
+    subplot(421)
     roz_mac_plot(0.45, 1)
-    subplot(212)
+    subplot(422)
     roz_mac_plot(0.45, 0.1)
-    gcf()
-end
-# - Before hopf damped oscillations
-let
-    figure()
-    subplot(211)
+    subplot(423)
     roz_mac_plot(0.6, 1)
-    subplot(212)
+    subplot(424)
     roz_mac_plot(0.6, 0.1)
-    gcf()
-end
-# - At hopf
-let
-    figure()
-    subplot(211)
-    roz_mac_plot(0.73, 1) #need to differentiate and find max
-    subplot(212)
-    roz_mac_plot(0.73, 0.1)
-    gcf()
-end
-# - After hopf (limit cycle)
-let
-    figure()
-    subplot(211)
+    subplot(425)
+    roz_mac_plot(0.71, 1) #need to differentiate and find max
+    subplot(426)
+    roz_mac_plot(0.71, 0.1)
+    subplot(427)
     roz_mac_plot(0.9, 1)
-    subplot(212)
+    subplot(428)
     roz_mac_plot(0.9, 0.1)
-    gcf()
+    savefig("figs/vectorfieldplot.png")
 end
 
 # Plot transients and measure length of transients
@@ -121,11 +103,7 @@ function roz_mac_ep_plot(eff,ep)
     par.ε = ep
     par.e = eff
     u0 = [2.5, 1.5]
-    tspan = (0.0, 5000.0)
-    tstart = 0
-    tend = 5000
-    tstep = 0.1
-    tvals = tstart:tstep:tend
+    tspan = (0.0, 500.0)
 
     prob = ODEProblem(roz_mac_II!, u0, tspan, par)
     sol = DifferentialEquations.solve(prob, reltol = 1e-8)
@@ -134,44 +112,66 @@ end
 
 let
     figure()
-    subplot(211)
+    subplot(421)
     roz_mac_ep_plot(0.45, 1)
-    subplot(212)
+    subplot(422)
     roz_mac_ep_plot(0.45, 0.1)
-    gcf()
-end
-
-let
-    figure()
-    subplot(211)
+    subplot(423)
     roz_mac_ep_plot(0.6, 1)
-    subplot(212)
+    subplot(424)
     roz_mac_ep_plot(0.6, 0.1)
-    gcf()
-end
-
-let
-    figure()
-    subplot(211)
+    subplot(425)
     roz_mac_ep_plot(0.73, 1)
-    subplot(212)
+    subplot(426)
     roz_mac_ep_plot(0.73, 0.1)
-    gcf()
-end
-
-
-let
-    figure()
-    subplot(211)
+    subplot(427)
     roz_mac_ep_plot(0.9, 1)
-    subplot(212)
+    subplot(428)
     roz_mac_ep_plot(0.9, 0.1)
-    gcf()
+    savefig("figs/transientsplot.png")
 end
 
 #0.1 epsilon decreases length of transients after hopf but no perceptible difference before hopf. after hopf less variability in the cycles
 
 #measure length of transients (before hopf) - know equilibria values but then need to check stay at those values for more than one timestep. also starting conditions should be random
+
+function eq_II(eff, p)
+    @unpack r, a, k, h, m = p
+    eq_II_R = m / (a * (eff - h * m))
+    eq_II_C = r * (a * h * k * (m / (a * (eff - h * m))) - a * h * (m / (a * (eff - h * m)))^2 + k - m / (a * (eff - h * m))) / (a * k)
+    return vcat(eq_II_R, eq_II_C)
+end
+
+function transient_length(effi, ep)
+    par = RozMacPar()
+    par.e = effi
+    par.ε = ep
+    eq = eq_II(par.e, par)
+    u0 = [2.5, 1.5]
+    tspan = (0.0, 100000.0)
+
+    prob = ODEProblem(roz_mac_II!, u0, tspan, par)
+    sol = DifferentialEquations.solve(prob, reltol = 1e-8)
+
+    for i in 1:length(sol.t)
+        if isapprox(sol.u[i], eq; atol = 1e-3) & isapprox(sol.u[i+1], eq; atol = 1e-3)
+        return sol.t[i]
+        end
+    end
+end
+
+effrange = 0.45:0.01:0.71
+eprange = 0.05:0.01:1
+
+con = [transient_length(ei, epi) for ei in effrange, epi in eprange]
+
+let
+    figure()
+    contourf(eprange, effrange, con,levels = collect(range(0, stop=36000, length = 100)))
+    gcf()
+    savefig("figs/transientlengthplot.png")
+end
+
 
 ## Dimensionalized
 #Setup
