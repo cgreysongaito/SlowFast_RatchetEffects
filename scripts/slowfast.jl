@@ -24,6 +24,15 @@ function roz_mac_II!(du, u, p, t,)
     return
 end
 
+function eq_II(eff, p)
+    @unpack r, a, k, h, m = p
+    eq_II_R = m / (a * (eff - h * m))
+    eq_II_C = r * (a * h * k * (m / (a * (eff - h * m))) - a * h * (m / (a * (eff - h * m)))^2 + k - m / (a * (eff - h * m))) / (a * k)
+    return vcat(eq_II_R, eq_II_C)
+end
+
+
+randeq(x) = x * 1 + rand(Uniform(1e-7, 1e-6))
 # Find equilibria - should be same as normal but also with ε = 0
 x, y, r, k, a, m, e, h = symbols("x, y, r, k, a, m, e, h", real = true)
 
@@ -75,7 +84,7 @@ function roz_mac_plot(eff, ep)
     return PyPlot.plot(repeat([con_iso(eff, par_rozmac)],100),collect(resconrange))
 end
 
-# - Before hopf fixed point
+# - Streamlot figure
 let
     figure(figsize = (8,10))
     subplot(421)
@@ -91,18 +100,61 @@ let
     subplot(426)
     roz_mac_plot(0.71, 0.1)
     subplot(427)
-    roz_mac_plot(0.9, 1)
+    roz_mac_plot(1.1, 1)
     subplot(428)
-    roz_mac_plot(0.9, 0.1)
+    roz_mac_plot(1.1, 0.1)
     savefig("figs/vectorfieldplot.png")
+    #gcf()
 end
 
+# Compare changing epsilon and implicit lag
+include("lag_utils.jl")
+
+function epsilon_lag_plot(eff)
+    par = RozMacPar()
+    par.e = eff
+    eq = eq_II(par.e, par)
+    epvals = 0.05:0.01:1
+    u0 = randeq.(eq)
+    tspan = (0.0, 10000.0)
+    tstart = 9000
+    tend = 10000
+    tstep = 0.1
+    tvals = tstart:tstep:tend
+    lag = fill(0.0, length(epvals))
+
+    for (epi, epval) in enumerate(epvals)
+        par.ε = epval
+        prob = ODEProblem(roz_mac_II!, u0, tspan, par)
+        sol = solve(prob, reltol = 1e-8)
+        asol = sol(tvals)
+
+        R_peaks = find_peaks(asol[1, :])
+        C_peaks = find_peaks(asol[2, :])
+        period = diff(R_peaks[1])[1] * tstep
+        phase = find_phase(tvals, asol[1, :], asol[2, :])
+        delay = phase / period
+        lag[i] = delay
+    end
+
+    plot(epvals, lag)
+    ylabel("Implicit Lag", fontsize = 15)
+    # ylim(-0.01, 0.51)
+    xlabel("ε", fontsize = 15)
+    return
+end
+
+epsilon_lag_plot(0.9)
 # Plot transients and measure length of transients
+# to create starting conditions eq * 1 + rand(Uniform(1e-7, 1e-6))
+
+
 function roz_mac_ep_plot(eff,ep)
     par = RozMacPar()
     par.ε = ep
     par.e = eff
-    u0 = [2.5, 1.5]
+    eq = eq_II(par.e, par)
+    u0 = randeq.(eq)
     tspan = (0.0, 500.0)
 
     prob = ODEProblem(roz_mac_II!, u0, tspan, par)
@@ -135,19 +187,14 @@ end
 
 #measure length of transients (before hopf) - know equilibria values but then need to check stay at those values for more than one timestep. also starting conditions should be random
 
-function eq_II(eff, p)
-    @unpack r, a, k, h, m = p
-    eq_II_R = m / (a * (eff - h * m))
-    eq_II_C = r * (a * h * k * (m / (a * (eff - h * m))) - a * h * (m / (a * (eff - h * m)))^2 + k - m / (a * (eff - h * m))) / (a * k)
-    return vcat(eq_II_R, eq_II_C)
-end
+
 
 function transient_length(effi, ep)
     par = RozMacPar()
     par.e = effi
     par.ε = ep
     eq = eq_II(par.e, par)
-    u0 = [2.5, 1.5]
+    u0 = randeq.(eq)
     tspan = (0.0, 100000.0)
 
     prob = ODEProblem(roz_mac_II!, u0, tspan, par)
