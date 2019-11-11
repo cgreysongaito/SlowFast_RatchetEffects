@@ -1,6 +1,7 @@
 #Script for slow fast examination of time delays
 
 include("packages.jl")
+include("lag_utils.jl")
 
 #Non-dimensionalized
 @with_kw mutable struct RozMacPar
@@ -108,8 +109,6 @@ let
 end
 
 # Compare changing epsilon and implicit lag
-include("lag_utils.jl")
-
 function epsilon_lag_plot(eff)
     par = RozMacPar()
     par.e = eff
@@ -126,7 +125,7 @@ function epsilon_lag_plot(eff)
     for (epi, epval) in enumerate(epvals)
         par.ε = epval
         prob = ODEProblem(roz_mac_II!, u0, tspan, par)
-        sol = solve(prob, reltol = 1e-8)
+        sol = DifferentialEquations.solve(prob, reltol = 1e-8)
         asol = sol(tvals)
 
         R_peaks = find_peaks(asol[1, :])
@@ -134,20 +133,47 @@ function epsilon_lag_plot(eff)
         period = diff(R_peaks[1])[1] * tstep
         phase = find_phase(tvals, asol[1, :], asol[2, :])
         delay = phase / period
-        lag[i] = delay
+        lag[epi] = delay
     end
 
-    plot(epvals, lag)
-    ylabel("Implicit Lag", fontsize = 15)
+    return PyPlot.plot(collect(epvals), lag)
+    #ylabel("Implicit Lag", fontsize = 15)
     # ylim(-0.01, 0.51)
-    xlabel("ε", fontsize = 15)
-    return
+    #xlabel("ε", fontsize = 15)
 end
 
 epsilon_lag_plot(0.9)
 # Plot transients and measure length of transients
 # to create starting conditions eq * 1 + rand(Uniform(1e-7, 1e-6))
+eq = eq_II(0.9, par)
+epvals = 0.05:0.01:1
+u0 = randeq.(eq)
+tspan = (0.0, 10000.0)
+tstart = 9000
+tend = 10000
+tstep = 0.1
+tvals = tstart:tstep:tend
+lag = fill(0.0, length(epvals))
 
+par = RozMacPar()
+par.ε = 0.5
+prob = ODEProblem(roz_mac_II!, u0, tspan, par)
+sol = DifferentialEquations.solve(prob, reltol = 1e-8)
+asol = sol(tvals)
+
+R_peaks = find_peaks(asol[1, :]) ### PLACEHOLDER FIND PEAKS DOES NOT WORK
+C_peaks = find_peaks(asol[2, :])
+period = diff(R_peaks[1])[1] * tstep
+phase = find_phase(tvals, asol[1, :], asol[2, :])
+delay = phase / period
+lag[epi] = delay
+
+
+let
+    figure()
+    plot(collect(epvals),test)
+    gcf()
+end
 
 function roz_mac_ep_plot(eff,ep)
     par = RozMacPar()
