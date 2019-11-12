@@ -25,12 +25,12 @@ end
 #
 # #Tools for calculating Lags and Phase difference between timeseries
 #
-function find_peaks(data)
+function find_peaks(data, tol)
     imax = Vector{Int}()
     maxes = Vector{Float64}()
     for (i, win) in enumerate(partition(data, 3, 1))
         if win[1] < win[2] && win[2] > win[3]
-            if abs(win[1] - win[2]) > 1e-8
+            if abs(win[1] - win[2]) > tol
                 push!(maxes, win[2])
                 push!(imax, i + 1) # Save the 2nd index (middle point)
             end

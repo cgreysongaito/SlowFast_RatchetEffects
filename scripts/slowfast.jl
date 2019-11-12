@@ -25,6 +25,12 @@ function roz_mac_II!(du, u, p, t,)
     return
 end
 
+function roz_mac_II(u, par)
+    du = similar(u)
+    roz_mac_II!(du, u, par, 0.0)
+    return du
+end
+
 function eq_II(eff, p)
     @unpack r, a, k, h, m = p
     eq_II_R = m / (a * (eff - h * m))
@@ -34,6 +40,11 @@ end
 
 
 randeq(x) = x * 1 + rand(Uniform(1e-7, 1e-6))
+
+jacmat(model, eq, par) = ForwardDiff.jacobian(eq -> model(eq, par), eq)
+
+λ_stability(M) = maximum(real.(eigvals(M)))
+ν_stability(M) = λ_stability((M + M') / 2)
 # Find equilibria - should be same as normal but also with ε = 0
 x, y, r, k, a, m, e, h = symbols("x, y, r, k, a, m, e, h", real = true)
 
@@ -109,7 +120,7 @@ let
 end
 
 # Compare changing epsilon and implicit lag
-function epsilon_lag_plot(eff)
+function epsilon_lag_plot(eff, lagboth)
     par = RozMacPar()
     par.e = eff
     eq = eq_II(par.e, par)
@@ -121,6 +132,8 @@ function epsilon_lag_plot(eff)
     tstep = 0.1
     tvals = tstart:tstep:tend
     lag = fill(0.0, length(epvals))
+    per = fill(0.0, length(epvals))
+    pha = fill(0.0, length(epvals))
 
     for (epi, epval) in enumerate(epvals)
         par.ε = epval
@@ -128,52 +141,43 @@ function epsilon_lag_plot(eff)
         sol = DifferentialEquations.solve(prob, reltol = 1e-8)
         asol = sol(tvals)
 
-        R_peaks = find_peaks(asol[1, :])
-        C_peaks = find_peaks(asol[2, :])
+        R_peaks = find_peaks(asol[1, :], 1e-20)
+        C_peaks = find_peaks(asol[2, :], 1e-20)
         period = diff(R_peaks[1])[1] * tstep
         phase = find_phase(tvals, asol[1, :], asol[2, :])
-        delay = phase / period
+        delay = phase / period #is the delay a fraction of the full difference between peaks of resource?
         lag[epi] = delay
+        per[epi] = period
+        pha[epi] = phase
     end
 
-    return PyPlot.plot(collect(epvals), lag)
+    if lagboth == "lag"
+        return PyPlot.plot(collect(epvals), lag)
+    else
+        PyPlot.plot(collect(epvals), pha, label = "phase")
+        return PyPlot.plot(collect(epvals), per, label = "period")
+    end
     #ylabel("Implicit Lag", fontsize = 15)
     # ylim(-0.01, 0.51)
     #xlabel("ε", fontsize = 15)
 end
 
-epsilon_lag_plot(0.9)
-# Plot transients and measure length of transients
-# to create starting conditions eq * 1 + rand(Uniform(1e-7, 1e-6))
-eq = eq_II(0.9, par)
-epvals = 0.05:0.01:1
-u0 = randeq.(eq)
-tspan = (0.0, 10000.0)
-tstart = 9000
-tend = 10000
-tstep = 0.1
-tvals = tstart:tstep:tend
-lag = fill(0.0, length(epvals))
-
-par = RozMacPar()
-par.ε = 0.5
-prob = ODEProblem(roz_mac_II!, u0, tspan, par)
-sol = DifferentialEquations.solve(prob, reltol = 1e-8)
-asol = sol(tvals)
-
-R_peaks = find_peaks(asol[1, :]) ### PLACEHOLDER FIND PEAKS DOES NOT WORK
-C_peaks = find_peaks(asol[2, :])
-period = diff(R_peaks[1])[1] * tstep
-phase = find_phase(tvals, asol[1, :], asol[2, :])
-delay = phase / period
-lag[epi] = delay
-
+let
+    figure()
+    epsilon_lag_plot(0.6, "both")
+    gcf()
+end #PLACEHOLDER not sure it makes sense to graph lag before the hopf - could do with if else function where before the hopf determine time span before reach equlibrium use this to calculate lag
 
 let
     figure()
-    plot(collect(epvals),test)
+    epsilon_lag_plot(0.9, "lag")
     gcf()
 end
+
+
+# Plot transients and measure length of transients
+# to create starting conditions eq * 1 + rand(Uniform(1e-7, 1e-6))
+
 
 function roz_mac_ep_plot(eff,ep)
     par = RozMacPar()
@@ -245,7 +249,122 @@ let
     savefig("figs/transientlengthplot.png")
 end
 
+## Compare epsilon and coefficient of variation
+# PLACEHOLDER should CV be calculated before the hopf
+function epsilon_cv_plot(eff, rescon, cvboth)
+    par = RozMacPar()
+    par.e = eff
+    eq = eq_II(par.e, par)
+    epvals = 0.05:0.01:1
+    u0 = randeq.(eq)
+    tspan = (0.0, 10000.0)
+    tstart = 9000
+    tend = 10000
+    tstep = 0.1
+    tvals = tstart:tstep:tend
+    cv = fill(0.0, length(epvals))
+    mn = fill(0.0, length(epvals))
+    sd = fill(0.0, length(epvals))
 
+    for (epi, epval) in enumerate(epvals)
+        par.ε = epval
+        prob = ODEProblem(roz_mac_II!, u0, tspan, par)
+        sol = DifferentialEquations.solve(prob, reltol = 1e-8)
+        asol = sol(tvals)
+        if rescon == "res"
+            cv[epi] = mean(asol[1, 1:end]) ./ std(asol[1, 1:end])
+            mn[epi] = mean(asol[1, 1:end])
+            sd[epi] = std(asol[1, 1:end])
+        else
+            cv[epi] = mean(asol[2, 1:end]) ./ std(asol[1, 1:end])
+            mn[epi] = mean(asol[2, 1:end])
+            sd[epi] = std(asol[2, 1:end])
+        end
+    end
+
+    if cvboth == "cv"
+    return PyPlot.plot(collect(epvals), cv)
+    else
+       PyPlot.plot(collect(epvals), mn, label = "mean")
+       return PyPlot.plot(collect(epvals), sd, label = "sd")
+    end
+end
+
+let
+    figure()
+    epsilon_cv_plot(0.9, "con", "cv")
+    gcf()
+end
+
+
+## Compare epsilon and eigenvalue
+function epsilon_eigen_plot(eff)
+    par = RozMacPar()
+    par.e = eff
+    equ = eq_II(par.e, par)
+    epvals = 0.05:0.01:1
+    max_eig = fill(0.0, length(epvals))
+
+    for (epi, epval) in enumerate(epvals)
+        par.ε = epval
+        max_eig[epi] = λ_stability(jacmat(roz_mac_II, equ, par))
+    end
+
+    return PyPlot.plot(collect(epvals), max_eig)
+    #ylabel("Implicit Lag", fontsize = 15)
+    # ylim(-0.01, 0.51)
+    #xlabel("ε", fontsize = 15)
+end
+
+let
+    figure()
+    epsilon_eigen_plot(0.45)
+    gcf()
+end
+
+let
+    figure()
+    epsilon_eigen_plot(0.7)
+    gcf()
+end
+
+let
+    figure()
+    epsilon_eigen_plot(0.9)
+    gcf()
+end
+
+
+## Compare epsilon and reactivity
+function epsilon_reac_plot(eff)
+    par = RozMacPar()
+    par.e = eff
+    equ = eq_II(par.e, par)
+    epvals = 0.05:0.01:1
+    reac = fill(0.0, length(epvals))
+
+    for (epi, epval) in enumerate(epvals)
+        par.ε = epval
+        reac[epi] = ν_stability(jacmat(roz_mac_II, equ, par))
+    end
+
+    return PyPlot.plot(collect(epvals), reac)
+    #ylabel("Implicit Lag", fontsize = 15)
+    # ylim(-0.01, 0.51)
+    #xlabel("ε", fontsize = 15)
+end
+
+let
+    figure()
+    epsilon_reac_plot(0.6)
+    gcf()
+end
+
+let
+    figure()
+    epsilon_reac_plot(0.9)
+    gcf()
+end
 ## Dimensionalized
 #Setup
 @with_kw mutable struct RozMacPar
