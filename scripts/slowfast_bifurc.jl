@@ -7,7 +7,7 @@ include("slowfast_commoncode.jl")
 
 par = RozMacPar()
 par.ε = 1.0
-equ = eq_II(par.e, par)
+equ = eq_II(par)
 
 function con_iso(eff, p)
     @unpack m, a, h = p
@@ -37,7 +37,7 @@ function transcrit(p)
     h * m + m / (a * k)
 end
 
-transcrit(par)
+transcrit(par) #0.441
 
 #when res_iso has a differential of 0 (max)
 Calculus.simplify(Calculus.differentiate("r * (a * h * k * R - a * h * R^2 + k - R) / (a * k)", :R))
@@ -52,4 +52,4 @@ function hopf(p)
     m / (R * a) + ( h * m)
 end
 
-hopf(par)
+hopf(par) #0.710

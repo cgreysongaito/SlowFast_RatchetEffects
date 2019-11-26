@@ -45,8 +45,8 @@ end
 function epsilon_comeigen_plot(eff)
     par = RozMacPar()
     par.e = eff
-    equ = eq_II(par.e, par)
-    epvals = 0.0001:0.0001:1
+    equ = eq_II(par)
+    epvals = 0.00001:0.000001:1
     eigr1 = fill(0.0, length(epvals))
     eigi1 = fill(0.0, length(epvals))
     eigr2 = fill(0.0, length(epvals))
@@ -68,7 +68,43 @@ function epsilon_comeigen_plot(eff)
 end
 
 let
-    figure()
-    epsilon_comeigen_plot(0.78)
+    figure(figsize = (8,10))
+    subplot(411)
+    epsilon_comeigen_plot(0.45)
+    subplot(412)
+    epsilon_comeigen_plot(0.6)
+    subplot(413)
+    epsilon_comeigen_plot(0.72)
+    subplot(414)
+    epsilon_comeigen_plot(0.9)
     gcf()
 end
+
+par = RozMacPar()
+par.e = 0.72
+equ = eq_II(par)
+
+par.ε = 0.0001
+real.(eigvals(jacmat(roz_mac_II, equ, par))[1])
+imag.(eigvals(jacmat(roz_mac_II, equ, par))[1])
+real.(eigvals(jacmat(roz_mac_II, equ, par))[2])
+imag.(eigvals(jacmat(roz_mac_II, equ, par))[2])
+
+par.ε = 0.00014 #last one before changes
+real.(eigvals(jacmat(roz_mac_II, equ, par))[1])
+imag.(eigvals(jacmat(roz_mac_II, equ, par))[1])
+real.(eigvals(jacmat(roz_mac_II, equ, par))[2])
+imag.(eigvals(jacmat(roz_mac_II, equ, par))[2])
+
+par.ε = 0.5
+real.(eigvals(jacmat(roz_mac_II, equ, par))[1])
+imag.(eigvals(jacmat(roz_mac_II, equ, par))[1])
+real.(eigvals(jacmat(roz_mac_II, equ, par))[2])
+imag.(eigvals(jacmat(roz_mac_II, equ, par))[2])
+
+
+par.ε = 1.0
+real.(eigvals(jacmat(roz_mac_II, equ, par))[1])
+imag.(eigvals(jacmat(roz_mac_II, equ, par))[1])
+real.(eigvals(jacmat(roz_mac_II, equ, par))[2])
+imag.(eigvals(jacmat(roz_mac_II, equ, par))[2])

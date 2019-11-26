@@ -1,13 +1,13 @@
 #Script for slow fast examination of time delays
 
 include("packages.jl")
-
+include("slowfast_commoncode.jl")
 ## Compare epsilon and reactivity
 function epsilon_reac_plot(eff)
     par = RozMacPar()
     par.e = eff
-    equ = eq_II(par.e, par)
-    epvals = 0.05:0.01:1
+    equ = eq_II(par)
+    epvals = 0.0005:0.0001:1.5
     reac = fill(0.0, length(epvals))
 
     for (epi, epval) in enumerate(epvals)

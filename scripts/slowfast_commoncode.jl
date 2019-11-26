@@ -28,10 +28,10 @@ function roz_mac_II(u, par)
     return du
 end
 
-function eq_II(eff, p)
-    @unpack r, a, k, h, m = p
-    eq_II_R = m / (a * (eff - h * m))
-    eq_II_C = r * (a * h * k * (m / (a * (eff - h * m))) - a * h * (m / (a * (eff - h * m)))^2 + k - m / (a * (eff - h * m))) / (a * k)
+function eq_II(p)
+    @unpack r, a, k, h, m, e = p
+    eq_II_R = m / (a * (e - h * m))
+    eq_II_C = r * (a * h * k * (m / (a * (e - h * m))) - a * h * (m / (a * (e - h * m)))^2 + k - m / (a * (e - h * m))) / (a * k)
     return vcat(eq_II_R, eq_II_C)
 end
 
