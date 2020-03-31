@@ -1,5 +1,5 @@
 # Slow fast common code
-
+cd("/home/chrisgg/Documents/Guelph/PhD/TimeDelays/")
 
 @with_kw mutable struct RozMacPar
     r = 2.0

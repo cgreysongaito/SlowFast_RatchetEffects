@@ -1,6 +1,7 @@
 #Script for slow fast examination of time delays
 
 include("packages.jl")
+include("slowfast_commoncode.jl")
 
 # Plot transients and measure length of transients
 # to create starting conditions eq * 1 + rand(Uniform(1e-7, 1e-6))
@@ -10,7 +11,7 @@ function roz_mac_ep_plot(eff,ep)
     par = RozMacPar()
     par.ε = ep
     par.e = eff
-    eq = eq_II(par.e, par)
+    eq = eq_II(par)
     u0 = randeq.(eq)
     tspan = (0.0, 500.0)
 
@@ -30,9 +31,9 @@ let
     subplot(424)
     roz_mac_ep_plot(0.6, 0.1)
     subplot(425)
-    roz_mac_ep_plot(0.73, 1)
+    roz_mac_ep_plot(0.75, 1)
     subplot(426)
-    roz_mac_ep_plot(0.73, 0.1)
+    roz_mac_ep_plot(0.75, 0.1)
     subplot(427)
     roz_mac_ep_plot(0.9, 1)
     subplot(428)
@@ -50,7 +51,7 @@ function transient_length(effi, ep)
     par = RozMacPar()
     par.e = effi
     par.ε = ep
-    eq = eq_II(par.e, par)
+    eq = eq_II(par)
     u0 = randeq.(eq)
     tspan = (0.0, 100000.0)
 
@@ -75,7 +76,7 @@ let
     xlabel("ε")
     ylabel("Efficiency")
     gcf()
-    savefig("figs/transientlengthplot.png")
+    #savefig("figs/transientlengthplot.png")
 end
 
 #need to add code to extend to after the hopf
