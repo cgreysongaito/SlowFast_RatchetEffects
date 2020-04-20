@@ -3,7 +3,6 @@
 include("packages.jl")
 include("lag_utils.jl")
 include("slowfast_commoncode.jl")
-k
 
 # Compare changing epsilon and implicit lag
 function epsilon_lag_plot(eff, lagboth)

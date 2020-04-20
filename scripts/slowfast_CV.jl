@@ -1,7 +1,8 @@
 #Script for slow fast examination of time delays
-include("slowfast_commoncode.jl")
+cd("/home/chrisgg/Documents/Guelph/PhD/TimeDelays/")
 
-include("packages.jl")
+include("scripts/packages.jl")
+include("scripts/slowfast_commoncode.jl")
 
 ## Compare epsilon and coefficient of variation
 # PLACEHOLDER should CV be calculated before the hopf
@@ -26,11 +27,11 @@ function epsilon_cv_plot(eff, rescon, cvboth)
         sol = DifferentialEquations.solve(prob, reltol = 1e-8)
         asol = sol(tvals)
         if rescon == "res"
-            cv[epi] = mean(asol[1, 1:end]) ./ std(asol[1, 1:end])
+            cv[epi] = std(asol[1, 1:end] ./ mean(asol[1, 1:end]))
             mn[epi] = mean(asol[1, 1:end])
             sd[epi] = std(asol[1, 1:end])
         else
-            cv[epi] = mean(asol[2, 1:end]) ./ std(asol[1, 1:end])
+            cv[epi] = std(asol[1, 1:end] ./ mean(asol[2, 1:end]))
             mn[epi] = mean(asol[2, 1:end])
             sd[epi] = std(asol[2, 1:end])
         end

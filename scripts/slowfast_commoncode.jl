@@ -1,5 +1,8 @@
 # Slow fast common code
-cd("/home/chrisgg/Documents/Guelph/PhD/TimeDelays/")
+
+function abpath()
+    replace(@__DIR__, "scripts" => "")
+end
 
 @with_kw mutable struct RozMacPar
     r = 2.0
@@ -36,7 +39,7 @@ function eq_II(p)
 end
 
 
-randeq(x) = x * 1 + rand(Uniform(1e-7, 1e-6))
+randeq(x) = x * ( 1 + rand(Uniform(1e-7, 1e-6)))
 
 jacmat(model, eq, par) = ForwardDiff.jacobian(eq -> model(eq, par), eq)
 
