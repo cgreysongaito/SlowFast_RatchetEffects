@@ -69,10 +69,13 @@ function stoepboth(eff)
     let
         figure()
         subplot(211)
+        PyPlot.title("ε = 1")
         numsolvplot(u0, tspan, par, 1)
         subplot(212)
+        PyPlot.title("ε = 0.01")
         numsolvplot(u0, tspan, par, 0.01)
-        return gcf()
+        #return gcf()
+        savefig(joinpath(abpath(), "figs/" * string(eff) * "sto.png"))
     end
 end
 
@@ -100,7 +103,7 @@ function randstart(ep, eff)
     par = RozMacPar()
     par.ε = ep
     par.e = eff
-    tspan = (0.0, 10000000.0)
+    tspan = (0.0, 1000000.0)
 
     uC = [0.5, 1.0, 2.0, 2.9]
     uR = [0.5, 1.0, 2.0, 2.9]
@@ -115,7 +118,8 @@ end
 let
     figure()
     randstart(0.0001,0.6)
-    gcf()
+    #gcf()
+    savefig(joinpath(abpath(), "figs/eptiny_beforehopf_sol.png"))
 end
 
 
