@@ -139,3 +139,31 @@ let
 end
 
 #something is not working when epsilon is tiny and consumer is above the "hopf" - consumer reduces to zero and doesn't increase again and do't have enough maxiters (or takes forever)
+
+
+# Create plots of con-res stochastic model before imag numbers (and before hopf)
+function noiseACF_plot(eff,ep)
+    par = RozMacPar()
+    par.ε = ep
+    par.e = eff
+    eq = eq_II(par)
+    u0 = randeq.(eq)
+    tspan = (0.0, 10000.0)
+    tstart = 4000
+    tend = 10000
+    tstep = 1
+    tvals = tstart:tstep:tend
+
+    cb = PeriodicCallback(pert_cb, 1, initial_affect = true)
+    prob = ODEProblem(roz_mac_II!, u0, tspan, par)
+    sol = DifferentialEquations.solve(prob, callback = cb, reltol = 1e-8)
+    endsol = sol(tvals)
+    return PyPlot.plot(endsol.t, endsol.u)
+end
+
+let
+    figure()
+    noiseACF_plot(0.55, 0.1)
+    gcf()
+end
+# are we flipping where ACF and white noise should be found - looks like white noise found when eigenvalues have complex - something seems wrong

@@ -6,12 +6,12 @@ include("slowfast_commoncode.jl")
 function epsilon_maxeigen_plot(eff)
     par = RozMacPar()
     par.e = eff
-    equ = eq_II(par.e, par)
     epvals = 0.05:0.01:1
     max_eig = fill(0.0, length(epvals))
 
     for (epi, epval) in enumerate(epvals)
         par.ε = epval
+        equ = eq_II(par)
         max_eig[epi] = λ_stability(jacmat(roz_mac_II, equ, par))
     end
 
@@ -38,14 +38,13 @@ let
     ylabel("Dominant λ")
     xlabel("ε")
     gcf()
-    savefig("figs/epsilon_eigen_plot.png")
+    #savefig("figs/epsilon_eigen_plot.png")
 end
 
 
 function epsilon_comeigen_plot(eff, realcom)
     par = RozMacPar()
     par.e = eff
-    equ = eq_II(par)
     epvals = 0.00001:0.000001:1
     eig1 = fill(0.0, length(epvals))
     eig2 = fill(0.0, length(epvals))
@@ -54,6 +53,7 @@ function epsilon_comeigen_plot(eff, realcom)
     if realcom == "real"
         for (epi, epval) in enumerate(epvals)
             par.ε = epval
+            equ = eq_II(par)
             eig1[epi] = real.(eigvals(jacmat(roz_mac_II, equ, par))[1])
             eig2[epi] = real.(eigvals(jacmat(roz_mac_II, equ, par))[2])
         end
@@ -62,6 +62,7 @@ function epsilon_comeigen_plot(eff, realcom)
     else
         for (epi, epval) in enumerate(epvals)
             par.ε = epval
+            equ = eq_II(par)
             eig1[epi] = imag.(eigvals(jacmat(roz_mac_II, equ, par))[1])
             eig2[epi] = imag.(eigvals(jacmat(roz_mac_II, equ, par))[2])
         end
@@ -95,8 +96,8 @@ let
     epsilon_comeigen_plot(0.85, "real")
     subplot(919)
     epsilon_comeigen_plot(0.90, "real")
-    #gcf()
-    savefig(joinpath(abpath(), "figs/ep_eigen_real.png"))
+    gcf()
+    #savefig(joinpath(abpath(), "figs/ep_eigen_real.png"))
 end
 
 let
@@ -186,4 +187,176 @@ let
     xlabel("ε")
     #gcf()
     savefig(joinpath(abpath(), "figs/eigencontour_imag.png"))
+end
+
+
+#When efficiency is 0.55, find epsilon value where imaginary numbers start
+
+
+par = RozMacPar()
+par.e = 0.55
+equ = eq_II(par)
+epvals = 0.00001:0.000001:1
+
+for (epi, epval) in enumerate(epvals)
+    par.ε = epval
+    eig1 = imag.(eigvals(jacmat(roz_mac_II, equ, par))[1])
+    #println(eig1)
+    if eig1 < 0 || eig1 > 0
+         return epval
+         break
+         #println(epval)
+    end
+end
+
+# When epp is 1, find the excitable and non excitable phases for e - deterministic
+function findRCdivide(ep)
+    par = RozMacPar()
+    par.ε = ep
+    evals = 0.441:0.005:0.9
+
+    for (ei, eval) in enumerate(evals)
+        par.e = eval
+        equ = eq_II(par)
+        eig1 = imag.(eigvals(jacmat(roz_mac_II, equ, par))[1])
+        if eig1 < 0 || eig1 > 0
+            return eval
+            break
+        end
+    end
+end
+
+findRCdivide(1.0)
+
+# create graph of efficiency on x and epsilon value that creates RC divide
+function findRCdivide_effx(eff)
+    par = RozMacPar()
+    par.e = eff
+    epvals = 0.00001:0.000001:1
+
+    for (epi, epval) in enumerate(epvals)
+        par.ε = epval
+        equ = eq_II(par)
+        eig1 = imag.(eigvals(jacmat(roz_mac_II, equ, par))[1])
+        if eig1 < 0 || eig1 > 0
+            return epval
+            break
+        end
+    end
+end
+
+function findRCdivide_effx_plot()
+    evals = 0.526:0.005:0.9
+    epRC = fill(0.0, length(evals))
+    for (ei, eval) in enumerate(evals)
+        epRC[ei] = findRCdivide_effx(eval)
+    end
+
+    return PyPlot.plot(collect(evals), epRC)
+end
+
+let
+    figure()
+    findRCdivide_effx_plot()
+    gcf()
+end
+
+# create graph of epsilon on x and efficiency value where RC divide
+function findRCdivide_epx(ep)
+    par = RozMacPar()
+    par.ε = ep
+    evals = 0.441:0.005:0.9
+
+    for (ei, eval) in enumerate(evals)
+        par.e = eval
+        equ = eq_II(par)
+        eig1 = imag.(eigvals(jacmat(roz_mac_II, equ, par))[1])
+        if eig1 < 0 || eig1 > 0
+            return eval
+            break
+        end
+    end
+end
+
+function findRCdivide_epx_plot()
+    epvals = 0.00001:0.000001:1
+    eRC = fill(0.0, length(epvals))
+    for (epi, epval) in enumerate(epvals)
+        eRC[epi] = findRCdivide_epx(epval)
+    end
+
+    return PyPlot.plot(collect(epvals), eRC)
+end
+
+let
+    figure()
+    findRCdivide_epx_plot()
+    gcf()
+end #why jagged graph, why end before hopf, add lines for RC and hopf
+
+# graph real and imag for deterministis ep = 1.0 for my own understanding
+function eff_maxeigen_plot()
+    par = RozMacPar()
+    par.ε = 1.0
+    evals = 0.441:0.005:0.9
+    max_eig = fill(0.0, length(evals))
+
+    for (ei, eval) in enumerate(evals)
+        par.e = eval
+        equ = eq_II(par)
+        max_eig[ei] = λ_stability(jacmat(roz_mac_II, equ, par))
+    end
+
+    return PyPlot.plot(collect(evals), max_eig)
+    #ylabel("Implicit Lag", fontsize = 15)
+    # ylim(-0.01, 0.51)
+    #xlabel("ε", fontsize = 15)
+end
+
+let
+    figure()
+    eff_maxeigen_plot()
+    gcf()
+end
+
+function eff_comeigen_plot(realcom)
+    par = RozMacPar()
+    par.ε = 1.0
+    evals = 0.441:0.005:0.9
+    eig1 = fill(0.0, length(evals))
+    eig2 = fill(0.0, length(evals))
+
+
+    if realcom == "real"
+        for (ei, eval) in enumerate(evals)
+            par.e = eval
+            equ = eq_II(par)
+            eig1[ei] = real.(eigvals(jacmat(roz_mac_II, equ, par))[1])
+            eig2[ei] = real.(eigvals(jacmat(roz_mac_II, equ, par))[2])
+        end
+        PyPlot.plot(collect(evals), eig1)
+        PyPlot.plot(collect(evals), eig2)
+    else
+        for (ei, eval) in enumerate(evals)
+            par.e = eval
+            equ = eq_II(par)
+            eig1[ei] = imag.(eigvals(jacmat(roz_mac_II, equ, par))[1])
+            eig2[ei] = imag.(eigvals(jacmat(roz_mac_II, equ, par))[2])
+        end
+        PyPlot.plot(collect(evals), eig1)
+        PyPlot.plot(collect(evals), eig2)
+    end
+
+    #ylabel("Implicit Lag", fontsize = 15)
+    # ylim(-0.01, 0.51)
+    #xlabel("ε", fontsize = 15)
+end
+
+let
+    figure()
+    subplot(211)
+    eff_comeigen_plot("real")
+    subplot(212)
+    eff_comeigen_plot("complex")
+    gcf()
 end
