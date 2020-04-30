@@ -142,6 +142,24 @@ end
 
 
 # Create plots of con-res stochastic model before imag numbers (and before hopf)
+function findRCdivide_effx(eff)
+    par = RozMacPar()
+    par.e = eff
+    epvals = 0.00001:0.000001:1
+
+    for (epi, epval) in enumerate(epvals)
+        par.ε = epval
+        equ = eq_II(par)
+        eig1 = imag.(eigvals(jacmat(roz_mac_II, equ, par))[1])
+        if eig1 < 0 || eig1 > 0
+            return epval
+            break
+        end
+    end
+end
+
+findRCdivide_effx(0.55)
+
 function noiseACF_plot(eff,ep)
     par = RozMacPar()
     par.ε = ep
@@ -149,7 +167,7 @@ function noiseACF_plot(eff,ep)
     eq = eq_II(par)
     u0 = randeq.(eq)
     tspan = (0.0, 10000.0)
-    tstart = 4000
+    tstart = 6000
     tend = 10000
     tstep = 1
     tvals = tstart:tstep:tend
@@ -158,12 +176,28 @@ function noiseACF_plot(eff,ep)
     prob = ODEProblem(roz_mac_II!, u0, tspan, par)
     sol = DifferentialEquations.solve(prob, callback = cb, reltol = 1e-8)
     endsol = sol(tvals)
-    return PyPlot.plot(endsol.t, endsol.u)
+    PyPlot.plot(endsol.t, endsol.u)
+    return ylim(1.00, 2.25)
 end
 
 let
-    figure()
+    figure(figsize = (7,10))
+    subplot(411)
     noiseACF_plot(0.55, 0.1)
-    gcf()
+    title("e = 0.55", fontsize = 15)
+    annotate("ε = 0.1", (450, 530), xycoords = "figure points", fontsize = 15)
+    subplot(412)
+    noiseACF_plot(0.55, 0.4007)
+    annotate("ε = 0.4007", (450, 380), xycoords = "figure points", fontsize = 15)
+    ylabel("Consumer (Blue)/Resource (Orange) Biomass", fontsize = 15)
+    subplot(413)
+    noiseACF_plot(0.55, 0.4008)
+    annotate("ε = 0.4008", (450, 250), xycoords = "figure points", fontsize = 15)
+    subplot(414)
+    noiseACF_plot(0.55, 0.9)
+    annotate("ε = 0.9", (450, 100), xycoords = "figure points", fontsize = 15)
+    xlabel("Time", fontsize = 15)
+    #gcf()
+    savefig(joinpath(abpath(), "figs/noiseACF_effbeforehopf.png"))
 end
 # are we flipping where ACF and white noise should be found - looks like white noise found when eigenvalues have complex - something seems wrong
