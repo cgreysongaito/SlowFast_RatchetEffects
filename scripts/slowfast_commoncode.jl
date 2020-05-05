@@ -45,3 +45,43 @@ jacmat(model, eq, par) = ForwardDiff.jacobian(eq -> model(eq, par), eq)
 
 λ_stability(M) = maximum(real.(eigvals(M)))
 ν_stability(M) = λ_stability((M + M') / 2)
+
+function pert_cb(int)
+    int.u[2] = int.u[2] * ( 1 + rand(Normal(0.0, 0.01)))
+end
+
+
+function roz_mac_res(R, C, p)
+    @unpack r, k, h, a, m = p
+    return r * R * (1 - R / k) - (a * R * C / (1 + a * h * R) )
+end
+
+function roz_mac_con(R, C, eff, ep, p)
+    @unpack h, a, m = p
+    return ep * ( ( eff * a * R * C ) / (1 + a * h * R) - m * C )
+end
+
+function con_iso(eff, p)
+    @unpack m, a, h = p
+    m / (a * (eff - h * m))
+end
+
+function res_iso(R, p)
+    @unpack a, k, r, h = p
+    r * (a * h * k * R - a * h * R^2 + k - R) / (a * k)
+end
+
+function roz_mac_plot(ep, eff)
+    minval = 0
+    maxval = 3
+    steps = 100
+    resconrange = range(minval,stop=maxval,length=steps)
+
+    U = [roz_mac_res(R, C, par_rozmac) for C in resconrange, R in resconrange]
+    V = [roz_mac_con(R, C, eff, ep, par_rozmac) for C in resconrange, R in resconrange]
+    speed = sqrt.(U.^2 .+ V.^2)
+    lw = 5 .* speed ./ maximum(speed) # Line Widths
+    streamplot(collect(resconrange), collect(resconrange), U, V, density = 0.6, color = "k", linewidth = lw)
+    PyPlot.plot(collect(resconrange), [res_iso(R, par_rozmac) for R in resconrange])
+    return PyPlot.plot(repeat([con_iso(eff, par_rozmac)],100),collect(resconrange))
+end

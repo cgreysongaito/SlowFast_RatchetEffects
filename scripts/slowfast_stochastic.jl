@@ -1,17 +1,16 @@
 include("packages.jl")
 include("slowfast_commoncode.jl")
 
-##
-function pert_cb(int)
-    int.u[2] = int.u[2] * ( 1 + rand(Normal(0.0, 0.01)))
-end
 
 function sto_cv_plot(ep, save)
     par = RozMacPar()
     par.ε = ep
     evals = 0.441:0.005:0.9
-    u0 = eq_II(par)
     tspan = (0.0, 10000.0)
+    tstart = 2000
+    tend = 10000
+    tstep = 1
+    tvals = tstart:tstep:tend
     cv = fill(0.0, length(evals))
     mn = fill(0.0, length(evals))
     sd = fill(0.0, length(evals))
@@ -19,22 +18,30 @@ function sto_cv_plot(ep, save)
 
     for (ei, eval) in enumerate(evals)
         par.e = eval
+        u0 = eq_II(par)
         prob = ODEProblem(roz_mac_II!, u0, tspan, par)
         sol = DifferentialEquations.solve(prob, callback = cb, reltol = 1e-8)
-
-        cv[ei] = std(sol[1, 1:end] ./ mean(sol[2, 1:end]))
-        mn[ei] = mean(sol[2, 1:end])
-        sd[ei] = std(sol[2, 1:end])
+        solend = sol(tvals)
+        cv[ei] = std(solend[2, 1:end] ./ mean(solend[2, 1:end]))
+        mn[ei] = mean(solend[2, 1:end])
+        sd[ei] = std(solend[2, 1:end])
     end
 
+    maxcv = maximum(cv)
+    maxmn = maximum(mn)
     let
         figure()
         subplot(211)
         PyPlot.plot(collect(evals), cv)
+        PyPlot.vlines([0.441,0.5225, 0.710], ymin = 0.0, ymax = maxcv, linestyles = "dashed")
+        annotate("TC", (50, 315), xycoords = "figure points", fontsize = 12)
+        annotate("R/C", (107, 315), xycoords = "figure points", fontsize = 12)
+        annotate("H", (250, 315), xycoords = "figure points", fontsize = 12)
         ylabel("Consumer CV")
         subplot(212)
         PyPlot.plot(collect(evals), mn, label = "mean")
         PyPlot.plot(collect(evals), sd, label = "sd")
+        PyPlot.vlines([0.441,0.5225, 0.710], ymin = 0.0, ymax = maxmn, linestyles = "dashed")
         xlabel("Efficiency (e)")
         ylabel("Mean (blue), SD (orange)")
         if save == "save" && ep < 1
@@ -201,3 +208,93 @@ let
     savefig(joinpath(abpath(), "figs/noiseACF_effbeforehopf.png"))
 end
 # are we flipping where ACF and white noise should be found - looks like white noise found when eigenvalues have complex - something seems wrong
+
+
+##### Autocorrelation analysis as efficiency changes with tiny epsilon - in stochastic
+
+function acf_plot(ep, eff, sto)
+    par = RozMacPar()
+    par.ε = ep
+    par.e = eff
+    u0 = eq_II(par)
+    tspan = (0.0, 10000.0)
+    tstart = 4000
+    tend = 10000
+    tstep = 1
+    tvals = tstart:tstep:tend
+
+    cb = PeriodicCallback(pert_cb, 1, initial_affect = true)
+    prob = ODEProblem(roz_mac_II!, u0, tspan, par)
+
+    if sto == "yes"
+        sol = DifferentialEquations.solve(prob, callback = cb, reltol = 1e-8)
+    else
+        sol = DifferentialEquations.solve(prob, reltol = 1e-8)
+    end
+
+    solend = sol(tvals)
+    if ep == 1.0
+        lrange = 0:1:200
+    else
+        lrange = 0:1:2000
+    end
+    acf = autocor(solend[2, 1:end], collect(lrange))
+
+    PyPlot.bar(collect(lrange), acf)
+    ylim(-1,1)
+    return ylabel("ACF")
+end
+
+let
+    figure(figsize = (8,10))
+    subplots_adjust(hspace = 0.2, wspace = 0.3)
+    subplot(5,2,1)
+    acf_plot(1.0,0.45, "yes")
+    ax1 = gca()
+    setp(ax1.get_xticklabels(),visible=false)
+    subplot(5,2,2)
+    acf_plot(0.01,0.45, "yes")
+    ax5 = gca()
+    setp(ax5.get_xticklabels(),visible=false)
+    subplot(5,2,3)
+    acf_plot(1.0,0.52, "yes")
+    ax2 = gca()
+    setp(ax2.get_xticklabels(),visible=false)
+    subplot(5,2,4)
+    acf_plot(0.01,0.52, "yes")
+    ax6 = gca()
+    setp(ax6.get_xticklabels(),visible=false)
+    subplot(5,2,5)
+    acf_plot(1.0, 0.53, "yes")
+    ax3 = gca()
+    setp(ax3.get_xticklabels(),visible=false)
+    subplot(5,2,6)
+    acf_plot(0.01, 0.53, "yes")
+    ax7 = gca()
+    setp(ax7.get_xticklabels(),visible=false)
+    subplot(5,2,7)
+    acf_plot(1.0, 0.71, "yes")
+    ax4 = gca()
+    setp(ax4.get_xticklabels(),visible=false)
+    subplot(5,2,8)
+    acf_plot(0.01, 0.71, "yes")
+    ax8 = gca()
+    setp(ax8.get_xticklabels(),visible=false)
+    subplot(5,2,9)
+    acf_plot(1.0, 1.0, "no")
+    xlabel("Lag")
+    subplot(5,2,10)
+    acf_plot(0.01, 1.0, "no")
+    xlabel("Lag")
+    annotate("e = 0.45\nStochastic", (515, 575), xycoords = "figure points", fontsize = 12)
+    annotate("e = 0.52\nStochastic", (515, 450), xycoords = "figure points", fontsize = 12)
+    annotate("e = 0.53\nStochastic", (515, 350), xycoords = "figure points", fontsize = 12)
+    annotate("e = 0.71\nStochastic", (515, 225), xycoords = "figure points", fontsize = 12)
+    annotate("e = 1.0\nDeterministic", (515, 125), xycoords = "figure points", fontsize = 12)
+    annotate("ε = 1.0", (100, 650), xycoords = "figure points", fontsize = 12)
+    annotate("ε = 0.01", (400, 650), xycoords = "figure points", fontsize = 12)
+    annotate("R/C", (515, 405), xycoords = "figure points", fontsize = 12)
+    annotate("Hopf", (515, 180), xycoords = "figure points", fontsize = 12)
+    # gcf()
+    savefig(joinpath(abpath(), "figs/ACF.png"))
+end

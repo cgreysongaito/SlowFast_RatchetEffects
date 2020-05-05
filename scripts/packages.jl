@@ -5,6 +5,7 @@ using Calculus
 using DifferentialEquations
 using ForwardDiff
 using Distributions
+using StatsBase
 #using DynamicalSystems
 using SymPy
 using PyPlot
