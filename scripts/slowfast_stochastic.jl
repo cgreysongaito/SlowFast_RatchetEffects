@@ -167,47 +167,80 @@ end
 
 findRCdivide_effx(0.55)
 
-function noiseACF_plot(eff,ep)
+function noiseACF_plot(eff, ep, sto)
     par = RozMacPar()
     par.ε = ep
     par.e = eff
     eq = eq_II(par)
     u0 = randeq.(eq)
     tspan = (0.0, 10000.0)
-    tstart = 6000
+    tstart = 9000
     tend = 10000
     tstep = 1
     tvals = tstart:tstep:tend
 
     cb = PeriodicCallback(pert_cb, 1, initial_affect = true)
     prob = ODEProblem(roz_mac_II!, u0, tspan, par)
-    sol = DifferentialEquations.solve(prob, callback = cb, reltol = 1e-8)
+    if sto == "yes"
+        sol = DifferentialEquations.solve(prob, callback = cb, reltol = 1e-8)
+    else
+        sol = DifferentialEquations.solve(prob, reltol = 1e-8)
+    end
     endsol = sol(tvals)
-    PyPlot.plot(endsol.t, endsol.u)
-    return ylim(1.00, 2.25)
+    PyPlot.plot(endsol[1,1:end], endsol[2,1:end])
+    return xlim(0.0,2.8)
 end
 
 let
     figure(figsize = (7,10))
-    subplot(411)
-    noiseACF_plot(0.55, 0.1)
+    subplots_adjust(right = 0.75)
+    subplot(5,1,1)
+    noiseACF_plot(0.55, 0.1, "yes")
     title("e = 0.55", fontsize = 15)
-    annotate("ε = 0.1", (450, 530), xycoords = "figure points", fontsize = 15)
-    subplot(412)
-    noiseACF_plot(0.55, 0.4007)
-    annotate("ε = 0.4007", (450, 380), xycoords = "figure points", fontsize = 15)
-    ylabel("Consumer (Blue)/Resource (Orange) Biomass", fontsize = 15)
-    subplot(413)
-    noiseACF_plot(0.55, 0.4008)
-    annotate("ε = 0.4008", (450, 250), xycoords = "figure points", fontsize = 15)
-    subplot(414)
-    noiseACF_plot(0.55, 0.9)
-    annotate("ε = 0.9", (450, 100), xycoords = "figure points", fontsize = 15)
-    xlabel("Time", fontsize = 15)
-    #gcf()
-    savefig(joinpath(abpath(), "figs/noiseACF_effbeforehopf.png"))
+    annotate("ε = 0.1", (400, 580), xycoords = "figure points", fontsize = 15)
+    subplot(5,1,2)
+    noiseACF_plot(0.55, 0.4007, "yes")
+    annotate("ε = 0.4007", (400, 460), xycoords = "figure points", fontsize = 15)
+    ylabel("Consumer", fontsize = 15)
+    subplot(5,1,3)
+    noiseACF_plot(0.55, 0.4008, "yes")
+    annotate("ε = 0.4008", (400, 350), xycoords = "figure points", fontsize = 15)
+    subplot(5,1,4)
+    noiseACF_plot(0.55, 0.9, "yes")
+    annotate("ε = 0.9", (400, 240), xycoords = "figure points", fontsize = 15)
+    subplot(5,1,5)
+    noiseACF_plot(1.0, 0.01, "det")
+    annotate("e = 1.0\nε = 0.01\nDeterministic", (400, 120), xycoords = "figure points", fontsize = 15)
+    xlabel("Resource", fontsize = 15)
+    # gcf()
+    savefig(joinpath(abpath(), "figs/noiseACF_effbeforehopf_phase.png"))
 end
 # are we flipping where ACF and white noise should be found - looks like white noise found when eigenvalues have complex - something seems wrong
+
+let
+    figure(figsize = (7,10))
+    subplots_adjust(right = 0.75)
+    subplot(5,1,1)
+    noiseACF_plot(0.46, 0.01, "yes")
+    title("ε = 0.01", fontsize = 15)
+    annotate("e = 0.46", (400, 580), xycoords = "figure points", fontsize = 15)
+    subplot(5,1,2)
+    noiseACF_plot(0.52, 0.01, "yes")
+    annotate("e = 0.52", (400, 460), xycoords = "figure points", fontsize = 15)
+    ylabel("Consumer", fontsize = 15)
+    subplot(5,1,3)
+    noiseACF_plot(0.53, 0.01, "yes")
+    annotate("e = 0.53", (400, 350), xycoords = "figure points", fontsize = 15)
+    subplot(5,1,4)
+    noiseACF_plot(0.71, 0.01, "yes")
+    annotate("e = 0.71", (400, 240), xycoords = "figure points", fontsize = 15)
+    subplot(5,1,5)
+    noiseACF_plot(1.0, 0.01, "det")
+    annotate("e = 1.0\nε = 0.01\nDeterministic", (400, 120), xycoords = "figure points", fontsize = 15)
+    xlabel("Resource", fontsize = 15)
+    gcf()
+    #savefig(joinpath(abpath(), "figs/noiseACF_effbeforehopf_phase.png"))
+end
 
 
 ##### Autocorrelation analysis as efficiency changes with tiny epsilon - in stochastic
