@@ -1,4 +1,15 @@
-include("packages.jl")
+let
+    using Parameters
+    using LinearAlgebra
+    using Calculus
+    using DifferentialEquations
+    using ForwardDiff
+    using Distributions
+    using StatsBase
+    using Random
+    using PyPlot
+end
+
 include("slowfast_commoncode.jl")
 
 
@@ -167,12 +178,14 @@ end
 
 findRCdivide_effx(0.55)
 
-function noiseACF_plot(eff, ep, sto)
+Random.seed!(1234)
+function noiseACF_plot(eff, ep, sto, seed)
+    Random.seed!(seed)
     par = RozMacPar()
     par.ε = ep
     par.e = eff
     eq = eq_II(par)
-    u0 = randeq.(eq)
+    #u0 = randeq.(eq)
     tspan = (0.0, 10000.0)
     tstart = 9000
     tend = 10000
@@ -180,7 +193,7 @@ function noiseACF_plot(eff, ep, sto)
     tvals = tstart:tstep:tend
 
     cb = PeriodicCallback(pert_cb, 1, initial_affect = true)
-    prob = ODEProblem(roz_mac_II!, u0, tspan, par)
+    prob = ODEProblem(roz_mac_II!, eq, tspan, par)
     if sto == "yes"
         sol = DifferentialEquations.solve(prob, callback = cb, reltol = 1e-8)
     else
@@ -188,57 +201,60 @@ function noiseACF_plot(eff, ep, sto)
     end
     endsol = sol(tvals)
     PyPlot.plot(endsol[1,1:end], endsol[2,1:end])
-    return xlim(0.0,2.8)
+    iso_plot(range(0, stop = 3, length = 100), par, eff)
+    ylim(0.0,3.0)
+    return xlim(0.0,3.0)
 end
 
 let
-    figure(figsize = (7,10))
-    subplots_adjust(right = 0.75)
+    noiseACF = figure(figsize = (5,12))
+    #subplots_adjust(right = 0.75)
     subplot(5,1,1)
     noiseACF_plot(0.55, 0.1, "yes")
-    title("e = 0.55", fontsize = 15)
-    annotate("ε = 0.1", (400, 580), xycoords = "figure points", fontsize = 15)
+    title("e = 0.55, ε = 0.1", fontsize = 15)
     subplot(5,1,2)
+    title("e = 0.55, ε = 0.4007", fontsize = 15)
     noiseACF_plot(0.55, 0.4007, "yes")
-    annotate("ε = 0.4007", (400, 460), xycoords = "figure points", fontsize = 15)
     ylabel("Consumer", fontsize = 15)
     subplot(5,1,3)
+    title("e = 0.55, ε = 0.4008", fontsize = 15)
     noiseACF_plot(0.55, 0.4008, "yes")
-    annotate("ε = 0.4008", (400, 350), xycoords = "figure points", fontsize = 15)
     subplot(5,1,4)
+    title("e = 0.55, ε = 0.9", fontsize = 15)
     noiseACF_plot(0.55, 0.9, "yes")
-    annotate("ε = 0.9", (400, 240), xycoords = "figure points", fontsize = 15)
     subplot(5,1,5)
+    title("e = 1.0, ε = 0.01, Deterministic", fontsize = 15)
     noiseACF_plot(1.0, 0.01, "det")
-    annotate("e = 1.0\nε = 0.01\nDeterministic", (400, 120), xycoords = "figure points", fontsize = 15)
     xlabel("Resource", fontsize = 15)
-    # gcf()
-    savefig(joinpath(abpath(), "figs/noiseACF_effbeforehopf_phase.png"))
+    tight_layout()
+    return noiseACF
+    #savefig(joinpath(abpath(), "figs/noiseACF_effbeforehopf_phase.png"))
 end
 # are we flipping where ACF and white noise should be found - looks like white noise found when eigenvalues have complex - something seems wrong
 
 let
-    figure(figsize = (7,10))
+    sto_canard = figure(figsize = (5,12))
+    seed = 2
     subplots_adjust(right = 0.75)
     subplot(5,1,1)
-    noiseACF_plot(0.46, 0.01, "yes")
-    title("ε = 0.01", fontsize = 15)
-    annotate("e = 0.46", (400, 580), xycoords = "figure points", fontsize = 15)
+    title("(A) ε = 0.01, e = 0.46", fontsize = 15)
+    noiseACF_plot(0.46, 0.01, "yes", seed)
     subplot(5,1,2)
-    noiseACF_plot(0.52, 0.01, "yes")
-    annotate("e = 0.52", (400, 460), xycoords = "figure points", fontsize = 15)
+    title("(B) ε = 0.01, e = 0.52", fontsize = 15)
+    noiseACF_plot(0.52, 0.01, "yes", seed)
     ylabel("Consumer", fontsize = 15)
     subplot(5,1,3)
-    noiseACF_plot(0.53, 0.01, "yes")
-    annotate("e = 0.53", (400, 350), xycoords = "figure points", fontsize = 15)
+    title("(C) ε = 0.01, e = 0.53", fontsize = 15)
+    noiseACF_plot(0.53, 0.01, "yes", seed)
     subplot(5,1,4)
-    noiseACF_plot(0.71, 0.01, "yes")
-    annotate("e = 0.71", (400, 240), xycoords = "figure points", fontsize = 15)
+    title("(D) ε = 0.01, e = 0.71", fontsize = 15)
+    noiseACF_plot(0.71, 0.01, "yes", seed)
     subplot(5,1,5)
-    noiseACF_plot(1.0, 0.01, "det")
-    annotate("e = 1.0\nε = 0.01\nDeterministic", (400, 120), xycoords = "figure points", fontsize = 15)
+    title("(E) ε = 0.01, e = 1.0, Deterministic", fontsize = 15)
+    noiseACF_plot(1.0, 0.01, "det", seed)
     xlabel("Resource", fontsize = 15)
-    gcf()
+    tight_layout()
+    return sto_canard
     #savefig(joinpath(abpath(), "figs/noiseACF_effbeforehopf_phase.png"))
 end
 
@@ -251,7 +267,7 @@ function acf_plot(ep, eff, sto)
     par.e = eff
     u0 = eq_II(par)
     tspan = (0.0, 10000.0)
-    tstart = 4000
+    tstart = 400
     tend = 10000
     tstep = 1
     tvals = tstart:tstep:tend
@@ -272,62 +288,73 @@ function acf_plot(ep, eff, sto)
         lrange = 0:1:2000
     end
     acf = autocor(solend[2, 1:end], collect(lrange))
-
+    conf = 1.96/sqrt(length(solend))
     PyPlot.bar(collect(lrange), acf)
+    hlines(0 + conf, 0, maximum(lrange))
+    hlines(0 - conf, 0, maximum(lrange))
     ylim(-1,1)
     return ylabel("ACF")
 end
 
 let
-    figure(figsize = (8,10))
-    subplots_adjust(hspace = 0.2, wspace = 0.3)
+    figure()
+    acf_plot(1.0, 0.45, "yes")
+    gcf()
+end
+
+let
+    acfplot = figure(figsize = (8,12))
     subplot(5,2,1)
+    title("(A) ε = 1.0, e = 0.45, Sto")
     acf_plot(1.0,0.45, "yes")
-    ax1 = gca()
-    setp(ax1.get_xticklabels(),visible=false)
+    # ax1 = gca()
+    # setp(ax1.get_xticklabels(),visible=false)
     subplot(5,2,2)
+    title("(B) ε = 0.01, e = 0.45, Sto")
     acf_plot(0.01,0.45, "yes")
-    ax5 = gca()
-    setp(ax5.get_xticklabels(),visible=false)
+    # ax5 = gca()
+    # setp(ax5.get_xticklabels(),visible=false)
     subplot(5,2,3)
+    title("(C) ε = 1.0, e = 0.52, Sto")
     acf_plot(1.0,0.52, "yes")
-    ax2 = gca()
-    setp(ax2.get_xticklabels(),visible=false)
+    # ax2 = gca()
+    # setp(ax2.get_xticklabels(),visible=false)
     subplot(5,2,4)
+    title("(D) ε = 0.01, e = 0.52, Sto")
     acf_plot(0.01,0.52, "yes")
-    ax6 = gca()
-    setp(ax6.get_xticklabels(),visible=false)
+    # ax6 = gca()
+    # setp(ax6.get_xticklabels(),visible=false)
     subplot(5,2,5)
+    title("(E) ε = 1.0, e = 0.53, Sto")
     acf_plot(1.0, 0.53, "yes")
-    ax3 = gca()
-    setp(ax3.get_xticklabels(),visible=false)
+    # ax3 = gca()
+    # setp(ax3.get_xticklabels(),visible=false)
     subplot(5,2,6)
+    title("(F) ε = 0.01, e = 0.53, Sto")
     acf_plot(0.01, 0.53, "yes")
-    ax7 = gca()
-    setp(ax7.get_xticklabels(),visible=false)
+    # ax7 = gca()
+    # setp(ax7.get_xticklabels(),visible=false)
     subplot(5,2,7)
+    title("(G) ε = 1.0, e = 0.71, Sto")
     acf_plot(1.0, 0.71, "yes")
-    ax4 = gca()
-    setp(ax4.get_xticklabels(),visible=false)
+    # ax4 = gca()
+    # setp(ax4.get_xticklabels(),visible=false)
     subplot(5,2,8)
+    title("(H) ε = 0.01, e = 0.71, Sto")
     acf_plot(0.01, 0.71, "yes")
-    ax8 = gca()
-    setp(ax8.get_xticklabels(),visible=false)
+    # ax8 = gca()
+    # setp(ax8.get_xticklabels(),visible=false)
     subplot(5,2,9)
+    title("(I) ε = 1.0, e = 1.0, Det")
     acf_plot(1.0, 1.0, "no")
     xlabel("Lag")
     subplot(5,2,10)
+    title("(J) ε = 0.01, e = 1.0, Det")
     acf_plot(0.01, 1.0, "no")
     xlabel("Lag")
-    annotate("e = 0.45\nStochastic", (515, 575), xycoords = "figure points", fontsize = 12)
-    annotate("e = 0.52\nStochastic", (515, 450), xycoords = "figure points", fontsize = 12)
-    annotate("e = 0.53\nStochastic", (515, 350), xycoords = "figure points", fontsize = 12)
-    annotate("e = 0.71\nStochastic", (515, 225), xycoords = "figure points", fontsize = 12)
-    annotate("e = 1.0\nDeterministic", (515, 125), xycoords = "figure points", fontsize = 12)
-    annotate("ε = 1.0", (100, 650), xycoords = "figure points", fontsize = 12)
-    annotate("ε = 0.01", (400, 650), xycoords = "figure points", fontsize = 12)
-    annotate("R/C", (515, 405), xycoords = "figure points", fontsize = 12)
-    annotate("Hopf", (515, 180), xycoords = "figure points", fontsize = 12)
-    # gcf()
-    savefig(joinpath(abpath(), "figs/ACF.png"))
+    # annotate("R/C", (515, 405), xycoords = "figure points", fontsize = 12)
+    # annotate("Hopf", (515, 180), xycoords = "figure points", fontsize = 12)
+    tight_layout()
+    return acfplot
+    #savefig(joinpath(abpath(), "figs/ACF.png"))
 end

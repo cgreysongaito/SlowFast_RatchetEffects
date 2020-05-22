@@ -71,17 +71,17 @@ function res_iso(R, p)
     r * (a * h * k * R - a * h * R^2 + k - R) / (a * k)
 end
 
-function roz_mac_plot(ep, eff)
-    minval = 0
-    maxval = 3
-    steps = 100
-    resconrange = range(minval,stop=maxval,length=steps)
+function iso_plot(resrange, par, eff)
+    PyPlot.plot(collect(resrange), [res_iso(R, par) for R in resrange])
+    return PyPlot.plot(repeat([con_iso(eff, par)], length(resrange)),collect(resrange))
+end
 
+function roz_mac_plot(ep, eff)
+    resconrange = range(0, stop = 3, length=100)
     U = [roz_mac_res(R, C, par_rozmac) for C in resconrange, R in resconrange]
     V = [roz_mac_con(R, C, eff, ep, par_rozmac) for C in resconrange, R in resconrange]
     speed = sqrt.(U.^2 .+ V.^2)
     lw = 5 .* speed ./ maximum(speed) # Line Widths
     streamplot(collect(resconrange), collect(resconrange), U, V, density = 0.6, color = "k", linewidth = lw)
-    PyPlot.plot(collect(resconrange), [res_iso(R, par_rozmac) for R in resconrange])
-    return PyPlot.plot(repeat([con_iso(eff, par_rozmac)],100),collect(resconrange))
+    return iso_plot(resconrange, par_rozmac, eff)
 end
