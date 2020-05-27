@@ -70,8 +70,11 @@ sto_cv_plot(1, "show")
 sto_cv_plot(0.01, "save")
 sto_cv_plot(0.01, "show")
 
-function numsolvplot(u0, tspan, par, ep)
+# cb = PeriodicCallback(pert_cb, 1, initial_affect = true)
+
+function numsolvplot(u0, tspan, par, ep, mean)
     par.ε = ep
+    par.μ = mean
     cb = PeriodicCallback(pert_cb, 1, initial_affect = true)
     prob = ODEProblem(roz_mac_II!, u0, tspan, par)
     sol = DifferentialEquations.solve(prob, callback = cb, reltol = 1e-8)
@@ -84,17 +87,15 @@ function stoepboth(eff)
     u0 = eq_II(par)
     tspan = (0.0, 10000.0)
 
-    let
-        figure()
-        subplot(211)
-        PyPlot.title("ε = 1")
-        numsolvplot(u0, tspan, par, 1)
-        subplot(212)
-        PyPlot.title("ε = 0.01")
-        numsolvplot(u0, tspan, par, 0.01)
-        #return gcf()
-        savefig(joinpath(abpath(), "figs/" * string(eff) * "sto.png"))
-    end
+    sto_epboth_fig = figure()
+    subplot(211)
+    PyPlot.title("ε = 1")
+    numsolvplot(u0, tspan, par, 1, 0.001)
+    subplot(212)
+    PyPlot.title("ε = 0.01")
+    numsolvplot(u0, tspan, par, 0.01, 0.001)
+    return sto_epboth_fig
+    #savefig(joinpath(abpath(), "figs/" * string(eff) * "sto.png"))
 end
 
 stoepboth(0.5)
@@ -179,15 +180,15 @@ end
 findRCdivide_effx(0.55)
 
 Random.seed!(1234)
-function noiseACF_plot(eff, ep, sto, seed)
+function noiseACF_plot(eff, ep, sto, seed, mean)
     Random.seed!(seed)
     par = RozMacPar()
     par.ε = ep
     par.e = eff
+    par.μ = mean
     eq = eq_II(par)
-    #u0 = randeq.(eq)
     tspan = (0.0, 10000.0)
-    tstart = 9000
+    tstart = 1
     tend = 10000
     tstep = 1
     tvals = tstart:tstep:tend
@@ -207,24 +208,24 @@ function noiseACF_plot(eff, ep, sto, seed)
 end
 
 let
+    seed = 2
     noiseACF = figure(figsize = (5,12))
-    #subplots_adjust(right = 0.75)
     subplot(5,1,1)
-    noiseACF_plot(0.55, 0.1, "yes")
-    title("e = 0.55, ε = 0.1", fontsize = 15)
+    noiseACF_plot(0.55, 0.1, "yes", seed)
+    title("(A) e = 0.55, ε = 0.1", fontsize = 15)
     subplot(5,1,2)
-    title("e = 0.55, ε = 0.4007", fontsize = 15)
-    noiseACF_plot(0.55, 0.4007, "yes")
+    title("(B) e = 0.55, ε = 0.4007", fontsize = 15)
+    noiseACF_plot(0.55, 0.4007, "yes", seed)
     ylabel("Consumer", fontsize = 15)
     subplot(5,1,3)
-    title("e = 0.55, ε = 0.4008", fontsize = 15)
-    noiseACF_plot(0.55, 0.4008, "yes")
+    title("(C) e = 0.55, ε = 0.4008", fontsize = 15)
+    noiseACF_plot(0.55, 0.4008, "yes", seed)
     subplot(5,1,4)
-    title("e = 0.55, ε = 0.9", fontsize = 15)
-    noiseACF_plot(0.55, 0.9, "yes")
+    title("(D) e = 0.55, ε = 0.9", fontsize = 15)
+    noiseACF_plot(0.55, 0.9, "yes", seed)
     subplot(5,1,5)
-    title("e = 1.0, ε = 0.01, Deterministic", fontsize = 15)
-    noiseACF_plot(1.0, 0.01, "det")
+    title("(E) e = 1.0, ε = 0.01, Deterministic", fontsize = 15)
+    noiseACF_plot(1.0, 0.01, "det", seed)
     xlabel("Resource", fontsize = 15)
     tight_layout()
     return noiseACF
@@ -232,26 +233,36 @@ let
 end
 # are we flipping where ACF and white noise should be found - looks like white noise found when eigenvalues have complex - something seems wrong
 
+let #examining e = 0.52 and ep = 0.01 seeing whether close to zero
+    par = RozMacPar()
+    par.ε = 0.01
+    par.e = 0.52
+    test = figure()
+    noiseACF_plot(0.52, 0.01, "yes", 3)
+    iso_plot(range(0, stop = 3, length = 100), par, 0.52)
+    return test
+end
+
 let
-    sto_canard = figure(figsize = (5,12))
     seed = 2
-    subplots_adjust(right = 0.75)
+    mean = 0.001
+    sto_canard = figure(figsize = (5,12))
     subplot(5,1,1)
     title("(A) ε = 0.01, e = 0.46", fontsize = 15)
-    noiseACF_plot(0.46, 0.01, "yes", seed)
+    noiseACF_plot(0.46, 0.01, "yes", seed, mean)
     subplot(5,1,2)
     title("(B) ε = 0.01, e = 0.52", fontsize = 15)
-    noiseACF_plot(0.52, 0.01, "yes", seed)
+    noiseACF_plot(0.52, 0.01, "yes", seed, mean)
     ylabel("Consumer", fontsize = 15)
     subplot(5,1,3)
     title("(C) ε = 0.01, e = 0.53", fontsize = 15)
-    noiseACF_plot(0.53, 0.01, "yes", seed)
+    noiseACF_plot(0.53, 0.01, "yes", seed, mean)
     subplot(5,1,4)
     title("(D) ε = 0.01, e = 0.71", fontsize = 15)
-    noiseACF_plot(0.71, 0.01, "yes", seed)
+    noiseACF_plot(0.71, 0.01, "yes", seed, mean)
     subplot(5,1,5)
     title("(E) ε = 0.01, e = 1.0, Deterministic", fontsize = 15)
-    noiseACF_plot(1.0, 0.01, "det", seed)
+    noiseACF_plot(1.0, 0.01, "det", seed, mean)
     xlabel("Resource", fontsize = 15)
     tight_layout()
     return sto_canard
@@ -261,7 +272,8 @@ end
 
 ##### Autocorrelation analysis as efficiency changes with tiny epsilon - in stochastic
 
-function acf_plot(ep, eff, sto)
+function acf_plot(ep, eff, sto, seed)
+    Random.seed!(seed)
     par = RozMacPar()
     par.ε = ep
     par.e = eff
@@ -303,58 +315,118 @@ let
 end
 
 let
+    seed = 3
     acfplot = figure(figsize = (8,12))
     subplot(5,2,1)
     title("(A) ε = 1.0, e = 0.45, Sto")
-    acf_plot(1.0,0.45, "yes")
-    # ax1 = gca()
-    # setp(ax1.get_xticklabels(),visible=false)
+    acf_plot(1.0,0.45, "yes", seed)
     subplot(5,2,2)
     title("(B) ε = 0.01, e = 0.45, Sto")
-    acf_plot(0.01,0.45, "yes")
-    # ax5 = gca()
-    # setp(ax5.get_xticklabels(),visible=false)
+    acf_plot(0.01,0.45, "yes", seed)
     subplot(5,2,3)
     title("(C) ε = 1.0, e = 0.52, Sto")
-    acf_plot(1.0,0.52, "yes")
-    # ax2 = gca()
-    # setp(ax2.get_xticklabels(),visible=false)
+    acf_plot(1.0,0.52, "yes", seed)
     subplot(5,2,4)
     title("(D) ε = 0.01, e = 0.52, Sto")
-    acf_plot(0.01,0.52, "yes")
-    # ax6 = gca()
-    # setp(ax6.get_xticklabels(),visible=false)
+    acf_plot(0.01,0.52, "yes", seed)
     subplot(5,2,5)
     title("(E) ε = 1.0, e = 0.53, Sto")
-    acf_plot(1.0, 0.53, "yes")
-    # ax3 = gca()
-    # setp(ax3.get_xticklabels(),visible=false)
+    acf_plot(1.0, 0.53, "yes", seed)
     subplot(5,2,6)
     title("(F) ε = 0.01, e = 0.53, Sto")
-    acf_plot(0.01, 0.53, "yes")
-    # ax7 = gca()
-    # setp(ax7.get_xticklabels(),visible=false)
+    acf_plot(0.01, 0.53, "yes", seed)
     subplot(5,2,7)
     title("(G) ε = 1.0, e = 0.71, Sto")
-    acf_plot(1.0, 0.71, "yes")
-    # ax4 = gca()
-    # setp(ax4.get_xticklabels(),visible=false)
+    acf_plot(1.0, 0.71, "yes", seed)
     subplot(5,2,8)
     title("(H) ε = 0.01, e = 0.71, Sto")
-    acf_plot(0.01, 0.71, "yes")
-    # ax8 = gca()
-    # setp(ax8.get_xticklabels(),visible=false)
+    acf_plot(0.01, 0.71, "yes", seed)
     subplot(5,2,9)
     title("(I) ε = 1.0, e = 1.0, Det")
-    acf_plot(1.0, 1.0, "no")
+    acf_plot(1.0, 1.0, "no", seed)
     xlabel("Lag")
     subplot(5,2,10)
     title("(J) ε = 0.01, e = 1.0, Det")
-    acf_plot(0.01, 1.0, "no")
+    acf_plot(0.01, 1.0, "no", seed)
     xlabel("Lag")
     # annotate("R/C", (515, 405), xycoords = "figure points", fontsize = 12)
     # annotate("Hopf", (515, 180), xycoords = "figure points", fontsize = 12)
     tight_layout()
     return acfplot
     #savefig(joinpath(abpath(), "figs/ACF.png"))
+end
+
+
+# Testing whether high versus low frequency pert increases probablity of canard
+# figure can change either efficiency and or frequency - four figures for four values of efficiency , x axis is frequency y axis is proportion
+
+function canard_proportion(eff, ep, repeat, mean)
+    freq_vals = 1.0:0.5:10.0
+    canard_prop = fill(0.0, length(freq_vals))
+
+    for (freq_i, freq_val) in enumerate(freq_vals)
+        par = RozMacPar()
+        par.ε = ep
+        par.e = eff
+        par.μ = mean
+        eq = eq_II(par)
+        tspan = (0.0, 10000.0)
+        tstart = 6000
+        tend = 10000
+        tstep = 1
+        tvals = tstart:tstep:tend
+        canard_count = 0
+        for j in 1:repeat
+            cb = PeriodicCallback(pert_cb, freq_val, initial_affect = true)
+            prob = ODEProblem(roz_mac_II!, eq, tspan, par)
+            sol = DifferentialEquations.solve(prob, callback = cb, reltol = 1e-8)
+            endsol = sol(tvals)
+
+            for k in 1:length(endsol)
+                if 0 < endsol.u[j][2] < 1.6 && 0 < endsol.u[j][1] < 1.6
+                    canard_count += 1
+                    break
+                end
+            end
+        end
+        canard_prop[freq_i] = canard_count / repeat
+    end
+    return canard_prop
+end
+
+let
+    canard_prop_plot = figure(figsize = (7, 10))
+    subplot(3,1,1)
+    title("(A) Perturbation μ = 0.0")
+    scatter(1.0:0.5:10.0, canard_proportion(0.46, 0.01, 100, 0.0), label = "e = 0.46")
+    scatter(1.0:0.5:10.0, canard_proportion(0.53, 0.01, 100, 0.0), label = "e = 0.53")
+    scatter(1.0:0.5:10.0, canard_proportion(0.6, 0.01, 100, 0.0), label = "e = 0.6")
+    scatter(1.0:0.5:10.0, canard_proportion(0.71, 0.01, 100, 0.0), label = "e = 0.71")
+    legend()
+    ylim(0.0,0.22)
+    xlabel("Perturbation frequency")
+    ylabel("Proportion")
+    subplot(3,1,2)
+    title("(B) Perturbation μ = 0.0001")
+    scatter(1.0:0.5:10.0, canard_proportion(0.46, 0.01, 100, 0.001), label = "e = 0.46")
+    scatter(1.0:0.5:10.0, canard_proportion(0.53, 0.01, 100, 0.001), label = "e = 0.53")
+    scatter(1.0:0.5:10.0, canard_proportion(0.6, 0.01, 100, 0.001), label = "e = 0.6")
+    scatter(1.0:0.5:10.0, canard_proportion(0.71, 0.01, 100, 0.001), label = "e = 0.71")
+    legend()
+    ylim(0.0,0.22)
+    xlabel("Perturbation frequency")
+    ylabel("Proportion")
+    subplot(3,1,3)
+    title("(C) Perturbation μ = 0.0002")
+    scatter(1.0:0.5:10.0, canard_proportion(0.46, 0.01, 100, 0.002), label = "e = 0.46")
+    scatter(1.0:0.5:10.0, canard_proportion(0.53, 0.01, 100, 0.002), label = "e = 0.53")
+    scatter(1.0:0.5:10.0, canard_proportion(0.6, 0.01, 100, 0.002), label = "e = 0.6")
+    scatter(1.0:0.5:10.0, canard_proportion(0.71, 0.01, 100, 0.002), label = "e = 0.71")
+    legend()
+    ylim(0.0,0.22)
+    xlabel("Perturbation frequency")
+    ylabel("Proportion")
+    tight_layout()
+    # return canard_prop_plot
+    savefig(joinpath(abpath(), "figs/perturbation_canard_proprtion.png"))
 end

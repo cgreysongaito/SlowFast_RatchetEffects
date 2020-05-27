@@ -13,6 +13,7 @@ end
     m = 0.4
     σ = 0.1
     ε = 0.1
+    μ  = 0.0
 end
 
 par_rozmac = RozMacPar()
@@ -46,8 +47,12 @@ jacmat(model, eq, par) = ForwardDiff.jacobian(eq -> model(eq, par), eq)
 λ_stability(M) = maximum(real.(eigvals(M)))
 ν_stability(M) = λ_stability((M + M') / 2)
 
-function pert_cb(int)
-    int.u[2] = int.u[2] * ( 1 + rand(Normal(0.0, 0.01)))
+# function pert_cb(int)
+#     int.u[2] = int.u[2] * ( 1 + rand(Normal(0.01)))
+# end
+
+function pert_cb(integrator)
+    integrator.u[2] = integrator.u[2] * ( 1 + rand(Normal(integrator.p.μ, 0.01)))
 end
 
 
@@ -85,3 +90,5 @@ function roz_mac_plot(ep, eff)
     streamplot(collect(resconrange), collect(resconrange), U, V, density = 0.6, color = "k", linewidth = lw)
     return iso_plot(resconrange, par_rozmac, eff)
 end
+
+println("finished loading")
