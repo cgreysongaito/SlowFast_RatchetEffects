@@ -13,6 +13,7 @@ end
 include("slowfast_commoncode.jl")
 
 
+
 function sto_cv_plot(ep, save)
     par = RozMacPar()
     par.ε = ep
@@ -179,7 +180,6 @@ end
 
 findRCdivide_effx(0.55)
 
-Random.seed!(1234)
 function noiseACF_plot(eff, ep, sto, seed, mean)
     Random.seed!(seed)
     par = RozMacPar()
@@ -237,10 +237,19 @@ let #examining e = 0.52 and ep = 0.01 seeing whether close to zero
     par = RozMacPar()
     par.ε = 0.01
     par.e = 0.52
-    test = figure()
-    noiseACF_plot(0.52, 0.01, "yes", 3)
+    test = figure(figsize = (8, 4))
+    subplot(1,2,1)
+    title("(A) ACF ε = 0.01, e = 0.52, Sto")
+    acf_plot(0.01,0.52, "yes", 3)
+    subplot(1,2,2)
+    title("(B) Phase space ε = 0.01, e = 0.52, Sto")
+    noiseACF_plot(0.52, 0.01, "yes", 3, 0.0)
     iso_plot(range(0, stop = 3, length = 100), par, 0.52)
-    return test
+    xlabel("Resource")
+    ylabel("Consumer")
+    tight_layout()
+    # return test
+    savefig(joinpath(abpath(), "figs/e52_ep001_isoclines_comparisonwithACF.png"))
 end
 
 let
@@ -279,7 +288,7 @@ function acf_plot(ep, eff, sto, seed)
     par.e = eff
     u0 = eq_II(par)
     tspan = (0.0, 10000.0)
-    tstart = 400
+    tstart = 6000
     tend = 10000
     tstep = 1
     tvals = tstart:tstep:tend
@@ -295,9 +304,9 @@ function acf_plot(ep, eff, sto, seed)
 
     solend = sol(tvals)
     if ep == 1.0
-        lrange = 0:1:200
+        lrange = 0:1:50
     else
-        lrange = 0:1:2000
+        lrange = 0:1:500
     end
     acf = autocor(solend[2, 1:end], collect(lrange))
     conf = 1.96/sqrt(length(solend))
@@ -305,13 +314,39 @@ function acf_plot(ep, eff, sto, seed)
     hlines(0 + conf, 0, maximum(lrange))
     hlines(0 - conf, 0, maximum(lrange))
     ylim(-1,1)
+    xlabel("Lag")
     return ylabel("ACF")
 end
 
+
+Random.seed!(seed)
+par = RozMacPar()
+par.ε = 0.01
+par.e = 0.45
+u0 = eq_II(par)
+tspan = (0.0, 10000.0)
+tstart = 6000
+tend = 10000
+tstep = 1
+tvals = tstart:tstep:tend
+
+cb = PeriodicCallback(pert_cb, 1, initial_affect = true)
+prob = ODEProblem(roz_mac_II!, u0, tspan, par)
+
+sol = DifferentialEquations.solve(prob, callback = cb, reltol = 1e-8)
+
+solend = sol(tvals)
+acf = autocor(solend[2, 1:end], collect(0:1:50))
+conf = 1.96/sqrt(length(solend))
 let
-    figure()
-    acf_plot(1.0, 0.45, "yes")
-    gcf()
+    test = figure()
+    subplot(1,2,1)
+    plot(solend.t, solend.u)
+    subplot(1,2,2)
+    bar(collect(0:1:50), acf)
+    hlines(0 + conf, 0, maximum(0:1:50))
+    hlines(0 - conf, 0, maximum(0:1:50))
+    return test
 end
 
 let
@@ -344,16 +379,14 @@ let
     subplot(5,2,9)
     title("(I) ε = 1.0, e = 1.0, Det")
     acf_plot(1.0, 1.0, "no", seed)
-    xlabel("Lag")
     subplot(5,2,10)
     title("(J) ε = 0.01, e = 1.0, Det")
     acf_plot(0.01, 1.0, "no", seed)
-    xlabel("Lag")
     # annotate("R/C", (515, 405), xycoords = "figure points", fontsize = 12)
     # annotate("Hopf", (515, 180), xycoords = "figure points", fontsize = 12)
     tight_layout()
     return acfplot
-    #savefig(joinpath(abpath(), "figs/ACF.png"))
+    # savefig(joinpath(abpath(), "figs/ACF.png"))
 end
 
 
