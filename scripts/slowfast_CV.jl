@@ -4,6 +4,9 @@ cd("/home/chrisgg/Documents/Guelph/PhD/TimeDelays/")
 include("scripts/packages.jl")
 include("scripts/slowfast_commoncode.jl")
 
+### NOTE this needs to be fixed - incorrect calc of CV and old way for producing prob
+
+
 ## Compare epsilon and coefficient of variation
 # PLACEHOLDER should CV be calculated before the hopf
 function epsilon_cv_plot(eff, rescon, cvboth)

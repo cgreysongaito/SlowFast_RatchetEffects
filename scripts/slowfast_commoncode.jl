@@ -47,15 +47,6 @@ jacmat(model, eq, par) = ForwardDiff.jacobian(eq -> model(eq, par), eq)
 λ_stability(M) = maximum(real.(eigvals(M)))
 ν_stability(M) = λ_stability((M + M') / 2)
 
-# function pert_cb(int)
-#     int.u[2] = int.u[2] * ( 1 + rand(Normal(0.01)))
-# end
-
-function pert_cb(integrator)
-    integrator.u[2] = integrator.u[2] * ( 1 + rand(Normal(integrator.p.μ, 0.01)))
-end
-
-
 function roz_mac_res(R, C, p)
     @unpack r, k, h, a, m = p
     return r * R * (1 - R / k) - (a * R * C / (1 + a * h * R) )
@@ -66,9 +57,9 @@ function roz_mac_con(R, C, eff, ep, p)
     return ep * ( ( eff * a * R * C ) / (1 + a * h * R) - m * C )
 end
 
-function con_iso(eff, p)
-    @unpack m, a, h = p
-    m / (a * (eff - h * m))
+function con_iso(p)
+    @unpack m, a, h, e = p
+    m / (a * (e - h * m))
 end
 
 function res_iso(R, p)
@@ -76,9 +67,9 @@ function res_iso(R, p)
     r * (a * h * k * R - a * h * R^2 + k - R) / (a * k)
 end
 
-function iso_plot(resrange, par, eff)
+function iso_plot(resrange, par)
     plot(collect(resrange), [res_iso(R, par) for R in resrange])
-    return plot(repeat([con_iso(eff, par)], length(resrange)),collect(resrange))
+    return plot(repeat([con_iso(par)], length(resrange)),collect(resrange))
 end
 
 function roz_mac_plot(ep, eff)
@@ -88,5 +79,44 @@ function roz_mac_plot(ep, eff)
     speed = sqrt.(U.^2 .+ V.^2)
     lw = 5 .* speed ./ maximum(speed) # Line Widths
     streamplot(collect(resconrange), collect(resconrange), U, V, density = 0.6, color = "k", linewidth = lw)
-    return iso_plot(resconrange, par_rozmac, eff)
+    return iso_plot(resconrange, RozMacPar(e = eff))
+end
+
+function pert_cb(integrator)
+    if isapprox(integrator.u[2], 0.00000000; atol = 1e-8)
+        integrator.u[2] = 0.00000000
+    else
+        integrator.u[2] = maximum([integrator.u[2] + rand(Normal(integrator.p.μ, 0.01)), 0.0])
+    end
+end
+
+
+function RozMac_pert(ep, eff, mean, seed, tsend, tvals)
+    Random.seed!(seed)
+    par = RozMacPar()
+    par.ε = ep
+    par.e = eff
+    par.μ = mean
+    u0 = [eq_II(par)[1], eq_II(par)[2] + rand(Normal(0.0, 0.01))]
+    tspan = (0, tsend)
+    cb = PeriodicCallback(pert_cb, 1, initial_affect = false) #as of may 29th - initial_affect does not actually do the affect on the first time point
+    prob = ODEProblem(roz_mac_II!, u0, tspan, par)
+    sol = DifferentialEquations.solve(prob, callback = cb, reltol = 1e-8)
+    return solend = sol(tvals)
+end
+
+
+function pert_timeseries_plot(ep, eff, mean, seed, tsend, tvals)
+    sol = RozMac_pert(ep, eff, mean, seed, tsend, tvals)
+    return plot(sol.t, sol.u)
+end
+
+function pert_consumer_timeseries_plot(ep, eff, mean, seed, tsend, tvals)
+    sol = RozMac_pert(ep, eff, mean, seed, tsend, tvals)
+    return plot(sol.t, sol[2,:])
+end
+
+function pert_phase_plot(ep, eff, mean, seed, tsend, tvals)
+    sol = RozMac_pert(ep, eff, mean, seed, tsend, tvals)
+    return plot(sol[1, :], sol[2,:])
 end
