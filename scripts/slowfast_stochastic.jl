@@ -280,20 +280,40 @@ end
 
 
 ##### Autocorrelation analysis as efficiency changes with tiny epsilon - in stochastic
+function RozMac_pert(ep, eff, seed, tsend, tvals)
+    Random.seed!(seed)
+    par = RozMacPar()
+    par.ε = ep
+    par.e = eff
+    u0 = [eq_II(par)[1], eq_II(par)[2] * ( 1 + rand(Normal(0.0, 0.01)))]
+    tspan = (0.0, tsend)
+    tstart = 0.0
+    tend = 200.0
+    tstep = 1
+    tvals = tstart:tstep:tend
+
+    cb = PeriodicCallback(pert_cb, 1, initial_affect = false) #as of may 29th - initial_affect does not actually do the affect on the first time point
+    prob = ODEProblem(roz_mac_II!, u0, tspan, par)
+
+    sol = DifferentialEquations.solve(prob, callback = cb, reltol = 1e-8)
+
+    return solend = sol(tvals)
+end
+
 
 function acf_plot(ep, eff, sto, seed)
     Random.seed!(seed)
     par = RozMacPar()
     par.ε = ep
     par.e = eff
-    u0 = eq_II(par)
-    tspan = (0.0, 10000.0)
-    tstart = 6000
-    tend = 10000
+    u0 = [eq_II(par)[1], eq_II(par)[2] * ( 1 + rand(Normal(0.0, 0.01)))]
+    tspan = (0.0, 200.0)
+    tstart = 0.0
+    tend = 200.0
     tstep = 1
     tvals = tstart:tstep:tend
 
-    cb = PeriodicCallback(pert_cb, 1, initial_affect = true)
+    cb = PeriodicCallback(pert_cb, 1, initial_affect = false) #as of may 29th - initial_affect does not actually do the affect on the first time point
     prob = ODEProblem(roz_mac_II!, u0, tspan, par)
 
     if sto == "yes"
@@ -303,12 +323,12 @@ function acf_plot(ep, eff, sto, seed)
     end
 
     solend = sol(tvals)
-    if ep == 1.0
-        lrange = 0:1:50
-    else
-        lrange = 0:1:500
-    end
-    acf = autocor(solend[2, 1:end], collect(lrange))
+    # if ep == 1.0
+    lrange = 0:1:50
+    # else
+        # lrange = 0:1:500
+    # end
+    acf = autocor(solend[2, :], collect(lrange))
     conf = 1.96/sqrt(length(solend))
     PyPlot.bar(collect(lrange), acf)
     hlines(0 + conf, 0, maximum(lrange))
@@ -318,35 +338,48 @@ function acf_plot(ep, eff, sto, seed)
     return ylabel("ACF")
 end
 
+function timeseries(ep, eff, seed)
+    Random.seed!(seed)
+    par = RozMacPar()
+    par.ε = ep
+    par.e = eff
+    par.μ = 0.0
+    u0 = [eq_II(par)[1], eq_II(par)[2] * ( 1 + rand(Normal(0.0, 0.01)))]
+    tspan = (0.0, 200.0)
+    tstart = 1
+    tend = 200.0
+    tstep = 1
+    tvals = tstart:tstep:tend
 
-Random.seed!(seed)
-par = RozMacPar()
-par.ε = 0.01
-par.e = 0.45
-u0 = eq_II(par)
-tspan = (0.0, 10000.0)
-tstart = 6000
-tend = 10000
-tstep = 1
-tvals = tstart:tstep:tend
+    cb = PeriodicCallback(pert_cb, 1, initial_affect = false)
+    prob = ODEProblem(roz_mac_II!, u0, tspan, par)
 
-cb = PeriodicCallback(pert_cb, 1, initial_affect = true)
-prob = ODEProblem(roz_mac_II!, u0, tspan, par)
+    sol = DifferentialEquations.solve(prob, callback = cb, reltol = 1e-8)
 
-sol = DifferentialEquations.solve(prob, callback = cb, reltol = 1e-8)
+    solend = sol(tvals)
+    return plot(solend.t, solend[2,:])
+end
 
-solend = sol(tvals)
-acf = autocor(solend[2, 1:end], collect(0:1:50))
-conf = 1.96/sqrt(length(solend))
-let
-    test = figure()
-    subplot(1,2,1)
-    plot(solend.t, solend.u)
-    subplot(1,2,2)
-    bar(collect(0:1:50), acf)
-    hlines(0 + conf, 0, maximum(0:1:50))
-    hlines(0 - conf, 0, maximum(0:1:50))
-    return test
+function phase(ep, eff, seed)
+    Random.seed!(seed)
+    par = RozMacPar()
+    par.ε = ep
+    par.e = eff
+    par.μ = 0.0
+    u0 = [eq_II(par)[1], eq_II(par)[2] * ( 1 + rand(Normal(0.0, 0.01)))]
+    tspan = (0.0, 200.0)
+    tstart = 1
+    tend = 200.0
+    tstep = 1
+    tvals = tstart:tstep:tend
+
+    cb = PeriodicCallback(pert_cb, 1, initial_affect = false)
+    prob = ODEProblem(roz_mac_II!, u0, tspan, par)
+
+    sol = DifferentialEquations.solve(prob, callback = cb, reltol = 1e-8)
+
+    solend = sol(tvals)
+    return plot(solend[1, :], solend[2,:])
 end
 
 let
@@ -389,6 +422,100 @@ let
     # savefig(joinpath(abpath(), "figs/ACF.png"))
 end
 
+let
+    seed = 3
+    acfplot_ep1 = figure(figsize = (12,12))
+    subplot(4,3,1)
+    title("(A) ε = 1.0, e = 0.45, Sto")
+    acf_plot(1.0,0.45, "yes", seed)
+    subplot(4,3,2)
+    title("(B) ε = 1.0, e = 0.45, Sto")
+    timeseries(1.0, 0.45, seed)
+    subplot(4,3,3)
+    title("(C) ε = 1.0, e = 0.45, Sto")
+    phase(1.0, 0.45, seed)
+    subplot(4,3,4)
+    title("(D) ε = 1.0, e = 0.52, Sto")
+    acf_plot(1.0, 0.52, "yes", seed)
+    subplot(4,3,5)
+    title("(E) ε = 1.0, e = 0.52, Sto")
+    timeseries(1.0, 0.52, seed)
+    subplot(4,3,6)
+    title("(F) ε = 1.0, e = 0.52, Sto")
+    phase(1.0, 0.52, seed)
+    subplot(4,3,7)
+    title("(G) ε = 1.0, e = 0.53, Sto")
+    acf_plot(1.0, 0.53, "yes", seed)
+    subplot(4,3,8)
+    title("(H) ε = 1.0, e = 0.53, Sto")
+    timeseries(1.0, 0.53, seed)
+    subplot(4,3,9)
+    title("(I) ε = 1.0, e = 0.53, Sto")
+    phase(1.0, 0.53, seed)
+    subplot(4,3,10)
+    title("(J) ε = 1.0, e = 0.71, Sto")
+    acf_plot(1.0, 0.71, "yes", seed)
+    subplot(4,3,11)
+    title("(K) ε = 1.0, e = 0.71, Sto")
+    timeseries(1.0, 0.71, seed)
+    subplot(4,3,12)
+    title("(L) ε = 1.0, e = 0.71, Sto")
+    phase(1.0, 0.71, seed)
+    tight_layout()
+    # return acfplot_ep1
+    savefig(joinpath(abpath(), "figs/ACFplot_ep1.png"))
+end
+
+let
+    Random.seed!(3)
+    x = rand(Normal(0.0,0.01))
+    y =  rand(Normal(0.0,0.01),100)
+    return [x,y]
+end
+
+let
+    seed = 3
+    acfplot_ep001 = figure(figsize = (12,12))
+    subplot(4,3,1)
+    title("(A) ε = 0.01, e = 0.45, Sto")
+    acf_plot(0.01,0.45, "yes", seed)
+    subplot(4,3,2)
+    title("(B) ε = 0.01, e = 0.45, Sto")
+    timeseries(0.01, 0.45, seed)
+    subplot(4,3,3)
+    title("(C) ε = 0.01, e = 0.45, Sto")
+    phase(0.01, 0.45, seed)
+    subplot(4,3,4)
+    title("(D) ε = 0.01, e = 0.52, Sto")
+    acf_plot(0.01, 0.52, "yes", seed)
+    subplot(4,3,5)
+    title("(E) ε = 0.01, e = 0.52, Sto")
+    timeseries(0.01, 0.52, seed)
+    subplot(4,3,6)
+    title("(F) ε = 0.01, e = 0.52, Sto")
+    phase(0.01, 0.52, seed)
+    subplot(4,3,7)
+    title("(G) ε = 0.01, e = 0.53, Sto")
+    acf_plot(0.01, 0.53, "yes", seed)
+    subplot(4,3,8)
+    title("(H) ε = 0.01, e = 0.53, Sto")
+    timeseries(0.01, 0.53, seed)
+    subplot(4,3,9)
+    title("(I) ε = 0.01, e = 0.53, Sto")
+    phase(0.01, 0.53, seed)
+    subplot(4,3,10)
+    title("(J) ε = 0.01, e = 0.71, Sto")
+    acf_plot(0.01, 0.71, "yes", seed)
+    subplot(4,3,11)
+    title("(K) ε = 0.01, e = 0.71, Sto")
+    timeseries(0.01, 0.71, seed)
+    subplot(4,3,12)
+    title("(L) ε = 0.01, e = 0.71, Sto")
+    phase(0.01, 0.71, seed)
+    tight_layout()
+    # return acfplot_ep001
+    savefig(joinpath(abpath(), "figs/ACFplot_ep001.png"))
+end
 
 # Testing whether high versus low frequency pert increases probablity of canard
 # figure can change either efficiency and or frequency - four figures for four values of efficiency , x axis is frequency y axis is proportion

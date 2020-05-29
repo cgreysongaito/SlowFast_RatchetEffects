@@ -77,8 +77,8 @@ function res_iso(R, p)
 end
 
 function iso_plot(resrange, par, eff)
-    PyPlot.plot(collect(resrange), [res_iso(R, par) for R in resrange])
-    return PyPlot.plot(repeat([con_iso(eff, par)], length(resrange)),collect(resrange))
+    plot(collect(resrange), [res_iso(R, par) for R in resrange])
+    return plot(repeat([con_iso(eff, par)], length(resrange)),collect(resrange))
 end
 
 function roz_mac_plot(ep, eff)
@@ -90,5 +90,3 @@ function roz_mac_plot(ep, eff)
     streamplot(collect(resconrange), collect(resconrange), U, V, density = 0.6, color = "k", linewidth = lw)
     return iso_plot(resconrange, par_rozmac, eff)
 end
-
-println("finished loading")
