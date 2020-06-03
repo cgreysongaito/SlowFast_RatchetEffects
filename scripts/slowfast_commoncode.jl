@@ -35,7 +35,7 @@ end
 function eq_II(p)
     @unpack r, a, k, h, m, e = p
     eq_II_R = m / (a * (e - h * m))
-    eq_II_C = r * (a * h * k * (m / (a * (e - h * m))) - a * h * (m / (a * (e - h * m)))^2 + k - m / (a * (e - h * m))) / (a * k)
+    eq_II_C = r * (a * h * k * eq_II_R - a * h * eq_II_R^2 + k - eq_II_R) / (a * k)
     return vcat(eq_II_R, eq_II_C)
 end
 
@@ -91,32 +91,32 @@ function pert_cb(integrator)
 end
 
 
-function RozMac_pert(ep, eff, mean, seed, tsend, tvals)
+function RozMac_pert(ep, eff, mean, freq, seed, tsend, tvals)
     Random.seed!(seed)
     par = RozMacPar()
     par.ε = ep
     par.e = eff
     par.μ = mean
-    u0 = [eq_II(par)[1], eq_II(par)[2] + rand(Normal(0.0, 0.01))]
+    u0 = [eq_II(par)[1], eq_II(par)[2] + rand(Normal(mean, 0.01))]
     tspan = (0, tsend)
-    cb = PeriodicCallback(pert_cb, 1, initial_affect = false) #as of may 29th - initial_affect does not actually do the affect on the first time point
+    cb = PeriodicCallback(pert_cb, freq, initial_affect = false) #as of may 29th - initial_affect does not actually do the affect on the first time point
     prob = ODEProblem(roz_mac_II!, u0, tspan, par)
     sol = DifferentialEquations.solve(prob, callback = cb, reltol = 1e-8)
     return solend = sol(tvals)
 end
 
 
-function pert_timeseries_plot(ep, eff, mean, seed, tsend, tvals)
-    sol = RozMac_pert(ep, eff, mean, seed, tsend, tvals)
+function pert_timeseries_plot(ep, eff, mean, freq, seed, tsend, tvals)
+    sol = RozMac_pert(ep, eff, mean, freq, seed, tsend, tvals)
     return plot(sol.t, sol.u)
 end
 
-function pert_consumer_timeseries_plot(ep, eff, mean, seed, tsend, tvals)
-    sol = RozMac_pert(ep, eff, mean, seed, tsend, tvals)
+function pert_consumer_timeseries_plot(ep, eff, mean, freq, seed, tsend, tvals)
+    sol = RozMac_pert(ep, eff, mean, freq, seed, tsend, tvals)
     return plot(sol.t, sol[2,:])
 end
 
-function pert_phase_plot(ep, eff, mean, seed, tsend, tvals)
-    sol = RozMac_pert(ep, eff, mean, seed, tsend, tvals)
+function pert_phase_plot(ep, eff, mean, seed, freq, tsend, tvals)
+    sol = RozMac_pert(ep, eff, mean, freq, seed, tsend, tvals)
     return plot(sol[1, :], sol[2,:])
 end

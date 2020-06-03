@@ -14,7 +14,7 @@ include("slowfast_commoncode.jl")
 
 
 
-function pert_cv_plot(ep)
+function pert_cv(ep)
     evals = 0.441:0.005:0.9
     cv = fill(0.0, length(evals))
 
@@ -22,17 +22,14 @@ function pert_cv_plot(ep)
         sol = RozMac_pert(ep, eval, 0.0, 3, 10000.0, 6000.0:1.0:10000.0)
         cv[ei] = std(sol[2, :]) / mean(sol[2, :])
     end
-
-    plot(collect(evals), cv)
-    vlines([0.441,0.5225, 0.710], ymin = 0.0, ymax = 0.4, linestyles = "dashed")
-    ylabel("Consumer CV")
-    return xlabel("Efficiency (e)")
+    cv[cv .==0.0] .= NaN
+    return hcat(evals, cv)
 end
 
-function pert_mean_plot(ep)
+function pert_sdmean(ep)
     evals = 0.441:0.005:0.9
-    mn = fill(0.0, length(evals))
-    sd = fill(0.0, length(evals))
+    mn = fill(0.0, length(evals), 1)
+    sd = fill(0.0, length(evals), 1)
 
     for (ei, eval) in enumerate(evals)
         sol = RozMac_pert(ep, eval, 0.0, 3, 10000.0, 6000.0:1.0:10000.0)
@@ -40,20 +37,30 @@ function pert_mean_plot(ep)
         mn[ei] = mean(sol[2, :])
     end
 
-    plot(collect(evals), mn, label = "mean")
-    plot(collect(evals), sd, label = "sd")
-    vlines([0.441,0.5225, 0.710], ymin = 0.0, ymax = maximum(mn), linestyles = "dashed")
-    ylabel("Mean (blue), SD (orange)")
-    return xlabel("Efficiency (e)")
+    sd[sd .==0.0] .= NaN
+    mn[mn .==0.0] .= NaN
+    return hcat(evals, sd, mn)
 end
 
+pert_sdmean(1.0)
+
 let
+    cv = pert_cv(1.0)
+    sdmean = pert_sdmean(1.0)
     sto_ep1_cv_plot = figure()
     subplot(2,1,1)
-    pert_cv_plot(1.0)
+    plot(cv[:, 1], cv[:, 2])
+    vlines([0.441,0.5225, 0.710], ymin = 0.0, ymax = 0.4, linestyles = "dashed")
+    ylabel("Consumer CV")
+    xlabel("Efficiency (e)")
+
     subplot(2,1,2)
-    pert_mean_plot(1.0)
-    # annotate("TC", (50, 315), xycoords = "figure points", fontsize = 12)
+    plot(sdmean[:,1], sdmean[:, 2], label = "sd")
+    plot(sdmean[:,1], sdmean[:, 3], label = "mean")
+    vlines([0.441,0.5225, 0.710], ymin = 0.0, ymax = maximum(filter(!isnan, sdmean[:,3])), linestyles = "dashed")
+    ylabel("Mean (orange), SD (blue)")
+    xlabel("Efficiency (e)")
+    #annotate("TC", (0.2, 0.9), xycoords = "figure fraction", fontsize = 12)
     # annotate("R/C", (107, 315), xycoords = "figure points", fontsize = 12)
     # annotate("H", (250, 315), xycoords = "figure points", fontsize = 12)
     tight_layout()
@@ -62,55 +69,76 @@ let
 end
 
 let
+    cv = pert_cv(0.01)
+    sdmean = pert_sdmean(0.01)
     sto_eptiny_cv_plot = figure()
     subplot(2,1,1)
-    pert_cv_plot(0.01)
+    plot(cv[:, 1], cv[:, 2])
+    vlines([0.441,0.5225, 0.710], ymin = 0.0, ymax = 0.4, linestyles = "dashed")
+    ylabel("Consumer CV")
+    xlabel("Efficiency (e)")
+
     subplot(2,1,2)
-    pert_mean_plot(0.01)
+    plot(sdmean[:,1], sdmean[:, 2], label = "sd")
+    plot(sdmean[:,1], sdmean[:, 3], label = "mean")
+    vlines([0.441,0.5225, 0.710], ymin = 0.0, ymax = maximum(filter(!isnan, sdmean[:,3])), linestyles = "dashed")
+    ylabel("Mean (orange), SD (blue)")
+    xlabel("Efficiency (e)")
     # annotate("TC", (50, 315), xycoords = "figure points", fontsize = 12)
     # annotate("R/C", (107, 315), xycoords = "figure points", fontsize = 12)
     # annotate("H", (250, 315), xycoords = "figure points", fontsize = 12)
     tight_layout()
-    return sto_eptiny_cv_plot
-    # savefig(joinpath(abpath(), "figs/sto_eptiny_cv_plot.png"))
+    # return sto_eptiny_cv_plot
+    savefig(joinpath(abpath(), "figs/sto_eptiny_cv_plot.png"))
 end
 
 
-function pert_con_minmax_plot(ep, stand)
+function pert_con_minmax(ep)
     evals = 0.441:0.005:0.9
     min_con = fill(0.0, length(evals))
     max_con = fill(0.0, length(evals))
+    min_con_stand = fill(0.0, length(evals))
+    max_con_stand = fill(0.0, length(evals))
 
     for (ei, eval) in enumerate(evals)
         sol = RozMac_pert(ep, eval, 0.0, 3, 10000.0, 6000.0:1.0:10000.0)
-        if stand == "standardized"
-            min_con[ei] = minimum(sol[2,:]) / eq_II(RozMacPar(e = eval))[2]
-            max_con[ei] = maximum(sol[2,:]) / eq_II(RozMacPar(e = eval))[2]
-        else
-            min_con[ei] = minimum(sol[2,:])
-            max_con[ei] = maximum(sol[2,:])
-        end
+        min_con[ei] = minimum(sol[2,:])
+        max_con[ei] = maximum(sol[2,:])
+        min_con_stand[ei] = minimum(sol[2,:]) / eq_II(RozMacPar(e = eval))[2]
+        max_con_stand[ei] = maximum(sol[2,:]) / eq_II(RozMacPar(e = eval))[2]
     end
 
-    scatter(collect(evals), min_con)
-    scatter(collect(evals), max_con)
-    vlines([0.441,0.5225, 0.710], ymin = 0.0, ymax = maximum(max_con), linestyles = "dashed")
-    return xlabel("Efficiency (e)")
+    min_con[min_con .== 0.0] .= NaN
+    max_con[max_con .== 0.0] .= NaN
+    min_con_stand[min_con_stand .== 0.0] .= NaN
+    max_con_stand[max_con_stand .== 0.0] .= NaN
+    return hcat(evals, min_con, max_con, min_con_stand, max_con_stand)
 end
 
+pert_con_minmax(0.01)
+
 let
+    data = pert_con_minmax(0.01)
     conminmax_plot = figure()
     subplot(2,1,1)
-    pert_con_minmax_plot(0.01, "no")
+    scatter(data[:,1], data[:, 2])
+    scatter(data[:,1], data[:, 3])
+    vlines([0.441,0.5225, 0.710], ymin = 0.0, ymax = maximum(filter(!isnan, data[:,3])), linestyles = "dashed")
+    xlabel("Efficiency (e)")
     ylabel("Consumer Min/Max")
+
     subplot(2,1,2)
-    pert_con_minmax_plot(0.01, "standardized")
+    scatter(data[:,1], data[:, 4])
+    scatter(data[:,1], data[:, 5])
+    vlines([0.441,0.5225, 0.710], ymin = 0.0, ymax = maximum(filter(!isnan, data[:,5])), linestyles = "dashed")
+    xlabel("Efficiency (e)")
     ylabel("Consumer Min/Max \n Standardized by equilibrium values")
     # annotate("TC", (50, 350), xycoords = "figure points", fontsize = 12)
     # annotate("R/C", (107, 350), xycoords = "figure points", fontsize = 12)
     # annotate("H", (250, 350), xycoords = "figure points", fontsize = 12)
     tight_layout()
-    return conminmax_plot
+    # return conminmax_plot
+    savefig(joinpath(abpath(), "figs/consumer_minmax_pert.png"))
 end
 
 let
@@ -127,7 +155,7 @@ let
 end
 
 
-# Create plots of con-res stochastic model before imag numbers (and before hopf)
+# Create plots of con-res stochastic model before/after imag numbers (and before hopf)
 function findRCdivide_effx(eff)
     par = RozMacPar()
     par.e = eff
@@ -145,6 +173,7 @@ function findRCdivide_effx(eff)
 end
 
 findRCdivide_effx(0.55)
+
 
 function phase_epgradient_plot(ep, eff, mean, seed, tsend, tvals)
     pert_phase_plot(ep, eff, mean, seed, tsend, tvals)
@@ -191,9 +220,10 @@ let
 end
 # are we flipping where ACF and white noise should be found - looks like white noise found when eigenvalues have complex - something seems wrong
 
+# Figure showing stochastic canards can be created before the Hopf when ep = 0.01
 let
     mean = 0.0
-    seed = 2
+    seed = 3
     tsend = 10000.0
     tvals = 1000.0:1.0:10000.0
     sto_canard = figure(figsize = (5,12))
@@ -218,8 +248,8 @@ end
 ##### Autocorrelation analysis as efficiency changes with tiny epsilon - in stochastic
 
 
-function acf_plot(lrange, ep, eff, seed, tsend, tvals)
-    sol = RozMac_pert(ep, eff, seed, tsend, tvals)
+function acf_plot(lrange, ep, eff, mean, freq, seed, tsend, tvals)
+    sol = RozMac_pert(ep, eff, mean, freq, seed, tsend, tvals)
     acf = autocor(sol[2, :], collect(lrange))
     conf = 1.96/sqrt(length(sol))
     PyPlot.bar(collect(lrange), acf)
@@ -230,135 +260,110 @@ function acf_plot(lrange, ep, eff, seed, tsend, tvals)
     return ylabel("ACF")
 end
 
-let
-    seed = 3
-    acfplot = figure(figsize = (8,12))
-    subplot(5,2,1)
-    title("(A) ε = 1.0, e = 0.45, Sto")
-    acf_plot(1.0,0.45, "yes", seed)
-    subplot(5,2,2)
-    title("(B) ε = 0.01, e = 0.45, Sto")
-    acf_plot(0.01,0.45, "yes", seed)
-    subplot(5,2,3)
-    title("(C) ε = 1.0, e = 0.52, Sto")
-    acf_plot(1.0,0.52, "yes", seed)
-    subplot(5,2,4)
-    title("(D) ε = 0.01, e = 0.52, Sto")
-    acf_plot(0.01,0.52, "yes", seed)
-    subplot(5,2,5)
-    title("(E) ε = 1.0, e = 0.53, Sto")
-    acf_plot(1.0, 0.53, "yes", seed)
-    subplot(5,2,6)
-    title("(F) ε = 0.01, e = 0.53, Sto")
-    acf_plot(0.01, 0.53, "yes", seed)
-    subplot(5,2,7)
-    title("(G) ε = 1.0, e = 0.71, Sto")
-    acf_plot(1.0, 0.71, "yes", seed)
-    subplot(5,2,8)
-    title("(H) ε = 0.01, e = 0.71, Sto")
-    acf_plot(0.01, 0.71, "yes", seed)
-    subplot(5,2,9)
-    title("(I) ε = 1.0, e = 1.0, Det")
-    acf_plot(1.0, 1.0, "no", seed)
-    subplot(5,2,10)
-    title("(J) ε = 0.01, e = 1.0, Det")
-    acf_plot(0.01, 1.0, "no", seed)
-    # annotate("R/C", (515, 405), xycoords = "figure points", fontsize = 12)
-    # annotate("Hopf", (515, 180), xycoords = "figure points", fontsize = 12)
-    tight_layout()
-    return acfplot
-    # savefig(joinpath(abpath(), "figs/ACF.png"))
-end
 
 let
-    seed = 3
-    acfplot_ep1 = figure(figsize = (12,12))
-    subplot(4,3,1)
-    title("(A) ε = 1.0, e = 0.45, Sto")
-    acf_plot(1.0,0.45, "yes", seed)
-    subplot(4,3,2)
-    title("(B) ε = 1.0, e = 0.45, Sto")
-    timeseries(1.0, 0.45, seed)
-    subplot(4,3,3)
-    title("(C) ε = 1.0, e = 0.45, Sto")
-    phase(1.0, 0.45, seed)
-    subplot(4,3,4)
-    title("(D) ε = 1.0, e = 0.52, Sto")
-    acf_plot(1.0, 0.52, "yes", seed)
-    subplot(4,3,5)
-    title("(E) ε = 1.0, e = 0.52, Sto")
-    timeseries(1.0, 0.52, seed)
-    subplot(4,3,6)
-    title("(F) ε = 1.0, e = 0.52, Sto")
-    phase(1.0, 0.52, seed)
-    subplot(4,3,7)
-    title("(G) ε = 1.0, e = 0.53, Sto")
-    acf_plot(1.0, 0.53, "yes", seed)
-    subplot(4,3,8)
-    title("(H) ε = 1.0, e = 0.53, Sto")
-    timeseries(1.0, 0.53, seed)
-    subplot(4,3,9)
-    title("(I) ε = 1.0, e = 0.53, Sto")
-    phase(1.0, 0.53, seed)
-    subplot(4,3,10)
-    title("(J) ε = 1.0, e = 0.71, Sto")
-    acf_plot(1.0, 0.71, "yes", seed)
-    subplot(4,3,11)
-    title("(K) ε = 1.0, e = 0.71, Sto")
-    timeseries(1.0, 0.71, seed)
-    subplot(4,3,12)
-    title("(L) ε = 1.0, e = 0.71, Sto")
-    phase(1.0, 0.71, seed)
-    tight_layout()
-    # return acfplot_ep1
-    savefig(joinpath(abpath(), "figs/ACFplot_ep1.png"))
-end
-
-let
+    mean = 0.0
+    freq = 1
     seed = 3
     tsend = 10000.0
     tvals = 5000.0:100.0:10000.0
     lrange = 0:1:50
     acfplot_ep001 = figure(figsize = (12,12))
     subplot(4,3,1)
-    title("(A) ε = 0.01, e = 0.45, Sto")
-    acf_plot(lrange, 0.01, 0.45, seed, tsend, tvals)
+    title("(A) ε = 0.01, e = 0.46, Sto")
+    acf_plot(lrange, 0.01, 0.46, mean, freq, seed, tsend, tvals)
     subplot(4,3,2)
-    title("(B) ε = 0.01, e = 0.45, Sto")
-    pert_timeseries(0.01, 0.45, seed, tsend, tvals)
+    title("(B) ε = 0.01, e = 0.46, Sto")
+    pert_consumer_timeseries_plot(0.01, 0.46, mean, freq, seed, tsend, tvals)
     subplot(4,3,3)
-    title("(C) ε = 0.01, e = 0.45, Sto")
-    pert_phase(0.01, 0.45, seed, tsend, tvals)
+    title("(C) ε = 0.01, e = 0.46, Sto")
+    pert_phase_plot(0.01, 0.46, mean, freq,  seed, tsend, tvals)
     subplot(4,3,4)
     title("(D) ε = 0.01, e = 0.52, Sto")
-    acf_plot(lrange, 0.01, 0.52, seed, tsend, tvals)
+    acf_plot(lrange, 0.01, 0.52, mean, freq,  seed, tsend, tvals)
     subplot(4,3,5)
     title("(E) ε = 0.01, e = 0.52, Sto")
-    pert_timeseries(0.01, 0.52, seed, tsend, tvals)
+    pert_consumer_timeseries_plot(0.01, 0.52, mean, freq,  seed, tsend, tvals)
     subplot(4,3,6)
     title("(F) ε = 0.01, e = 0.52, Sto")
-    pert_phase(0.01, 0.52, seed, tsend, tvals)
+    pert_phase_plot(0.01, 0.52, mean, freq, seed, tsend, tvals)
     subplot(4,3,7)
     title("(G) ε = 0.01, e = 0.53, Sto")
-    acf_plot(lrange, 0.01, 0.53, seed, tsend, tvals)
+    acf_plot(lrange, 0.01, 0.53, mean, freq, seed, tsend, tvals)
     subplot(4,3,8)
     title("(H) ε = 0.01, e = 0.53, Sto")
-    pert_timeseries(0.01, 0.53, seed, tsend, tvals)
+    pert_consumer_timeseries_plot(0.01, 0.53, mean, freq, seed, tsend, tvals)
     subplot(4,3,9)
     title("(I) ε = 0.01, e = 0.53, Sto")
-    pert_phase(0.01, 0.53, seed, tsend, tvals)
+    pert_phase_plot(0.01, 0.53, mean, freq, seed, tsend, tvals)
     subplot(4,3,10)
     title("(J) ε = 0.01, e = 0.71, Sto")
-    acf_plot(lrange, 0.01, 0.71, seed, tsend, tvals)
+    acf_plot(lrange, 0.01, 0.71, mean, freq, seed, tsend, tvals)
     subplot(4,3,11)
     title("(K) ε = 0.01, e = 0.71, Sto")
-    pert_timeseries(0.01, 0.71, seed, tsend, tvals)
+    pert_consumer_timeseries_plot(0.01, 0.71, mean, freq, seed, tsend, tvals)
     subplot(4,3,12)
     title("(L) ε = 0.01, e = 0.71, Sto")
-    pert_phase(0.01, 0.71, seed, tsend, tvals)
+    pert_phase_plot(0.01, 0.71, mean, freq, seed, tsend, tvals)
     tight_layout()
     return acfplot_ep001
     # savefig(joinpath(abpath(), "figs/ACFplot_ep001.png"))
+end
+
+let
+    mean = 0.0
+    freq = 1
+    seed = 3
+    tsend = 30000.0
+    tvals = 5000.0:500.0:tsend
+    lrange = 0:1:50
+    eff = 0.51
+    test = figure()
+    subplot(3,1,1)
+    title("(J) ε = 0.01, e = 0.6, Sto")
+    acf_plot(lrange, 0.01, eff, mean, freq, seed, tsend, tvals)
+    subplot(3,1,2)
+    title("(K) ε = 0.01, e = 0.57, Sto")
+    pert_consumer_timeseries_plot(0.01, eff, mean, freq, seed, tsend, tvals)
+    subplot(3,1,3)
+    title("(L) ε = 0.01, e = 0.57, Sto")
+    pert_phase_plot(0.01, eff, mean, freq, seed, tsend, tvals)
+    tight_layout()
+    return test
+end
+
+# Testing whether see ACF structure in resource or closer to white noise - prediction closer to white noise because on faster time scale
+# I was wrong - looks pretty similar between resources and consumers - WHY? but is time scale of ACF presently obscuring short time scale of resources?
+function acf_res_plot(lrange, ep, eff, mean, freq, seed, tsend, tvals)
+    sol = RozMac_pert(ep, eff, mean, freq, seed, tsend, tvals)
+    acf = autocor(sol[1, :], collect(lrange))
+    conf = 1.96/sqrt(length(sol))
+    PyPlot.bar(collect(lrange), acf)
+    hlines(0 + conf, 0, maximum(lrange))
+    hlines(0 - conf, 0, maximum(lrange))
+    ylim(-1,1)
+    xlabel("Lag")
+    return ylabel("ACF")
+end
+
+let
+    mean = 0.0
+    freq = 1
+    seed = 3
+    tsend = 10000.0
+    tvals = 9900.0:1.0:tsend
+    lrange = 0:1:50
+    eff = 0.51
+    test = figure()
+    subplot(4, 1, 1)
+    acf_res_plot(lrange, 0.01, eff, mean, freq, seed, tsend, tvals)
+    subplot(4, 1, 2)
+    acf_plot(lrange, 0.01, eff, mean, freq, seed, tsend, tvals)
+    subplot(4, 1, 3)
+    pert_timeseries_plot(0.01, eff, mean, freq, seed, tsend, tvals)
+    subplot(4, 1, 4)
+    pert_phase_plot(0.01, eff, mean, freq, seed, tsend, tvals)
+    return test
 end
 
 # Testing whether high versus low frequency pert increases probablity of canard
@@ -371,7 +376,7 @@ function canard_proportion(repeat, ep, eff, mean, tsend, tvals)
     for (freq_i, freq_val) in enumerate(freq_vals)
         canard_count = 0
         for j in 1:repeat
-            sol = RozMac_pert(ep, eff, mean, rand(1:100000), tsend, tvals)
+            sol = RozMac_pert(ep, eff, mean, freq_val, rand(1:100000), tsend, tvals)
 
             for k in 1:length(sol)
                 if 0 < sol.u[j][2] < 1.6 && 0 < sol.u[j][1] < 1.6
@@ -425,8 +430,51 @@ let
 end
 
 
+## Testing whether ep = 0.01 with initial perturbation (and no futher pert) returns to equilibrium
+
+function RozMac_initial_pert(ep, eff, mean, seed, tsend, tvals)
+    Random.seed!(seed)
+    par = RozMacPar()
+    par.ε = ep
+    par.e = eff
+    par.μ = mean
+    u0 = [eq_II(par)[1], eq_II(par)[2] + rand(Normal(mean, 0.01))]
+    tspan = (0, tsend)
+    prob = ODEProblem(roz_mac_II!, u0, tspan, par)
+    sol = DifferentialEquations.solve(prob, reltol = 1e-8)
+    println(eq_II(par))
+    println(u0)
+    return solend = sol(tvals)
+end
+
+let
+    tsend = 75.0
+    sol = RozMac_initial_pert(1, 0.59, 0.0, 3, tsend, 0.0:1.0:tsend)
+    test = figure()
+    plot(sol.t, sol[2, :])
+    return test
+end
+
+## Exploring whether can increase signal of white noise if match pertubation frequency to length of time takes to return to equilibrium (and ACF time steps)
+let
+    mean = 0.0
+    seed = 3
+    tsend = 500.0
+    lrange = 0:1:15
+    test = figure()
+    subplot(4,1,1)
+    acf_plot(lrange, 1.0, 0.52, mean, 30, seed, tsend, 0.0:28.0:tsend)
+    subplot(4,1,2)
+    acf_plot(lrange, 1.0, 0.52, mean, 30, seed, tsend, 0.0:4.0:tsend)
+    subplot(4, 1, 3)
+    pert_consumer_timeseries_plot(1.0, 0.52, mean, 30, seed, tsend, 0.0:26.0:tsend)
+    subplot(4, 1, 4)
+    pert_consumer_timeseries_plot(1.0, 0.52, mean, 30, seed, tsend, 0.0:4.0:tsend)
+    return test
+end
 
 #### Old code - not sure if want
+
 # let #examining e = 0.52 and ep = 0.01 seeing whether close to zero
 #     par = RozMacPar()
 #     par.ε = 0.01
