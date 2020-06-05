@@ -42,8 +42,6 @@ function pert_sdmean(ep)
     return hcat(evals, sd, mn)
 end
 
-pert_sdmean(1.0)
-
 let
     cv = pert_cv(1.0)
     sdmean = pert_sdmean(1.0)
@@ -115,8 +113,6 @@ function pert_con_minmax(ep)
     return hcat(evals, min_con, max_con, min_con_stand, max_con_stand)
 end
 
-pert_con_minmax(0.01)
-
 let
     data = pert_con_minmax(0.01)
     conminmax_plot = figure()
@@ -139,19 +135,6 @@ let
     tight_layout()
     # return conminmax_plot
     savefig(joinpath(abpath(), "figs/consumer_minmax_pert.png"))
-end
-
-let
-    sto_epboth_fig = figure()
-    subplot(2,1,1)
-    title("ε = 1")
-    pert_timeseries_plot(1.0, 0.5, 0.0, 3, 10000.0, 6000.0:1.0:10000.0)
-    subplot(2,1,2)
-    title("ε = 0.01")
-    pert_timeseries_plot(0.01, 0.5, 0.0, 3, 10000.0, 6000.0:1.0:10000.0)
-    tight_layout()
-    return sto_epboth_fig
-    #savefig(joinpath(abpath(), "figs/" * string(eff) * "sto.png"))
 end
 
 
@@ -306,30 +289,8 @@ let
     title("(L) ε = 0.01, e = 0.71, Sto")
     pert_phase_plot(0.01, 0.71, mean, freq, seed, tsend, tvals)
     tight_layout()
-    return acfplot_ep001
-    # savefig(joinpath(abpath(), "figs/ACFplot_ep001.png"))
-end
-
-let
-    mean = 0.0
-    freq = 1
-    seed = 3
-    tsend = 30000.0
-    tvals = 5000.0:500.0:tsend
-    lrange = 0:1:50
-    eff = 0.51
-    test = figure()
-    subplot(3,1,1)
-    title("(J) ε = 0.01, e = 0.6, Sto")
-    acf_plot(lrange, 0.01, eff, mean, freq, seed, tsend, tvals)
-    subplot(3,1,2)
-    title("(K) ε = 0.01, e = 0.57, Sto")
-    pert_consumer_timeseries_plot(0.01, eff, mean, freq, seed, tsend, tvals)
-    subplot(3,1,3)
-    title("(L) ε = 0.01, e = 0.57, Sto")
-    pert_phase_plot(0.01, eff, mean, freq, seed, tsend, tvals)
-    tight_layout()
-    return test
+    # return acfplot_ep001
+    savefig(joinpath(abpath(), "figs/ACFplot_ep001.png"))
 end
 
 # Testing whether see ACF structure in resource or closer to white noise - prediction closer to white noise because on faster time scale
@@ -425,8 +386,8 @@ let
     xlabel("Perturbation frequency")
     ylabel("Proportion")
     tight_layout()
-    return canard_prop_plot
-    # savefig(joinpath(abpath(), "figs/perturbation_canard_proprtion.png"))
+    # return canard_prop_plot
+    savefig(joinpath(abpath(), "figs/perturbation_canard_proportion.png"))
 end
 
 
@@ -455,21 +416,65 @@ let
     return test
 end
 
-## Exploring whether can increase signal of white noise if match pertubation frequency to length of time takes to return to equilibrium (and ACF time steps)
+## Could you see canard (oscilattory structure) in ACF for e = 0.46 and ep = 0.01
+# Answer yes when mean of pert large enough
+let
+    mean = 0.002
+    seed = 3
+    tsend = 10000.0
+    tvals = 0.0:100.0:tsend
+    lrange = 0:1:50
+    freq = 1
+    test = figure()
+    subplot(3,1,1)
+    acf_plot(lrange, 0.01, 0.46, mean, freq, seed, tsend, tvals)
+    subplot(3,1,2)
+    pert_timeseries_plot(0.01, 0.46, mean, freq, seed, tsend, tvals)
+    subplot(3, 1, 3)
+    pert_phase_plot(0.01, 0.46, mean, freq, seed, tsend, tvals)
+    tight_layout()
+    # return test
+    savefig(joinpath(abpath(), "figs/perturbation_eff046ep001mean0002.png"))
+end
+
+# Can you see oscillations and autocorelation outside of initial small lags even when eff is small
+# answer yes
 let
     mean = 0.0
     seed = 3
+    tsend = 30000.0
+    tvals = 6000.0:500.0:tsend
+    lrange = 0:1:25
+    freq = 1
+    test = figure()
+    subplot(3,1,1)
+    acf_plot(lrange, 0.01, 0.48, mean, freq, seed, tsend, tvals)
+    subplot(3,1,2)
+    pert_timeseries_plot(0.01, 0.48, mean, freq, seed, tsend, tvals)
+    subplot(3, 1, 3)
+    pert_phase_plot(0.01, 0.48, mean, freq, seed, tsend, tvals)
+    tight_layout()
+    # return test
+    savefig(joinpath(abpath(), "figs/perturbation_acfoscillations_eff048.png"))
+end
+
+
+## Exploring whether can increase signal of white noise if match pertubation frequency to length of time takes to return to equilibrium (and ACF time steps)
+let
+    mean = 0.0
+    seed = 1234
     tsend = 500.0
     lrange = 0:1:15
     test = figure()
     subplot(4,1,1)
-    acf_plot(lrange, 1.0, 0.52, mean, 30, seed, tsend, 0.0:28.0:tsend)
+    acf_plot(lrange, 1.0, 0.52, mean, 30, seed, tsend, 0.0:31.0:tsend)
     subplot(4,1,2)
-    acf_plot(lrange, 1.0, 0.52, mean, 30, seed, tsend, 0.0:4.0:tsend)
+    acf_plot(lrange, 1.0, 0.52, mean, 30, seed, tsend, 0.0:1.0:tsend)
     subplot(4, 1, 3)
-    pert_consumer_timeseries_plot(1.0, 0.52, mean, 30, seed, tsend, 0.0:26.0:tsend)
+    pert_consumer_timeseries_plot(1.0, 0.52, mean, 30, seed, tsend, 0.0:31.0:tsend)
     subplot(4, 1, 4)
-    pert_consumer_timeseries_plot(1.0, 0.52, mean, 30, seed, tsend, 0.0:4.0:tsend)
+    pert_consumer_timeseries_plot(1.0, 0.52, mean, 30, seed, tsend, 0.0:1.0:tsend)
+    tight_layout()
     return test
 end
 

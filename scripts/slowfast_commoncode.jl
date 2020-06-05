@@ -108,15 +108,19 @@ end
 
 function pert_timeseries_plot(ep, eff, mean, freq, seed, tsend, tvals)
     sol = RozMac_pert(ep, eff, mean, freq, seed, tsend, tvals)
-    return plot(sol.t, sol.u)
+    plot(sol.t, sol.u)
+    return ylabel("Resource & \n Consumer Biomass")
 end
 
 function pert_consumer_timeseries_plot(ep, eff, mean, freq, seed, tsend, tvals)
     sol = RozMac_pert(ep, eff, mean, freq, seed, tsend, tvals)
-    return plot(sol.t, sol[2,:])
+    plot(sol.t, sol[2, :])
+    return ylabel("Consumer biomass")
 end
 
-function pert_phase_plot(ep, eff, mean, seed, freq, tsend, tvals)
+function pert_phase_plot(ep, eff, mean, freq, seed, tsend, tvals)
     sol = RozMac_pert(ep, eff, mean, freq, seed, tsend, tvals)
-    return plot(sol[1, :], sol[2,:])
+    plot(sol[1, :], sol[2, :])
+    xlabel("Resource")
+    return ylabel("Consumer")
 end
