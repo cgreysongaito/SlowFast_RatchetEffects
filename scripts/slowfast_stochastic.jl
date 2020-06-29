@@ -1,14 +1,4 @@
-let
-    using Parameters
-    using LinearAlgebra
-    using Calculus
-    using DifferentialEquations
-    using ForwardDiff
-    using Distributions
-    using StatsBase
-    using Random
-    using PyPlot
-end
+include("packages.jl")
 
 include("slowfast_commoncode.jl")
 
@@ -367,20 +357,20 @@ let
     ylabel("Proportion")
     subplot(3,1,2)
     title("(B) Perturbation μ = 0.0001")
-    scatter(1.0:0.5:10.0, canard_proportion(100, 0.01, 0.46, 0.001, tsend, tvals), label = "e = 0.46")
-    scatter(1.0:0.5:10.0, canard_proportion(100, 0.01, 0.53, 0.001, tsend, tvals), label = "e = 0.53")
-    scatter(1.0:0.5:10.0, canard_proportion(100, 0.01, 0.6, 0.001, tsend, tvals), label = "e = 0.6")
-    scatter(1.0:0.5:10.0, canard_proportion(100, 0.01, 0.71, 0.001, tsend, tvals), label = "e = 0.71")
+    scatter(1.0:0.5:10.0, canard_proportion(100, 0.01, 0.46, 0.0001, tsend, tvals), label = "e = 0.46")
+    scatter(1.0:0.5:10.0, canard_proportion(100, 0.01, 0.53, 0.0001, tsend, tvals), label = "e = 0.53")
+    scatter(1.0:0.5:10.0, canard_proportion(100, 0.01, 0.6, 0.0001, tsend, tvals), label = "e = 0.6")
+    scatter(1.0:0.5:10.0, canard_proportion(100, 0.01, 0.71, 0.0001, tsend, tvals), label = "e = 0.71")
     legend()
     ylim(0.0,0.22)
     xlabel("Perturbation frequency")
     ylabel("Proportion")
     subplot(3,1,3)
     title("(C) Perturbation μ = 0.0002")
-    scatter(1.0:0.5:10.0, canard_proportion(100, 0.01, 0.46, 0.002, tsend, tvals), label = "e = 0.46")
-    scatter(1.0:0.5:10.0, canard_proportion(100, 0.01, 0.53, 0.001, tsend, tvals), label = "e = 0.53")
-    scatter(1.0:0.5:10.0, canard_proportion(100, 0.01, 0.6, 0.001, tsend, tvals), label = "e = 0.6")
-    scatter(1.0:0.5:10.0, canard_proportion(100, 0.01, 0.71, 0.001, tsend, tvals), label = "e = 0.71")
+    scatter(1.0:0.5:10.0, canard_proportion(100, 0.01, 0.46, 0.0002, tsend, tvals), label = "e = 0.46")
+    scatter(1.0:0.5:10.0, canard_proportion(100, 0.01, 0.53, 0.0002, tsend, tvals), label = "e = 0.53")
+    scatter(1.0:0.5:10.0, canard_proportion(100, 0.01, 0.6, 0.0002, tsend, tvals), label = "e = 0.6")
+    scatter(1.0:0.5:10.0, canard_proportion(100, 0.01, 0.71, 0.0002, tsend, tvals), label = "e = 0.71")
     legend()
     ylim(0.0,0.22)
     xlabel("Perturbation frequency")

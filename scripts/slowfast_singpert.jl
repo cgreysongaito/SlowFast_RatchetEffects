@@ -108,7 +108,7 @@ let
     plot(before_trans_cvals, roz_mac_C_bifurc(par_rozmacC, before_trans_cvals)[1][:,2], color = "black", linestyle = "solid")
     plot(after_trans_cvals, roz_mac_C_bifurc(par_rozmacC, after_trans_cvals)[1][:,2], color = "black", linestyle = "dashed")
     plot(fullcvals, roz_mac_C_bifurc(par_rozmacC, fullcvals)[1][:,3], color  = "black")
-    plot(fullcvals, fill(con_iso(RozMacPar(e = 0.79)), length(fullcvals)))
+    plot(fullcvals, fill(con_iso(RozMacPar(e = 0.46)), length(fullcvals)))
     ylabel("Resource")
     xlabel("Consumer")
     return sing_pert
