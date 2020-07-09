@@ -1,13 +1,35 @@
 include("packages.jl")
 include("slowfast_commoncode.jl")
 
+@vars R C r a h e m k ε
+
+function percapR(equ)
+    return eval(Expr(:call, :(/), equ, :R))
+end
+
+function percapC(equ)
+    return eval(Expr(:call, :(/), equ, :C))
+end
+
 # Type II
 
 #With ε
-Calculus.simplify(differentiate("r * R * (1 - R / k) - a * R * C / (1 + a * h * R)", :R))
-Calculus.simplify(differentiate("r * R * (1 - R / k) - a * R * C / (1 + a * h * R)", :C))
-Calculus.simplify(differentiate("ε * ( e * a * R * C / (1 + a * h * R) - m * C )", :R))
-Calculus.simplify(differentiate("ε * ( e * a * R * C / (1 + a * h * R) - m * C )", :C))
+Calculus.simplify(percapR(differentiate("r * R * (1 - R / k) - a * R * C / (1 + a * h * R)", :R)))
+Calculus.simplify(percapR(differentiate("r * R * (1 - R / k) - a * R * C / (1 + a * h * R)", :C)))
+Calculus.simplify(percapC(differentiate("ε * ( e * a * R * C / (1 + a * h * R) - m * C )", :R)))
+Calculus.simplify(percapC(differentiate("ε * ( e * a * R * C / (1 + a * h * R) - m * C )", :C)))
+
+#Without ε
+Calculus.simplify(percapR(differentiate("r * R * (1 - R / k) - a * R * C / (1 + a * h * R)", :R)))
+Calculus.simplify(percapR(differentiate("r * R * (1 - R / k) - a * R * C / (1 + a * h * R)", :C)))
+Calculus.simplify(percapC(differentiate("e * a * R * C / (1 + a * h * R) - m * C", :R)))
+Calculus.simplify(percapC(differentiate("e * a * R * C / (1 + a * h * R) - m * C", :C)))
+
+#Without ep and e
+Calculus.simplify(percapR(differentiate("r * R * (1 - R / k) - a * R * C / (1 + a * h * R)", :R)))
+Calculus.simplify(percapR(differentiate("r * R * (1 - R / k) - a * R * C / (1 + a * h * R)", :C)))
+Calculus.simplify(percapC(differentiate("a * R * C / (1 + a * h * R) - m * C", :R)))
+Calculus.simplify(percapC(differentiate("a * R * C / (1 + a * h * R) - m * C", :C)))
 
 function jac_rozmac(p, R, C)
     @vars ε
@@ -24,12 +46,6 @@ jac_rozmac(par_rozmac, eq_II(par_rozmac)[1], eq_II(par_rozmac)[2])
 
 jac_rozmac(par_rozmac, 0, 0)
 
-#Without ε
-Calculus.simplify(differentiate("r * R * (1 - R / k) - a * R * C / (1 + a * h * R)", :R))
-Calculus.simplify(differentiate("r * R * (1 - R / k) - a * R * C / (1 + a * h * R)", :C))
-Calculus.simplify(differentiate("e * a * R * C / (1 + a * h * R) - m * C", :R))
-Calculus.simplify(differentiate("e * a * R * C / (1 + a * h * R) - m * C", :C))
-
 function jac_rozmac_woep(p, R, C)
     @vars ε
     @unpack r, k, a, h, e, m = p
@@ -44,13 +60,6 @@ end
 jac_rozmac_woep(par_rozmac, eq_II(par_rozmac)[1], eq_II(par_rozmac)[2])
 
 jac_rozmac_woep(par_rozmac, 0, 0)
-
-
-#Without ep and e
-Calculus.simplify(differentiate("r * R * (1 - R / k) - a * R * C / (1 + a * h * R)", :R))
-Calculus.simplify(differentiate("r * R * (1 - R / k) - a * R * C / (1 + a * h * R)", :C))
-Calculus.simplify(differentiate("a * R * C / (1 + a * h * R) - m * C", :R))
-Calculus.simplify(differentiate("a * R * C / (1 + a * h * R) - m * C", :C))
 
 function jac_rozmac_woepe(p)
     @vars ε R C
@@ -68,3 +77,20 @@ jac_rozmac_woepe(par_rozmac)
 jac_rozmac_woepe(par_rozmac, 0, 0)
 
 #Type I
+# with e and ep
+Calculus.simplify(percapR(differentiate("r * R * (1 - R / k) - a * R * C", :R)))
+Calculus.simplify(percapR(differentiate("r * R * (1 - R / k) - a * R * C", :C)))
+Calculus.simplify(percapC(differentiate("ε * ( e * a * R * C - m * C )", :R)))
+Calculus.simplify(percapC(differentiate("ε * ( e * a * R * C - m * C )", :C)))
+
+#with e, not ep,
+Calculus.simplify(percapR(differentiate("r * R * (1 - R / k) - a * R * C", :R)))
+Calculus.simplify(percapR(differentiate("r * R * (1 - R / k) - a * R * C", :C)))
+Calculus.simplify(percapC(differentiate("e * a * R * C - m * C", :R)))
+Calculus.simplify(percapC(differentiate("e * a * R * C - m * C", :C)))
+
+#witout e and ep
+Calculus.simplify(percapR(differentiate("r * R * (1 - R / k) - a * R * C", :R)))
+Calculus.simplify(percapR(differentiate("r * R * (1 - R / k) - a * R * C", :C)))
+Calculus.simplify(percapC(differentiate("a * R * C - m * C", :R)))
+Calculus.simplify(percapC(differentiate("a * R * C - m * C", :C)))
