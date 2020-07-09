@@ -15,3 +15,17 @@ SymPy.solve(g(x,y),y)
 c(e) = ( 0.4 / (1.1 * (e - 0.8 * 0.4)) ) - 3
 
 SymPy.solve(c(e),e)
+
+
+
+#Find isoclines of Type I
+@vars R C
+@vars r k a m e
+
+f(R, C) = r * R * (1 - R / k) - a * R * C
+g(R ,C) = e * a * R * C - m * R
+
+SymPy.solve(f(R,C),R)
+SymPy.solve(f(R,C),C)
+SymPy.solve(g(R,C),R)
+SymPy.solve(g(R,C),C)
