@@ -31,10 +31,10 @@ end
 # Type II
 
 #With ε and e
-jac11_II = differentiate("r * R * (1 - R / k) - a * R * C / (1 + a * h * R)", :R)
-jac12_II = differentiate("r * R * (1 - R / k) - a * R * C / (1 + a * h * R)", :C)
-jac21_II = differentiate("ε * ( e * a * R * C / (1 + a * h * R) - m * C )", :R)
-jac22_II = differentiate("ε * ( e * a * R * C / (1 + a * h * R) - m * C )", :C)
+jac11_II = SymPy.simplify(diff(r * R * (1 - R / k) - a * R * C / (1 + a * h * R), R))
+jac12_II = SymPy.simplify(diff(r * R * (1 - R / k) - a * R * C / (1 + a * h * R), C))
+jac21_II = SymPy.simplify(diff(ε * ( e * a * R * C / (1 + a * h * R) - m * C ), R))
+jac22_II = SymPy.simplify(diff(ε * ( e * a * R * C / (1 + a * h * R) - m * C), C))
 
 percapR(jac11_II)
 percapR(jac12_II)
@@ -48,10 +48,10 @@ trace_fun(jac11_II, jac22_II)
 det_fun(jac11_II, jac22_II, jac12_II, jac21_II)
 
 #Without ε
-jac11_IIep = differentiate("r * R * (1 - R / k) - a * R * C / (1 + a * h * R)", :R)
-jac12_IIep = differentiate("r * R * (1 - R / k) - a * R * C / (1 + a * h * R)", :C)
-jac21_IIep = differentiate("e * a * R * C / (1 + a * h * R) - m * C", :R)
-jac22_IIep = differentiate("e * a * R * C / (1 + a * h * R) - m * C", :C)
+jac11_IIep = SymPy.simplify(diff(r * R * (1 - R / k) - a * R * C / (1 + a * h * R), R))
+jac12_IIep = SymPy.simplify(diff(r * R * (1 - R / k) - a * R * C / (1 + a * h * R), C))
+jac21_IIep = SymPy.simplify(diff(e * a * R * C / (1 + a * h * R) - m * C, R))
+jac22_IIep = SymPy.simplify(diff(e * a * R * C / (1 + a * h * R) - m * C, C))
 
 percapR(jac11_IIep)
 percapR(jac12_IIep)
@@ -66,10 +66,10 @@ det_fun(jac11_IIep, jac22_IIep, jac12_IIep, jac21_IIep)
 
 
 #Without ep and e
-jac11_IIepe = differentiate("r * R * (1 - R / k) - a * R * C / (1 + a * h * R)", :R)
-jac12_IIepe = differentiate("r * R * (1 - R / k) - a * R * C / (1 + a * h * R)", :C)
-jac21_IIepe = differentiate("a * R * C / (1 + a * h * R) - m * C", :R)
-jac22_IIepe = differentiate("a * R * C / (1 + a * h * R) - m * C", :C)
+jac11_IIepe = SymPy.simplify(diff(r * R * (1 - R / k) - a * R * C / (1 + a * h * R), R))
+jac12_IIepe = SymPy.simplify(diff(r * R * (1 - R / k) - a * R * C / (1 + a * h * R), C))
+jac21_IIepe = SymPy.simplify(diff(a * R * C / (1 + a * h * R) - m * C, R))
+jac22_IIepe = SymPy.simplify(diff(a * R * C / (1 + a * h * R) - m * C, C))
 
 percapR(jac11_IIepe)
 percapR(jac12_IIepe)
@@ -130,10 +130,10 @@ jac_rozmac_woepe(par_rozmac, 0, 0)
 
 # Type I
 # with e and ep
-jac11_I = differentiate("r * R * (1 - R / k) - a * R * C", :R)
-jac12_I = differentiate("r * R * (1 - R / k) - a * R * C", :C)
-jac21_I = differentiate("ε * ( e * a * R * C - m * C )", :R)
-jac22_I = differentiate("ε * ( e * a * R * C - m * C )", :C)
+jac11_I = SymPy.simplify(diff(r * R * (1 - R / k) - a * R * C, R))
+jac12_I = SymPy.simplify(diff(r * R * (1 - R / k) - a * R * C, C))
+jac21_I = SymPy.simplify(diff(ε * ( e * a * R * C - m * C ), R))
+jac22_I = SymPy.simplify(diff(ε * ( e * a * R * C - m * C ), C))
 
 percapR(jac11_I)
 percapR(jac12_I)
@@ -147,10 +147,10 @@ trace_fun(jac11_I, jac22_I)
 det_fun(jac11_I, jac22_I, jac12_I, jac21_I)
 
 #with e, not ep
-jac11_Iep = differentiate("r * R * (1 - R / k) - a * R * C", :R)
-jac12_Iep = differentiate("r * R * (1 - R / k) - a * R * C", :C)
-jac21_Iep = differentiate("e * a * R * C - m * C", :R)
-jac22_Iep = differentiate("e * a * R * C - m * C", :C)
+jac11_Iep = SymPy.simplify(diff(r * R * (1 - R / k) - a * R * C, R))
+jac12_Iep = SymPy.simplify(diff(r * R * (1 - R / k) - a * R * C, C))
+jac21_Iep = SymPy.simplify(diff(e * a * R * C - m * C, R))
+jac22_Iep = SymPy.simplify(diff(e * a * R * C - m * C, C))
 
 percapR(jac11_Iep)
 percapR(jac12_Iep)
@@ -165,10 +165,10 @@ det_fun(jac11_Iep, jac22_Iep, jac12_Iep, jac21_Iep)
 
 
 #with ep, not e
-jac11_Ie = differentiate("r * R * (1 - R / k) - a * R * C", :R)
-jac12_Ie = differentiate("r * R * (1 - R / k) - a * R * C", :C)
-jac21_Ie = differentiate("ε * ( a * R * C - m * C )", :R)
-jac22_Ie = differentiate("ε * ( a * R * C - m * C )", :C)
+jac11_Ie = SymPy.simplify(diff(r * R * (1 - R / k) - a * R * C, R))
+jac12_Ie = SymPy.simplify(diff(r * R * (1 - R / k) - a * R * C, C))
+jac21_Ie = SymPy.simplify(diff(ε * ( a * R * C - m * C ), R))
+jac22_Ie = SymPy.simplify(diff(ε * ( a * R * C - m * C ), C))
 
 percapR(jac11_Ie)
 percapR(jac12_Ie)
@@ -183,10 +183,10 @@ det_fun(jac11_Iep, jac22_Iep, jac12_Iep, jac21_Iep)
 
 
 #witout e and ep
-jac11_Iepe = Calculus.simplify(differentiate("r * R * (1 - R / k) - a * R * C", :R))
-jac12_Iepe = Calculus.simplify(differentiate("r * R * (1 - R / k) - a * R * C", :C))
-jac21_Iepe = Calculus.simplify(differentiate("a * R * C - m * C", :R))
-jac22_Iepe = Calculus.simplify(differentiate("a * R * C - m * C", :C))
+jac11_Iepe = SymPy.simplify(diff(r * R * (1 - R / k) - a * R * C, R))
+jac12_Iepe = SymPy.simplify(diff(r * R * (1 - R / k) - a * R * C, C))
+jac21_Iepe = SymPy.simplify(diff(a * R * C - m * C, R))
+jac22_Iepe = SymPy.simplify(diff(a * R * C - m * C, C))
 
 percapR(jac11_Iepe)
 percapR(jac12_Iepe)
