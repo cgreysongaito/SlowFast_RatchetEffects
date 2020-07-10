@@ -1,7 +1,7 @@
 include("packages.jl")
 include("slowfast_commoncode.jl")
-
-@vars R C r a h e m k ε
+using Reduce
+@vars R C r a h e m k ε y
 
 function percapR(equ)
     return SymPy.simplify(eval(Expr(:call, :(/), equ, :R)))
@@ -27,6 +27,10 @@ function eig_ineq(tra, dete)
     dete4 = Expr(:call, :(*), 4, dete)
     return SymPy.simplify(eval(Expr(:call, :(-), tra2, dete4)))
 end
+
+SymPy.simplify(r * (a * h * k * ( m / (a * (e - h * m))) - a * h * ( m / (a * (e - h * m)))^2 + k - ( m / (a * (e - h * m)))) / (a * k))
+
+SymPy.simplify(subs(diff(r * R * (1 - R / k) - a * R * C / (1 + a * h * R), R), (R, ( m / (a * (e - h * m)))), (C, (e*r*(a*e*k - a*h*k*m - m)/(a^2*k*(e^2 - 2*e*h*m + h^2*m^2))))))
 
 # Type II
 
