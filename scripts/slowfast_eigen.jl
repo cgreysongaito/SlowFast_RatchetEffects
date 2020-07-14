@@ -228,7 +228,7 @@ end
 
 findRCdivide(1.0)
 
-# create graph of efficiency on x and epsilon value that creates RC divide
+# # create graph of epsilon on x and efficiency value where RC divide by transposing graph of efficiency on x and epsilon value that creates RC divide
 function findRCdivide_effx(eff)
     par = RozMacPar()
     par.e = eff
@@ -253,85 +253,25 @@ function findRCdivide_effx_plot()
     for (ei, eval) in enumerate(evals)
         epRC[ei] = findRCdivide_effx(eval)
     end
-
-    return PyPlot.plot(collect(evals), epRC)
+    return hcat(reverse(epRC), reverse(collect(evals)))
 end
 
 let
     figure()
-    findRCdivide_effx_plot()
-    xlim(0.410, 1)
-    ylim(-0.05,1.05)
-    ylabel("ε where R/C divide occurs", fontsize = 15)
-    xlabel("Efficiency", fontsize = 15)
-    PyPlot.vlines([0.441,0.5225, 0.710], ymin = -0.05, ymax = 1.05, linestyles = "dashed")
-    annotate("TC", (60, 315), xycoords = "figure points", fontsize = 12)
-    annotate("R/C", (107, 315), xycoords = "figure points", fontsize = 12)
-    annotate("H", (224, 315), xycoords = "figure points", fontsize = 12)
-    #gcf()
-    savefig(joinpath(abpath(), "figs/efficiencyxaxis_RCdivide.png"))
+    data = findRCdivide_effx_plot()
+    plot(data[:,1], data[:,2])
+    xlim(-0.05,1.05)
+    ylim(0.410, 1)
+    ylabel("Efficiency where R/C divide occurs", fontsize = 15)
+    xlabel("ε", fontsize = 15)
+    hlines([0.441,0.5225, 0.710], xmin = -0.05, xmax = 1.05, linestyles = "dashed")
+    annotate("TC", (408, 54), xycoords = "figure points", fontsize = 12)
+    annotate("R/C", (408, 89), xycoords = "figure points", fontsize = 12)
+    annotate("H", (408, 175), xycoords = "figure points", fontsize = 12)
+    # gcf()
+    savefig(joinpath(abpath(), "figs/epsilonxaxis_RCdivide.png"))
 end
 
-# create graph of epsilon on x and efficiency value where RC divide - #tried but couldn't create line above hopf
-# function findRCdivide_epx(ep, evals)
-#     par = RozMacPar()
-#     par.ε = ep
-#
-#     for (ei, eval) in enumerate(evals)
-#         par.e = eval
-#         equ = eq_II(par)
-#         #if minimum(collect(evals)) < 0.6
-#         eig1 = imag.(eigvals(jacmat(roz_mac_II, equ, par))[1])
-#         #else
-#         #    eig1 = round(imag.(eigvals(jacmat(roz_mac_II, equ, par))[1]), digits = 3)
-#         #end
-#         if eig1 < 0 || eig1 > 0
-#             return eval
-#             break
-#         end
-#     end
-# end
-#
-#
-#
-# # findRCdivide_epx(0.0000001, 0.71025:0.0005:1.0)
-# #
-# # par = RozMacPar()
-# # par.ε = 0.000000001
-# #
-# # par.e = 0.71025
-# # equ = eq_II(par)
-# # eig1 = round(imag.(eigvals(jacmat(roz_mac_II, equ, par))[1]), digits = 4)
-# # if eig1 < 0 || eig1 > 0
-# #     return eval
-# # end
-#
-# function findRCdivide_epx_plot()
-#     epvals = 0.00001:0.0001:1
-#     eRC1 = fill(0.0, length(epvals))
-#     eRC2 = fill(0.0, length(epvals))
-#     for (epi, epval) in enumerate(epvals)
-#         eRC1[epi] = findRCdivide_epx(epval, 0.5225:0.0005:0.71024)
-#         eRC2[epi] = findRCdivide_epx(epval, 0.75:0.0005:1.0)
-#     end
-#
-#     PyPlot.plot(collect(epvals), eRC1)
-#     return PyPlot.plot(collect(epvals), eRC2)
-# end
-#
-# let
-#     figure()
-#     findRCdivide_epx_plot()
-#     xlim(-0.05,1.05)
-#     ylim(0.410, 1)
-#     ylabel("Efficiency where R/C divide occurs")
-#     xlabel("ε")
-#     PyPlot.hlines([0.441,0.5225, 0.710], xmin = -0.05, xmax = 1.05, linestyles = "dashed")
-#     annotate("TC", (315, 60), xycoords = "figure points", fontsize = 12)
-#     annotate("R/C", (315, 107), xycoords = "figure points", fontsize = 12)
-#     annotate("H", (315, 224), xycoords = "figure points", fontsize = 12)
-#     gcf()
-# end #why end before hopf, add lines for RC and hopf
 
 # graph real and imag for deterministis ep = 1.0 for my own understanding
 function eff_maxeigen_plot()

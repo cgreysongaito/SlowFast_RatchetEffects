@@ -4,77 +4,48 @@ include("slowfast_commoncode.jl")
 
 
 
-function pert_cv(ep)
+function pert_cvsdmean(ep)
     evals = 0.441:0.005:0.9
     cv = fill(0.0, length(evals))
-
-    for (ei, eval) in enumerate(evals)
-        sol = RozMac_pert(ep, eval, 0.0, 3, 10000.0, 6000.0:1.0:10000.0)
-        cv[ei] = std(sol[2, :]) / mean(sol[2, :])
-    end
-    cv[cv .==0.0] .= NaN
-    return hcat(evals, cv)
-end
-
-function pert_sdmean(ep)
-    evals = 0.441:0.005:0.9
     mn = fill(0.0, length(evals), 1)
     sd = fill(0.0, length(evals), 1)
 
     for (ei, eval) in enumerate(evals)
-        sol = RozMac_pert(ep, eval, 0.0, 3, 10000.0, 6000.0:1.0:10000.0)
+        sol = RozMac_pert(ep, eval, 0.0, 1, 3, 10000.0, 6000.0:1.0:10000.0)
+        cv[ei] = std(sol[2, :]) / mean(sol[2, :])
         sd[ei] = std(sol[2, :])
         mn[ei] = mean(sol[2, :])
     end
-
+    cv[cv .==0.0] .= NaN
     sd[sd .==0.0] .= NaN
     mn[mn .==0.0] .= NaN
-    return hcat(evals, sd, mn)
+    return hcat(evals, cv, sd, mn)
 end
 
 let
-    cv = pert_cv(1.0)
-    sdmean = pert_sdmean(1.0)
-    sto_ep1_cv_plot = figure()
-    subplot(2,1,1)
-    plot(cv[:, 1], cv[:, 2])
-    vlines([0.441,0.5225, 0.710], ymin = 0.0, ymax = 0.4, linestyles = "dashed")
-    ylabel("Consumer CV")
-    xlabel("Efficiency (e)")
-
-    subplot(2,1,2)
-    plot(sdmean[:,1], sdmean[:, 2], label = "sd")
-    plot(sdmean[:,1], sdmean[:, 3], label = "mean")
-    vlines([0.441,0.5225, 0.710], ymin = 0.0, ymax = maximum(filter(!isnan, sdmean[:,3])), linestyles = "dashed")
-    ylabel("Mean (orange), SD (blue)")
-    xlabel("Efficiency (e)")
-    #annotate("TC", (0.2, 0.9), xycoords = "figure fraction", fontsize = 12)
-    # annotate("R/C", (107, 315), xycoords = "figure points", fontsize = 12)
-    # annotate("H", (250, 315), xycoords = "figure points", fontsize = 12)
-    tight_layout()
-    return sto_ep1_cv_plot
-    # savefig(joinpath(abpath(), "figs/sto_ep1_cv_plot.png"))
-end
-
-let
-    cv = pert_cv(0.01)
-    sdmean = pert_sdmean(0.01)
+    data = pert_cvsdmean(0.01)
     sto_eptiny_cv_plot = figure()
-    subplot(2,1,1)
-    plot(cv[:, 1], cv[:, 2])
+    subplot(3,1,1)
+    plot(data[:, 1], data[:, 2])
     vlines([0.441,0.5225, 0.710], ymin = 0.0, ymax = 0.4, linestyles = "dashed")
-    ylabel("Consumer CV")
+    ylabel("Coefficient of \n Variation (CV)")
     xlabel("Efficiency (e)")
 
-    subplot(2,1,2)
-    plot(sdmean[:,1], sdmean[:, 2], label = "sd")
-    plot(sdmean[:,1], sdmean[:, 3], label = "mean")
-    vlines([0.441,0.5225, 0.710], ymin = 0.0, ymax = maximum(filter(!isnan, sdmean[:,3])), linestyles = "dashed")
-    ylabel("Mean (orange), SD (blue)")
+    subplot(3,1,2)
+    plot(data[:,1], data[:, 4])
+    vlines([0.441,0.5225, 0.710], ymin = 0.0, ymax = maximum(filter(!isnan, data[:,4])), linestyles = "dashed")
+    ylabel("Mean (μ)")
     xlabel("Efficiency (e)")
-    # annotate("TC", (50, 315), xycoords = "figure points", fontsize = 12)
-    # annotate("R/C", (107, 315), xycoords = "figure points", fontsize = 12)
-    # annotate("H", (250, 315), xycoords = "figure points", fontsize = 12)
+
+    subplot(3,1,3)
+    plot(data[:,1], data[:, 3])
+    vlines([0.441,0.5225, 0.710], ymin = 0.0, ymax = maximum(filter(!isnan, data[:,4])), linestyles = "dashed")
+    ylabel("Standard \n Deviation (σ) ")
+    xlabel("Efficiency (e)")
+    ylim(0.0, 0.35)
+    annotate("TC", (55, 315), xycoords = "figure points", fontsize = 12)
+    annotate("R/C", (112, 315), xycoords = "figure points", fontsize = 12)
+    annotate("H", (255, 315), xycoords = "figure points", fontsize = 12)
     tight_layout()
     # return sto_eptiny_cv_plot
     savefig(joinpath(abpath(), "figs/sto_eptiny_cv_plot.png"))
