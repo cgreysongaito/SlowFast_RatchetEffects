@@ -5,49 +5,19 @@ library(rSymPy)
 library(plot3D)
 library(viridis)
 
-
-#Quasi-potential with same noise for epsilon of 1 (with no cycling)
-var.eqn.x <- "( r * x * (1 - ( x / k ) ) ) - ( a * x * y ) / ( 1 +  ( a * h * x ) ) "
-var.eqn.y <- "( e * a * x * y ) / (1 + ( a * h * x ) ) - ( m * y )"
-
-model.parms <- c(r = 2.0, k = 3.0, a = 1.1, h = 0.8, e = 0.5, m = 0.4)
-parms.eqn.x <- Model2String(var.eqn.x, parms = model.parms, supress.print = TRUE)
-parms.eqn.y <- Model2String(var.eqn.y, parms = model.parms, supress.print = TRUE)
-
-model.state <- c(x = 1.30, y = 2.21)
-model.sigma <- 0.01
-model.time <- 1000     # we used 12500 in the figures
-model.deltat <- 0.01
-ts.ex1 <- TSTraj(y0 = model.state, time = model.time, deltat = model.deltat, x.rhs = parms.eqn.x, y.rhs = parms.eqn.y, sigma = model.sigma)
-
-TSPlot(ts.ex1, deltat = model.deltat)
-TSPlot(ts.ex1, deltat = model.deltat, dim = 2)
-TSDensity(ts.ex1, dim = 1)
-TSDensity(ts.ex1, dim = 2)
-
-eq1.x <- 2.0202020202
-eq1.y <- 1.6494915485
-bounds.x <- c(-0.5, 10.0)
-bounds.y <- c(-0.5, 10.0)
-step.number.x <- 1000
-step.number.y <- 1000
-
-eq1.local <- QPotential(x.rhs = parms.eqn.x, x.start = eq1.x, x.bound = bounds.x,x.num.steps = step.number.x, y.rhs = parms.eqn.y, y.start = eq1.y,y.bound = bounds.y, y.num.steps = step.number.y)
-
-QPContour(surface = eq1.local, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
-
-persp3D(z =eq1.local, xlim=c(0,0.5), ylim=c(0,0.5), col = viridis(n = 100, option = "A"), contour=TRUE)
+# Questions:
+#When does ordered upwind method stop - when does Quasipotential end?
 
 
 #Quasi-potential with same noise for epsilon of 1 (with cycling)
 var.eqn.x <- "( r * x * (1 - ( x / k ) ) ) - ( a * x * y ) / ( 1 +  ( a * h * x ) ) "
 var.eqn.y <- "( e * a * x * y ) / (1 + ( a * h * x ) ) - ( m * y )"
 
-model.parms <- c(r = 2.0, k = 3.0, a = 1.1, h = 0.8, e = 0.8, m = 0.4)
+model.parms <- c(r = 2.0, k = 3.0, a = 1.1, h = 0.72, e = 0.8, m = 0.4)
 parms.eqn.x <- Model2String(var.eqn.x, parms = model.parms, supress.print = TRUE)
 parms.eqn.y <- Model2String(var.eqn.y, parms = model.parms, supress.print = TRUE)
 
-model.state <- c(x = 1.30, y = 2.21)
+model.state <- c(x = 1.1922515, y= 2.367524)
 model.sigma <- 0.01
 model.time <- 1000     # we used 12500 in the figures
 model.deltat <- 0.01
@@ -62,17 +32,17 @@ bounds.y <- c(-0.5, 5.0)
 step.number.x <- 1000
 step.number.y <- 1000
 
-eq1.local <- QPotential(x.rhs = parms.eqn.x, x.start = 1.5, x.bound = bounds.x,x.num.steps = step.number.x, y.rhs = parms.eqn.y, y.start = 2.0, y.bound = bounds.y, y.num.steps = step.number.y)
+eq1.local <- QPotential(x.rhs = parms.eqn.x, x.start = 1.1922515, x.bound = bounds.x,x.num.steps = step.number.x, y.rhs = parms.eqn.y, y.start = 2.367524, y.bound = bounds.y, y.num.steps = step.number.y)
 
 QPContour(surface = eq1.local, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
 # From gradient vector field does not look like upwind method correctly tested area within limit cycle - why?
-persp3D(z =eq1.local, xlim=c(0,0.5), ylim=c(0,0.5), col = viridis(n = 100, option = "A"), contour=TRUE)
+persp3D(z =eq1.local, x=seq(0,4,length.out = 1000), y=seq(0,4,length.out = 1000), xlim=c(0,3), ylim=c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,   xlab="Resource", ylab="Consumer", zlab="Quasipotential", ticktype="detailed", theta = 20, phi = 20)
 
-
+par(mfrow=c(1, 1))
 # Calculate all three vector fields.
 VDAll <- VecDecomAll(surface = eq1.local, x.rhs = parms.eqn.x, y.rhs = parms.eqn.y,x.bound = bounds.x, y.bound = bounds.y)
 ## Plot the deterministic skeleton vector field.
-VecDecomPlot(x.field = VDAll[, , 1], y.field = VDAll[, , 2], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, xlim = c(0, 5), ylim = c(0, 5),arrow.type = "equal", tail.length = 0.25, head.length = 0.025)
+VecDecomPlot(x.field = VDAll[, , 1], y.field = VDAll[, , 2], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, xlim = c(0, 4), ylim = c(0, 4),arrow.type = "equal", tail.length = 0.25, head.length = 0.025)
 ## Plot the gradient vector field.
 VecDecomPlot(x.field = VDAll[, , 3], y.field = VDAll[, , 4], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.25, head.length = 0.025)
 ## Plot the remainder vector field.
@@ -84,11 +54,11 @@ VecDecomPlot(x.field = VDAll[, , 5], y.field = VDAll[, , 6], dens = c(25, 25),x.
 var.eqn.x <- "( r * x * (1 - ( x / k ) ) ) - ( a * x * y ) / ( 1 +  ( a * h * x ) ) "
 var.eqn.y <- "p * ( ( e * a * x * y ) / (1 + ( a * h * x ) ) - ( m * y ) )"
 
-model.parms <- c(r = 2.0, k = 3.0, a = 1.1, h = 0.8, e = 0.8, m = 0.4, p = 0.01)
+model.parms <- c(r = 2.0, k = 3.0, a = 1.1, h = 0.8, e = 0.8, m = 0.4, p = 0.1)
 parms.eqn.x <- Model2String(var.eqn.x, parms = model.parms, supress.print = TRUE)
 parms.eqn.y <- Model2String(var.eqn.y, parms = model.parms, supress.print = TRUE)
 
-model.state <- c(x = 0.75, y = 2.26)
+model.state <- c(x = 0.9131818, y = 2.28127)
 model.sigma <- 0.01
 model.time <- 1000     # we used 12500 in the figures
 model.deltat <- 1
@@ -103,11 +73,11 @@ TSDensity(ts.ex1, dim = 2)
 bounds.x <- c(0, 4)
 bounds.y <- c(0, 4)
 
-eq1.local <- QPotential(x.rhs = parms.eqn.x, x.start = 2.134206, x.bound = bounds.x,x.num.steps = step.number.x, y.rhs = parms.eqn.y, y.start = 1.513848, y.bound = bounds.y, y.num.steps = step.number.y)
+eq1.local <- QPotential(x.rhs = parms.eqn.x, x.start = 0.9131818, x.bound = bounds.x,x.num.steps = step.number.x, y.rhs = parms.eqn.y, y.start = 2.28127, y.bound = bounds.y, y.num.steps = step.number.y)
 
 QPContour(surface = eq1.local, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
 #not quite working
-persp3D(z =eq1.local, xlim=c(0,0.5), ylim=c(0,0.5), col = viridis(n = 100, option = "A"), contour=TRUE)
+persp3D(z =eq1.local, x=seq(0,4,length.out = 1000),y=seq(0,4,length.out = 1000), xlim=c(0,3), ylim=c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab="Resource", ylab="Consumer", zlab="Quasipotential", ticktype="detailed", theta = 20, phi = 20)
 
 VDAll <- VecDecomAll(surface = eq1.local, x.rhs = parms.eqn.x, y.rhs = parms.eqn.y,x.bound = bounds.x, y.bound = bounds.y)
 ## Plot the deterministic skeleton vector field.
@@ -128,7 +98,7 @@ VecDecomPlot(x.field = VDAll[, , 5], y.field = VDAll[, , 6], dens = c(25, 25),x.
 #3. canard with stochasticity doesn't follow same straight back to resource isocline (going right) every single time 
 #4. coordinate transform to get different noise for C and R
 
-#Quasi-potential with same noise for epsilon of 0.01 (with efficiency of 0.5)
+#Quasi-potential with same noise for epsilon of 0.1 (with efficiency of 0.5)
 var.eqn.x <- "( r * x * (1 - ( x / k ) ) ) - ( a * x * y ) / ( 1 +  ( a * h * x ) ) "
 var.eqn.y <- "p * ( ( e * a * x * y ) / (1 + ( a * h * x ) ) - ( m * y ) )"
 
@@ -150,12 +120,14 @@ TSDensity(ts.ex1, dim = 1)
 TSDensity(ts.ex1, dim = 2)
 bounds.x <- c(0, 4)
 bounds.y <- c(0, 4)
+step.number.x <- 1000
+step.number.y <- 1000
 
 eq1.local <- QPotential(x.rhs = parms.eqn.x, x.start = 2.02, x.bound = bounds.x,x.num.steps = step.number.x, y.rhs = parms.eqn.y, y.start = 1.65, y.bound = bounds.y, y.num.steps = step.number.y)
 
 QPContour(surface = eq1.local, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
 #not quite working
-persp3D(z =eq1.local, xlim=c(0,0.5), ylim=c(0,0.5), col = viridis(n = 100, option = "A"), contour=TRUE)
+persp3D(z =eq1.local, x=seq(0, 4, length.out=1000), y=seq(0, 4, length.out=1000), xlim=c(0,3), ylim=c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab="Resource", ylab="Consumer", zlab="Quasipotential", ticktype="detailed", theta = 20, phi = 20)
 
 VDAll <- VecDecomAll(surface = eq1.local, x.rhs = parms.eqn.x, y.rhs = parms.eqn.y,x.bound = bounds.x, y.bound = bounds.y)
 ## Plot the deterministic skeleton vector field.
@@ -165,11 +137,11 @@ VecDecomPlot(x.field = VDAll[, , 3], y.field = VDAll[, , 4], dens = c(25, 25),x.
 ## Plot the remainder vector field.
 VecDecomPlot(x.field = VDAll[, , 5], y.field = VDAll[, , 6], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.35, head.length = 0.025)
 
-#Quasi-potential with same noise for epsilon of 0.1 (with efficiency of 0.5)
+#Quasi-potential with same noise for epsilon of 0.5 (with efficiency of 0.5)
 var.eqn.x <- "( r * x * (1 - ( x / k ) ) ) - ( a * x * y ) / ( 1 +  ( a * h * x ) ) "
 var.eqn.y <- "p * ( ( e * a * x * y ) / (1 + ( a * h * x ) ) - ( m * y ) )"
 
-model.parms <- c(r = 2.0, k = 3.0, a = 1.1, h = 0.8, e = 0.5, m = 0.4, p = 0.1)
+model.parms <- c(r = 2.0, k = 3.0, a = 1.1, h = 0.8, e = 0.5, m = 0.4, p = 0.5)
 parms.eqn.x <- Model2String(var.eqn.x, parms = model.parms, supress.print = TRUE)
 parms.eqn.y <- Model2String(var.eqn.y, parms = model.parms, supress.print = TRUE)
 
@@ -192,7 +164,7 @@ eq1.local <- QPotential(x.rhs = parms.eqn.x, x.start = 2.02, x.bound = bounds.x,
 
 QPContour(surface = eq1.local, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
 #not quite working
-persp3D(z =eq1.local, xlim=c(0,0.5), ylim=c(0,0.5), col = viridis(n = 100, option = "A"), contour=TRUE)
+persp3D(z =eq1.local,x=seq(0, 4, length.out=1000), y=seq(0, 4, length.out=1000), xlim=c(0,3), ylim=c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab="Resource", ylab="Consumer", zlab="Quasipotential", ticktype="detailed", theta = 20, phi = 20)
 
 VDAll <- VecDecomAll(surface = eq1.local, x.rhs = parms.eqn.x, y.rhs = parms.eqn.y,x.bound = bounds.x, y.bound = bounds.y)
 ## Plot the deterministic skeleton vector field.
@@ -224,12 +196,14 @@ TSDensity(ts.ex1, dim = 1)
 TSDensity(ts.ex1, dim = 2)
 bounds.x <- c(0, 4)
 bounds.y <- c(0, 4)
+step.number.x <- 1000
+step.number.y <- 1000
 
 eq1.local <- QPotential(x.rhs = parms.eqn.x, x.start = 2.02, x.bound = bounds.x,x.num.steps = step.number.x, y.rhs = parms.eqn.y, y.start = 1.65, y.bound = bounds.y, y.num.steps = step.number.y)
 
 QPContour(surface = eq1.local, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
 #not quite working
-persp3D(z =eq1.local, xlim=c(0,0.5), ylim=c(0,0.5), col = viridis(n = 100, option = "A"), contour=TRUE)
+persp3D(z =eq1.local, x=seq(0, 4, length.out=1000), y=seq(0, 4, length.out=1000), xlim=c(0,3), ylim=c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab="Resource", ylab="Consumer", zlab="Quasipotential", ticktype="detailed", theta = 20, phi = 20)
 
 VDAll <- VecDecomAll(surface = eq1.local, x.rhs = parms.eqn.x, y.rhs = parms.eqn.y,x.bound = bounds.x, y.bound = bounds.y)
 ## Plot the deterministic skeleton vector field.
@@ -238,6 +212,8 @@ VecDecomPlot(x.field = VDAll[, , 1], y.field = VDAll[, , 2], dens = c(25, 25),x.
 VecDecomPlot(x.field = VDAll[, , 3], y.field = VDAll[, , 4], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.25, head.length = 0.025)
 ## Plot the remainder vector field.
 VecDecomPlot(x.field = VDAll[, , 5], y.field = VDAll[, , 6], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.35, head.length = 0.025)
+
+
 
 #Quasi-potential with same noise for epsilon of 0.04 (with efficiency of 0.6)
 var.eqn.x <- "( r * x * (1 - ( x / k ) ) ) - ( a * x * y ) / ( 1 +  ( a * h * x ) ) "
@@ -261,16 +237,18 @@ TSDensity(ts.ex1, dim = 1)
 TSDensity(ts.ex1, dim = 2)
 bounds.x <- c(0, 4)
 bounds.y <- c(0, 4)
+step.number.x <- 1000
+step.number.y <- 1000
 
-eq1.local <- QPotential(x.rhs = parms.eqn.x, x.start = 2.02, x.bound = bounds.x,x.num.steps = step.number.x, y.rhs = parms.eqn.y, y.start = 1.65, y.bound = bounds.y, y.num.steps = step.number.y)
+eq1.local <- QPotential(x.rhs = parms.eqn.x, x.start = 1.30, x.bound = bounds.x,x.num.steps = step.number.x, y.rhs = parms.eqn.y, y.start = 2.21, y.bound = bounds.y, y.num.steps = step.number.y)
 
 QPContour(surface = eq1.local, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
-#not quite working
-persp3D(z =eq1.local, xlim=c(0,0.5), ylim=c(0,0.5), col = viridis(n = 100, option = "A"), contour=TRUE)
+
+persp3D(z =eq1.local, x=seq(0,4,length.out = 1000), y=seq(0,4,length.out = 1000), xlim=c(0,3), ylim=c(0,2.5), zlim=c(0,0.0007), col = viridis(n = 100, option = "A"), contour=TRUE, xlab="Resource", ylab="Consumer", zlab="Quasipotential", ticktype="detailed", theta = 40, phi = 20)
 
 VDAll <- VecDecomAll(surface = eq1.local, x.rhs = parms.eqn.x, y.rhs = parms.eqn.y,x.bound = bounds.x, y.bound = bounds.y)
 ## Plot the deterministic skeleton vector field.
-VecDecomPlot(x.field = VDAll[, , 1], y.field = VDAll[, , 2], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, xlim = c(0, 4), ylim = c(0, 4),arrow.type = "equal", tail.length = 0.25, head.length = 0.025)
+VecDecomPlot(x.field = VDAll[, , 1], y.field = VDAll[, , 2], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, xlim = c(0, 4), ylim = c(0, 4), arrow.type = "equal", tail.length = 0.25, head.length = 0.025)
 ## Plot the gradient vector field.
 VecDecomPlot(x.field = VDAll[, , 3], y.field = VDAll[, , 4], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.25, head.length = 0.025)
 ## Plot the remainder vector field.
@@ -300,11 +278,11 @@ TSDensity(ts.ex1, dim = 2)
 bounds.x <- c(0, 4)
 bounds.y <- c(0, 4)
 
-eq1.local <- QPotential(x.rhs = parms.eqn.x, x.start = 2.02, x.bound = bounds.x,x.num.steps = step.number.x, y.rhs = parms.eqn.y, y.start = 1.65, y.bound = bounds.y, y.num.steps = step.number.y)
+eq1.local <- QPotential(x.rhs = parms.eqn.x, x.start = 1.30, x.bound = bounds.x,x.num.steps = step.number.x, y.rhs = parms.eqn.y, y.start = 2.21, y.bound = bounds.y, y.num.steps = step.number.y)
 
 QPContour(surface = eq1.local, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
 #not quite working
-persp3D(z =eq1.local, xlim=c(0,0.5), ylim=c(0,0.5), col = viridis(n = 100, option = "A"), contour=TRUE)
+persp3D(z =eq1.local,x=seq(0,4,length.out = 1000),y=seq(0,4,length.out = 1000), xlim=c(0,3), ylim=c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab="Resource", ylab="Consumer", zlab="Quasipotential", ticktype="detailed", theta = 40, phi = 20)
 
 VDAll <- VecDecomAll(surface = eq1.local, x.rhs = parms.eqn.x, y.rhs = parms.eqn.y,x.bound = bounds.x, y.bound = bounds.y)
 ## Plot the deterministic skeleton vector field.
@@ -340,11 +318,11 @@ bounds.y <- c(0, 4)
 step.number.x <- 1000
 step.number.y <- 1000
 
-eq1.local <- QPotential(x.rhs = parms.eqn.x, x.start = 2.02, x.bound = bounds.x,x.num.steps = step.number.x, y.rhs = parms.eqn.y, y.start = 1.65, y.bound = bounds.y, y.num.steps = step.number.y)
+eq1.local <- QPotential(x.rhs = parms.eqn.x, x.start = 1.30, x.bound = bounds.x,x.num.steps = step.number.x, y.rhs = parms.eqn.y, y.start = 2.21, y.bound = bounds.y, y.num.steps = step.number.y)
 
 QPContour(surface = eq1.local, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
 #not quite working
-persp3D(z =eq1.local, xlim=c(0,0.5), ylim=c(0,0.5), col = viridis(n = 100, option = "A"), contour=TRUE)
+persp3D(z =eq1.local,x=seq(0,4,length.out = 1000),y=seq(0,4,length.out = 1000), xlim=c(0,3), ylim=c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab="Resource", ylab="Consumer", zlab="Quasipotential", ticktype="detailed", theta = 40, phi = 20)
 
 VDAll <- VecDecomAll(surface = eq1.local, x.rhs = parms.eqn.x, y.rhs = parms.eqn.y,x.bound = bounds.x, y.bound = bounds.y)
 ## Plot the deterministic skeleton vector field.
@@ -457,14 +435,25 @@ sympy("solve(( e * a * x * y ) / (1 + ( a * h * x ) ) - ( m * y ) , x)")
 RM <- function(t, state, parameters) {
   with(as.list(c(state, parameters)), {
     dX <- ( r * X * (1 - ( X / k ) ) ) -  ( ( a * X * Y ) / ( 1 +  ( a * h * X ) ) )
+    dY <- ( ( e * a * X * Y ) / (1 + ( a * h * X ) ) ) - ( m * Y ) 
+    
+    list(c(dX, dY))
+  })
+}
+
+RMep <- function(t, state, parameters) {
+  with(as.list(c(state, parameters)), {
+    dX <- ( r * X * (1 - ( X / k ) ) ) -  ( ( a * X * Y ) / ( 1 +  ( a * h * X ) ) )
     dY <- p * ( ( ( e * a * X * Y ) / (1 + ( a * h * X ) ) ) - ( m * Y ) )
     
     list(c(dX, dY))
   })
 }
 
-times <- seq(0, 1000, by = 1)
+times <- seq(0, 600, by = 1)
 initstate = c(X = 0.75, Y = 2.26)
-parmslc <- c(r = 2.0, k = 3.0, a = 1.1, h = 0.8, e = 0.8, m = 0.4, p = 0.01)
+parmslc <- c(r = 2.0, k = 3.0, a = 1.1, h = 0.8, e = 0.72, m = 0.4)
+
+parmslcep <- c(r = 2.0, k = 3.0, a = 1.1, h = 0.8, e = 0.8, m = 0.4, p = 0.01)
 solved <- ode(y = initstate, times = times, func = RM, parms = parmslc)
 plot(solved)
