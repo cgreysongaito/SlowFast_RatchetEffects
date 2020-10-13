@@ -8,6 +8,69 @@ library(viridis)
 # Questions:
 #When does ordered upwind method stop - when does Quasipotential end?
 
+#Clean Code
+var.eqn.x <- "( r * x * (1 - ( x / k ) ) ) - ( a * x * y ) / ( 1 +  ( a * h * x ) ) "
+var.eqn.y <- "p * ( ( e * a * x * y ) / (1 + ( a * h * x ) ) - ( m * y ) )"
+
+param_model <- function(eff, ep) {
+  model.parms <- c(r = 2.0, k = 3.0, a = 1.1, h = 0.8, e = eff, m = 0.4, p = ep)
+  parms.eqn.x <- Model2String(var.eqn.x, parms = model.parms, supress.print = TRUE)
+  parms.eqn.y <- Model2String(var.eqn.y, parms = model.parms, supress.print = TRUE)
+  parms.eqn <- list(parms.eqn.x,parms.eqn.y)
+  return(parms.eqn)
+}
+
+sto_realization <- function(x0, y0, sigma, time, deltat, eff, ep) {
+  model.state <- c(x = x0, y = y0)
+  model.sigma <- sigma
+  model.time <- time
+  model.deltat <- deltat
+  ts.ex1 <- TSTraj(y0 = model.state,
+                   time = model.time,
+                   deltat = model.deltat,
+                   x.rhs = param_model(eff,ep)[1],
+                   y.rhs = param_model(eff,ep)[2],
+                   sigma = model.sigma,
+                   lower.bound = 0)
+  return(ts.ex1)
+}
+
+vector_decomp_plot <- function(qpotential, bounds.x, bounds.y) {
+  VDAll <- VecDecomAll(surface = qpotential, x.rhs = parms.eqn.x, y.rhs = parms.eqn.y,x.bound = bounds.x, y.bound = bounds.y)
+  ## Plot the deterministic skeleton vector field.
+  ## VecDecomPlot(x.field = VDAll[, , 1], y.field = VDAll[, , 2], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, xlim = c(0, 4), ylim = c(0, 4),arrow.type = "equal", tail.length = 0.25, head.length = 0.025)
+  par(mfrow=c(1,2))
+  ## Plot the gradient vector field.
+  VecDecomPlot(x.field = VDAll[, , 3], y.field = VDAll[, , 4], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.25, head.length = 0.025)
+  ## Plot the remainder vector field.
+  VecDecomPlot(x.field = VDAll[, , 5], y.field = VDAll[, , 6], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.35, head.length = 0.025)
+}
+
+ts.extest <- sto_realization(1.1922515, 2.367524, 0.01, 1000, 1, 0.6, 1.0)
+
+
+TSPlot(ts.extest, deltat = 1, ylim = c(0,5), xlim = c(0,5))
+TSPlot(ts.extest, deltat = 1, dim = 2)
+TSDensity(ts.extest, dim = 1)
+TSDensity(ts.extest, dim = 2)
+
+
+bounds.x <- c(0, 4)
+bounds.y <- c(0, 4)
+step.number.x <- 1000
+step.number.y <- 1000
+
+
+eq1.local <- QPotential(x.rhs = param_model(0.6,1.0)[1],
+                        x.start = 0.9131818,
+                        x.bound = bounds.x,
+                        x.num.steps = step.number.x,
+                        y.rhs = param_model(0.6,1.0)[2],
+                        y.start = 2.28127,
+                        y.bound = bounds.y,
+                        y.num.steps = step.number.y)
+
+QPContour(surface = eq1.local, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
 
 #Quasi-potential with same noise for epsilon of 1 (with cycling)
 var.eqn.x <- "( r * x * (1 - ( x / k ) ) ) - ( a * x * y ) / ( 1 +  ( a * h * x ) ) "
@@ -21,12 +84,13 @@ model.state <- c(x = 1.1922515, y= 2.367524)
 model.sigma <- 0.01
 model.time <- 1000     # we used 12500 in the figures
 model.deltat <- 0.01
-ts.ex1 <- TSTraj(y0 = model.state, time = model.time, deltat = model.deltat, x.rhs = parms.eqn.x, y.rhs = parms.eqn.y, sigma = model.sigma)
-
+ts_symnoise_ep1 <- sto_realization(1.1922515, 2.367524, 0.01, 1000, 1, 0.72, 1.0)
 TSPlot(ts.ex1, deltat = model.deltat)
 TSPlot(ts.ex1, deltat = model.deltat, dim = 2)
 TSDensity(ts.ex1, dim = 1)
-TSDensity(ts.ex1, dim = 2)   
+TSDensity(ts.ex1, dim = 2)
+
+
 bounds.x <- c(-0.5, 5.0)
 bounds.y <- c(-0.5, 5.0)
 step.number.x <- 1000
@@ -95,7 +159,7 @@ VecDecomPlot(x.field = VDAll[, , 5], y.field = VDAll[, , 6], dens = c(25, 25),x.
 #TODO try making for different epsilon values across the real/complex divide - AND set out issues
 #1. non canard limit cycle -> centre just a flat surface - shouldnt be that
 #2. check determinitistic canard skeleton - always same numbers?
-#3. canard with stochasticity doesn't follow same straight back to resource isocline (going right) every single time 
+#3. canard with stochasticity doesn't follow same straight back to resource isocline (going right) every single time
 #4. coordinate transform to get different noise for C and R
 
 #Quasi-potential with same noise for epsilon of 0.1 (with efficiency of 0.5)
@@ -435,7 +499,7 @@ ts.ex2 <- TSTraj(y0 = model.state, time = model.time, deltat = model.deltat,x.rh
 TSPlot(ts.ex2, deltat = model.deltat)                                  # Figure 8
 TSPlot(ts.ex2, deltat = model.deltat, dim = 2, line.alpha = 25)        # Figure 9a
 TSDensity(ts.ex2, dim = 1)                                             # Histogram
-TSDensity(ts.ex2, dim = 2) 
+TSDensity(ts.ex2, dim = 2)
 
 eqn.x <- Model2String(var.eqn.x, parms = model.parms)
 eqn.y <- Model2String(var.eqn.y, parms = model.parms)
@@ -475,8 +539,8 @@ sympy("solve(( e * a * x * y ) / (1 + ( a * h * x ) ) - ( m * y ) , x)")
 RM <- function(t, state, parameters) {
   with(as.list(c(state, parameters)), {
     dX <- ( r * X * (1 - ( X / k ) ) ) -  ( ( a * X * Y ) / ( 1 +  ( a * h * X ) ) )
-    dY <- ( ( e * a * X * Y ) / (1 + ( a * h * X ) ) ) - ( m * Y ) 
-    
+    dY <- ( ( e * a * X * Y ) / (1 + ( a * h * X ) ) ) - ( m * Y )
+
     list(c(dX, dY))
   })
 }
@@ -485,7 +549,7 @@ RMep <- function(t, state, parameters) {
   with(as.list(c(state, parameters)), {
     dX <- ( r * X * (1 - ( X / k ) ) ) -  ( ( a * X * Y ) / ( 1 +  ( a * h * X ) ) )
     dY <- p * ( ( ( e * a * X * Y ) / (1 + ( a * h * X ) ) ) - ( m * Y ) )
-    
+
     list(c(dX, dY))
   })
 }
