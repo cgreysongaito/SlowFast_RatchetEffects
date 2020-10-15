@@ -3,40 +3,40 @@ library(deSolve)
 library(phaseR)
 library(rSymPy)
 library(plot3D)
+library(zeallot)
 library(viridis)
 
-# Questions:
-#When does ordered upwind method stop - when does Quasipotential end?
+#Model Set Up - NOTE g and f parameters added to allow for differential stochastic noise
+res_model <- "( r * x * (1 - ( ( x * g ) / k ) ) ) - ( a * x * y * f ) / ( 1 +  ( a * h * x * g ) ) "
+con_model <- "p * ( ( e * a * x * g * y ) / (1 + ( a * h * x * g ) ) - ( m * y ) )"
 
-#Clean Code
-var.eqn.x <- "( r * x * (1 - ( x / k ) ) ) - ( a * x * y ) / ( 1 +  ( a * h * x ) ) "
-var.eqn.y <- "p * ( ( e * a * x * y ) / (1 + ( a * h * x ) ) - ( m * y ) )"
-
-param_model <- function(eff, ep) {
-  model.parms <- c(r = 2.0, k = 3.0, a = 1.1, h = 0.8, e = eff, m = 0.4, p = ep)
-  parms.eqn.x <- Model2String(var.eqn.x, parms = model.parms, supress.print = TRUE)
-  parms.eqn.y <- Model2String(var.eqn.y, parms = model.parms, supress.print = TRUE)
-  parms.eqn <- list(parms.eqn.x,parms.eqn.y)
-  return(parms.eqn)
+#General Functions
+param_model <- function(param) {
+  c(eff, ep, res_g, con_f) %<-% param
+  model_parms <- c(r = 2.0, k = 3.0, a = 1.1, h = 0.8, e = eff, m = 0.4, p = ep, g = res_g, f = con_f)
+  res_model_param <- Model2String(res_model, parms = model_parms, supress.print = TRUE)
+  con_model_param <- Model2String(con_model, parms = model_parms, supress.print = TRUE)
+  parms_eqn <- list(res_model_param, con_model_param)
+  return(parms_eqn)
 }
 
-sto_realization <- function(x0, y0, sigma, time, deltat, eff, ep) {
-  model.state <- c(x = x0, y = y0)
+sto_realization <- function(u0, param, sigma = 0.01, time = 1000, deltat = 1) {
+  model.state <- u0
   model.sigma <- sigma
   model.time <- time
   model.deltat <- deltat
-  ts.ex1 <- TSTraj(y0 = model.state,
+  ts.ex <- TSTraj(y0 = model.state,
                    time = model.time,
                    deltat = model.deltat,
-                   x.rhs = param_model(eff,ep)[1],
-                   y.rhs = param_model(eff,ep)[2],
+                   x.rhs = param_model(param)[[1]],
+                   y.rhs = param_model(param)[[2]],
                    sigma = model.sigma,
                    lower.bound = 0)
-  return(ts.ex1)
+  return(ts.ex)
 }
 
-vector_decomp_plot <- function(qpotential, bounds.x, bounds.y) {
-  VDAll <- VecDecomAll(surface = qpotential, x.rhs = parms.eqn.x, y.rhs = parms.eqn.y,x.bound = bounds.x, y.bound = bounds.y)
+vector_decomp_plot <- function(qpotential, bounds.x, bounds.y, param) {
+  VDAll <- VecDecomAll(surface = qpotential, x.rhs = param_model(param)[[1]], y.rhs = param_model(param)[[2]],x.bound = bounds.x, y.bound = bounds.y)
   ## Plot the deterministic skeleton vector field.
   ## VecDecomPlot(x.field = VDAll[, , 1], y.field = VDAll[, , 2], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, xlim = c(0, 4), ylim = c(0, 4),arrow.type = "equal", tail.length = 0.25, head.length = 0.025)
   par(mfrow=c(1,2))
@@ -46,397 +46,293 @@ vector_decomp_plot <- function(qpotential, bounds.x, bounds.y) {
   VecDecomPlot(x.field = VDAll[, , 5], y.field = VDAll[, , 6], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.35, head.length = 0.025)
 }
 
-ts.extest <- sto_realization(1.1922515, 2.367524, 0.01, 1000, 1, 0.6, 1.0)
-
-
-TSPlot(ts.extest, deltat = 1, ylim = c(0,5), xlim = c(0,5))
-TSPlot(ts.extest, deltat = 1, dim = 2)
-TSDensity(ts.extest, dim = 1)
-TSDensity(ts.extest, dim = 2)
-
-
+# Set bounds and step numbers for QPotential calculation
 bounds.x <- c(0, 4)
 bounds.y <- c(0, 4)
 step.number.x <- 1000
 step.number.y <- 1000
-
-
-eq1.local <- QPotential(x.rhs = param_model(0.6,1.0)[1],
-                        x.start = 0.9131818,
-                        x.bound = bounds.x,
-                        x.num.steps = step.number.x,
-                        y.rhs = param_model(0.6,1.0)[2],
-                        y.start = 2.28127,
-                        y.bound = bounds.y,
-                        y.num.steps = step.number.y)
-
-QPContour(surface = eq1.local, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
 
 #Quasi-potential with same noise for epsilon of 1 (with cycling)
-var.eqn.x <- "( r * x * (1 - ( x / k ) ) ) - ( a * x * y ) / ( 1 +  ( a * h * x ) ) "
-var.eqn.y <- "( e * a * x * y ) / (1 + ( a * h * x ) ) - ( m * y )"
+param_symnoise_ep1 <- list(eff = 0.72,
+                           ep = 1.0,
+                           res_g = 1.0,
+                           con_f = 1.0)
 
-model.parms <- c(r = 2.0, k = 3.0, a = 1.1, h = 0.8, e = 0.72, m = 0.4)
-parms.eqn.x <- Model2String(var.eqn.x, parms = model.parms, supress.print = TRUE)
-parms.eqn.y <- Model2String(var.eqn.y, parms = model.parms, supress.print = TRUE)
+u0_symnoise_ep1 <- c(x = 1.1922515, y = 2.367524)
 
-model.state <- c(x = 1.1922515, y= 2.367524)
-model.sigma <- 0.01
-model.time <- 1000     # we used 12500 in the figures
-model.deltat <- 0.01
-ts_symnoise_ep1 <- sto_realization(1.1922515, 2.367524, 0.01, 1000, 1, 0.72, 1.0)
-TSPlot(ts.ex1, deltat = model.deltat)
-TSPlot(ts.ex1, deltat = model.deltat, dim = 2)
-TSDensity(ts.ex1, dim = 1)
-TSDensity(ts.ex1, dim = 2)
+ts_symnoise_ep1 <- sto_realization(u0 = u0_symnoise_ep1, param = param_symnoise_ep1)
 
+TSPlot(ts_symnoise_ep1, deltat = 1)
+TSPlot(ts_symnoise_ep1, deltat = 1, dim = 2)
+TSDensity(ts_symnoise_ep1, dim = 1)
+TSDensity(ts_symnoise_ep1, dim = 2)
 
-bounds.x <- c(-0.5, 5.0)
-bounds.y <- c(-0.5, 5.0)
-step.number.x <- 1000
-step.number.y <- 1000
+qp_symnoise_ep1 <- QPotential(x.rhs = param_model(param_symnoise_ep1)[[1]],
+                              x.start = u0_symnoise_ep1[1],
+                              x.bound = bounds.x,
+                              x.num.steps = step.number.x,
+                              y.rhs = param_model(param_symnoise_ep1)[[2]],
+                              y.start = u0_symnoise_ep1[2],
+                              y.bound = bounds.y,
+                              y.num.steps = step.number.y)
 
-eq1.local <- QPotential(x.rhs = parms.eqn.x, x.start = 1.1922515, x.bound = bounds.x,x.num.steps = step.number.x, y.rhs = parms.eqn.y, y.start = 2.367524, y.bound = bounds.y, y.num.steps = step.number.y) #using point on cycle
-
-QPContour(surface = eq1.local, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
+QPContour(surface = qp_symnoise_ep1, dens = c(1000, 1000), x.bound = bounds.x, y.bound = bounds.y, c.parm = 5)
 # From gradient vector field does not look like upwind method correctly tested area within limit cycle - why?
-persp3D(z =eq1.local, x=seq(0,4,length.out = 1000), y=seq(0,4,length.out = 1000), xlim=c(0,3), ylim=c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,   xlab="Resource", ylab="Consumer", zlab="Quasipotential", ticktype="detailed", theta = 20, phi = 20)
 
-par(mfrow=c(1, 1))
-# Calculate all three vector fields.
-VDAll <- VecDecomAll(surface = eq1.local, x.rhs = parms.eqn.x, y.rhs = parms.eqn.y,x.bound = bounds.x, y.bound = bounds.y)
-## Plot the deterministic skeleton vector field.
-VecDecomPlot(x.field = VDAll[, , 1], y.field = VDAll[, , 2], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, xlim = c(0, 4), ylim = c(0, 4),arrow.type = "equal", tail.length = 0.25, head.length = 0.025)
-## Plot the gradient vector field.
-VecDecomPlot(x.field = VDAll[, , 3], y.field = VDAll[, , 4], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.25, head.length = 0.025)
-## Plot the remainder vector field.
-VecDecomPlot(x.field = VDAll[, , 5], y.field = VDAll[, , 6], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.35, head.length = 0.025)
+#persp3D(z = qp_symnoise_ep1, x = seq(0,4,length.out = 1000), y = seq(0,4,length.out = 1000), xlim = c(0,3), ylim = c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,   xlab="Resource", ylab="Consumer", zlab="Quasipotential", ticktype="detailed", theta = 20, phi = 20)
 
-
+vector_decomp_plot(qp_symnoise_ep1, bounds.x, bounds.y, param_symnoise_ep1)
 
 #Quasi-potential with same noise for epsilon of 0.01 (with efficiency of 0.8 - canard)
-var.eqn.x <- "( r * x * (1 - ( x / k ) ) ) - ( a * x * y ) / ( 1 +  ( a * h * x ) ) "
-var.eqn.y <- "p * ( ( e * a * x * y ) / (1 + ( a * h * x ) ) - ( m * y ) )"
+param_symnoise_ep001_eff08 <- list(eff = 0.8,
+                                   ep = 0.01,
+                                   res_g = 1.0,
+                                   con_f = 1.0)
 
-model.parms <- c(r = 2.0, k = 3.0, a = 1.1, h = 0.8, e = 0.8, m = 0.4, p = 0.1)
-parms.eqn.x <- Model2String(var.eqn.x, parms = model.parms, supress.print = TRUE)
-parms.eqn.y <- Model2String(var.eqn.y, parms = model.parms, supress.print = TRUE)
+u0_symnoise_ep001_eff08 <- c(x = 0.9131818, y = 2.28127)
 
-model.state <- c(x = 0.9131818, y = 2.28127) # using top of resource isocline
-model.sigma <- 0.01
-model.time <- 1000     # we used 12500 in the figures
-model.deltat <- 1
-ts.ex1 <- TSTraj(y0 = model.state, time = model.time, deltat = model.deltat, x.rhs = parms.eqn.x, y.rhs = parms.eqn.y, sigma = model.sigma, lower.bound = 0)
-#Problem - if using noise on resource - dynamics can flick over to negative because so close to 0 resources for part of canard
-# COuld have been solved with lower.bound = 0
+ts_symnoise_ep001_eff08 <- sto_realization(u0 = u0_symnoise_ep001_eff08, param = param_symnoise_ep001_eff08)
 
-TSPlot(ts.ex1, deltat = model.deltat, ylim = c(0,5), xlim = c(0,5))
-TSPlot(ts.ex1, deltat = model.deltat, dim = 2)
-TSDensity(ts.ex1, dim = 1)
-TSDensity(ts.ex1, dim = 2)
-bounds.x <- c(0, 4)
-bounds.y <- c(0, 4)
-
-eq1.local <- QPotential(x.rhs = parms.eqn.x, x.start = 0.9131818, x.bound = bounds.x,x.num.steps = step.number.x, y.rhs = parms.eqn.y, y.start = 2.28127, y.bound = bounds.y, y.num.steps = step.number.y)
-
-QPContour(surface = eq1.local, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
-#not quite working
-persp3D(z =eq1.local, x=seq(0,4,length.out = 1000),y=seq(0,4,length.out = 1000), xlim=c(0,3), ylim=c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab="Resource", ylab="Consumer", zlab="Quasipotential", ticktype="detailed", theta = 20, phi = 20)
-
-VDAll <- VecDecomAll(surface = eq1.local, x.rhs = parms.eqn.x, y.rhs = parms.eqn.y,x.bound = bounds.x, y.bound = bounds.y)
-## Plot the deterministic skeleton vector field.
-VecDecomPlot(x.field = VDAll[, , 1], y.field = VDAll[, , 2], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, xlim = c(0, 4), ylim = c(0, 4),arrow.type = "equal", tail.length = 0.25, head.length = 0.025)
-## Plot the gradient vector field.
-VecDecomPlot(x.field = VDAll[, , 3], y.field = VDAll[, , 4], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.25, head.length = 0.025)
-## Plot the remainder vector field.
-VecDecomPlot(x.field = VDAll[, , 5], y.field = VDAll[, , 6], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.35, head.length = 0.025)
+TSPlot(ts_symnoise_ep001_eff08, deltat = 1, ylim = c(0,5), xlim = c(0,5))
+TSPlot(ts_symnoise_ep001_eff08, deltat = 1, dim = 2)
+TSDensity(ts_symnoise_ep001_eff08, dim = 1)
+TSDensity(ts_symnoise_ep001_eff08, dim = 2)
 
 
 
-# maybe doesn't matter that same noise for both equations - could put different noise in supplemental
-# NO BUT noise on different time scales so could potentially matter!
+qp_symnoise_ep001_eff08 <- QPotential(x.rhs = param_model(param_symnoise_ep001_eff08)[[1]],
+                                      x.start = u0_symnoise_ep001_eff08[1],
+                                      x.bound = bounds.x,
+                                      x.num.steps = step.number.x,
+                                      y.rhs = param_model(param_symnoise_ep001_eff08)[[2]],
+                                      y.start = u0_symnoise_ep001_eff08[2],
+                                      y.bound = bounds.y,
+                                      y.num.steps = step.number.y)
 
-#TODO try making for different epsilon values across the real/complex divide - AND set out issues
+#not working - need to change where qp began?
+QPContour(surface = qp_symnoise_ep001_eff08, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
+
+#persp3D(z = qp_symnoise_ep001_eff08, x = seq(0,4,length.out = 1000),y = seq(0,4,length.out = 1000), xlim = c(0,3), ylim = c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab = "Resource", ylab = "Consumer", zlab = "Quasipotential", ticktype = "detailed", theta = 20, phi = 20)
+
+vector_decomp_plot(qp_symnoise_ep001_eff08, bounds.x, bounds.y, param_symnoise_ep001_eff08)
+
+#TODO
 #1. non canard limit cycle -> centre just a flat surface - shouldnt be that
-#2. check determinitistic canard skeleton - always same numbers?
-#3. canard with stochasticity doesn't follow same straight back to resource isocline (going right) every single time
 #4. coordinate transform to get different noise for C and R
 
 #Quasi-potential with same noise for epsilon of 0.1 (with efficiency of 0.5)
-var.eqn.x <- "( r * x * (1 - ( x / k ) ) ) - ( a * x * y ) / ( 1 +  ( a * h * x ) ) "
-var.eqn.y <- "p * ( ( e * a * x * y ) / (1 + ( a * h * x ) ) - ( m * y ) )"
+param_symnoise_ep01_eff05 <- list(eff = 0.5,
+                                   ep = 0.1,
+                                   res_g = 1.0,
+                                   con_f = 1.0)
 
-model.parms <- c(r = 2.0, k = 3.0, a = 1.1, h = 0.8, e = 0.5, m = 0.4, p = 0.01)
-parms.eqn.x <- Model2String(var.eqn.x, parms = model.parms, supress.print = TRUE)
-parms.eqn.y <- Model2String(var.eqn.y, parms = model.parms, supress.print = TRUE)
+u0_symnoise_ep01_eff05 <- c(x = 2.02, y = 1.65)
 
-model.state <- c(x = 2.02, y = 1.65)
-model.sigma <- 0.01
-model.time <- 1000     # we used 12500 in the figures
-model.deltat <- 1
-ts.ex1 <- TSTraj(y0 = model.state, time = model.time, deltat = model.deltat, x.rhs = parms.eqn.x, y.rhs = parms.eqn.y, sigma = model.sigma, lower.bound = 0)
-#Problem - if using noise on resource - dynamics can flick over to negative because so close to 0 resources for part of canard
-# COuld have been solved with lower.bound = 0
+ts_symnoise_ep01_eff05 <- sto_realization(u0 = u0_symnoise_ep01_eff05, param = param_symnoise_ep01_eff05)
 
-TSPlot(ts.ex1, deltat = model.deltat, ylim = c(0,5), xlim = c(0,5))
-TSPlot(ts.ex1, deltat = model.deltat, dim = 2)
-TSDensity(ts.ex1, dim = 1)
-TSDensity(ts.ex1, dim = 2)
-bounds.x <- c(0, 4)
-bounds.y <- c(0, 4)
-step.number.x <- 1000
-step.number.y <- 1000
+TSPlot(ts_symnoise_ep01_eff05, deltat = 1, ylim = c(0,5), xlim = c(0,5))
+TSPlot(ts_symnoise_ep01_eff05, deltat = 1, dim = 2)
+TSDensity(ts_symnoise_ep01_eff05, dim = 1)
+TSDensity(ts_symnoise_ep01_eff05, dim = 2)
 
-eq1.local <- QPotential(x.rhs = parms.eqn.x, x.start = 2.02, x.bound = bounds.x,x.num.steps = step.number.x, y.rhs = parms.eqn.y, y.start = 1.65, y.bound = bounds.y, y.num.steps = step.number.y)
+qp_symnoise_ep01_eff05 <- QPotential(x.rhs = param_model(param_symnoise_ep01_eff05)[[1]],
+                                      x.start = u0_symnoise_ep01_eff05[1],
+                                      x.bound = bounds.x,
+                                      x.num.steps = step.number.x,
+                                      y.rhs = param_model(param_symnoise_ep01_eff05)[[2]],
+                                      y.start = u0_symnoise_ep01_eff05[2],
+                                      y.bound = bounds.y,
+                                      y.num.steps = step.number.y)
 
-QPContour(surface = eq1.local, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
-#not quite working
-persp3D(z =eq1.local, x=seq(0, 4, length.out=1000), y=seq(0, 4, length.out=1000), xlim=c(0,3), ylim=c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab="Resource", ylab="Consumer", zlab="Quasipotential", ticktype="detailed", theta = 20, phi = 20)
+QPContour(surface = qp_symnoise_ep01_eff05, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
 
-VDAll <- VecDecomAll(surface = eq1.local, x.rhs = parms.eqn.x, y.rhs = parms.eqn.y,x.bound = bounds.x, y.bound = bounds.y)
-## Plot the deterministic skeleton vector field.
-VecDecomPlot(x.field = VDAll[, , 1], y.field = VDAll[, , 2], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, xlim = c(0, 4), ylim = c(0, 4),arrow.type = "equal", tail.length = 0.25, head.length = 0.025)
-## Plot the gradient vector field.
-VecDecomPlot(x.field = VDAll[, , 3], y.field = VDAll[, , 4], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.25, head.length = 0.025)
-## Plot the remainder vector field.
-VecDecomPlot(x.field = VDAll[, , 5], y.field = VDAll[, , 6], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.35, head.length = 0.025)
+persp3D(z = qp_symnoise_ep001_eff08, x = seq(0,4,length.out = 1000),y = seq(0,4,length.out = 1000), xlim = c(0,3), ylim = c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab = "Resource", ylab = "Consumer", zlab = "Quasipotential", ticktype = "detailed", theta = 20, phi = 20)
+
+vector_decomp_plot(qp_symnoise_ep001_eff08, bounds.x, bounds.y, param_symnoise_ep01_eff05)
 
 #Quasi-potential with same noise for epsilon of 0.5 (with efficiency of 0.5)
-var.eqn.x <- "( r * x * (1 - ( x / k ) ) ) - ( a * x * y ) / ( 1 +  ( a * h * x ) ) "
-var.eqn.y <- "p * ( ( e * a * x * y ) / (1 + ( a * h * x ) ) - ( m * y ) )"
+param_symnoise_ep05_eff05 <- list(eff = 0.5,
+                                   ep = 0.5,
+                                   res_g = 1.0,
+                                   con_f = 1.0)
 
-model.parms <- c(r = 2.0, k = 3.0, a = 1.1, h = 0.8, e = 0.5, m = 0.4, p = 0.5)
-parms.eqn.x <- Model2String(var.eqn.x, parms = model.parms, supress.print = TRUE)
-parms.eqn.y <- Model2String(var.eqn.y, parms = model.parms, supress.print = TRUE)
+u0_symnoise_ep05_eff05 <- c(x = 2.02, y = 1.65)
 
-model.state <- c(x = 2.02, y = 1.65)
-model.sigma <- 0.01
-model.time <- 1000     # we used 12500 in the figures
-model.deltat <- 1
-ts.ex1 <- TSTraj(y0 = model.state, time = model.time, deltat = model.deltat, x.rhs = parms.eqn.x, y.rhs = parms.eqn.y, sigma = model.sigma, lower.bound = 0)
-#Problem - if using noise on resource - dynamics can flick over to negative because so close to 0 resources for part of canard
-# COuld have been solved with lower.bound = 0
+ts_symnoise_ep05_eff05 <- sto_realization(u0 = u0_symnoise_ep05_eff05, param = param_symnoise_ep05_eff05)
 
-TSPlot(ts.ex1, deltat = model.deltat, ylim = c(0,5), xlim = c(0,5))
-TSPlot(ts.ex1, deltat = model.deltat, dim = 2)
-TSDensity(ts.ex1, dim = 1)
-TSDensity(ts.ex1, dim = 2)
-bounds.x <- c(0, 4)
-bounds.y <- c(0, 4)
+TSPlot(ts_symnoise_ep05_eff05, deltat = 1, ylim = c(0,5), xlim = c(0,5))
+TSPlot(ts_symnoise_ep05_eff05, deltat = 1, dim = 2)
+TSDensity(ts_symnoise_ep05_eff05, dim = 1)
+TSDensity(ts_symnoise_ep05_eff05, dim = 2)
 
-eq1.local <- QPotential(x.rhs = parms.eqn.x, x.start = 2.02, x.bound = bounds.x,x.num.steps = step.number.x, y.rhs = parms.eqn.y, y.start = 1.65, y.bound = bounds.y, y.num.steps = step.number.y)
+qp_symnoise_ep05_eff05 <- QPotential(x.rhs = param_model(param_symnoise_ep05_eff05)[[1]],
+                                      x.start = u0_symnoise_ep05_eff05[1],
+                                      x.bound = bounds.x,
+                                      x.num.steps = step.number.x,
+                                      y.rhs = param_model(param_symnoise_ep05_eff05)[[2]],
+                                      y.start = u0_symnoise_ep05_eff05[2],
+                                      y.bound = bounds.y,
+                                      y.num.steps = step.number.y)
 
-QPContour(surface = eq1.local, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
-#not quite working
-persp3D(z =eq1.local,x=seq(0, 4, length.out=1000), y=seq(0, 4, length.out=1000), xlim=c(0,3), ylim=c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab="Resource", ylab="Consumer", zlab="Quasipotential", ticktype="detailed", theta = 20, phi = 20)
+QPContour(surface = qp_symnoise_ep05_eff05, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
 
-VDAll <- VecDecomAll(surface = eq1.local, x.rhs = parms.eqn.x, y.rhs = parms.eqn.y,x.bound = bounds.x, y.bound = bounds.y)
-## Plot the deterministic skeleton vector field.
-VecDecomPlot(x.field = VDAll[, , 1], y.field = VDAll[, , 2], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, xlim = c(0, 4), ylim = c(0, 4),arrow.type = "equal", tail.length = 0.25, head.length = 0.025)
-## Plot the gradient vector field.
-VecDecomPlot(x.field = VDAll[, , 3], y.field = VDAll[, , 4], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.25, head.length = 0.025)
-## Plot the remainder vector field.
-VecDecomPlot(x.field = VDAll[, , 5], y.field = VDAll[, , 6], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.35, head.length = 0.025)
+persp3D(z = qp_symnoise_ep05_eff05, x = seq(0,4,length.out = 1000),y = seq(0,4,length.out = 1000), xlim = c(0,3), ylim = c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab = "Resource", ylab = "Consumer", zlab = "Quasipotential", ticktype = "detailed", theta = 20, phi = 20)
+
+vector_decomp_plot(qp_symnoise_ep05_eff05, bounds.x, bounds.y, param_symnoise_ep05_eff05)
 
 #Quasi-potential with same noise for epsilon of 0.9 (with efficiency of 0.5)
-var.eqn.x <- "( r * x * (1 - ( x / k ) ) ) - ( a * x * y ) / ( 1 +  ( a * h * x ) ) "
-var.eqn.y <- "p * ( ( e * a * x * y ) / (1 + ( a * h * x ) ) - ( m * y ) )"
+param_symnoise_ep09_eff05 <- list(eff = 0.5,
+                                   ep = 0.9,
+                                   res_g = 1.0,
+                                   con_f = 1.0)
 
-model.parms <- c(r = 2.0, k = 3.0, a = 1.1, h = 0.8, e = 0.5, m = 0.4, p = 0.9)
-parms.eqn.x <- Model2String(var.eqn.x, parms = model.parms, supress.print = TRUE)
-parms.eqn.y <- Model2String(var.eqn.y, parms = model.parms, supress.print = TRUE)
+u0_symnoise_ep09_eff05 <- c(x = 2.02, y = 1.65)
 
-model.state <- c(x = 2.02, y = 1.65)
-model.sigma <- 0.01
-model.time <- 1000     # we used 12500 in the figures
-model.deltat <- 1
-ts.ex1 <- TSTraj(y0 = model.state, time = model.time, deltat = model.deltat, x.rhs = parms.eqn.x, y.rhs = parms.eqn.y, sigma = model.sigma, lower.bound = 0)
-#Problem - if using noise on resource - dynamics can flick over to negative because so close to 0 resources for part of canard
-# COuld have been solved with lower.bound = 0
+ts_symnoise_ep09_eff05 <- sto_realization(u0 = u0_symnoise_ep09_eff05, param = param_symnoise_ep09_eff05)
 
-TSPlot(ts.ex1, deltat = model.deltat, ylim = c(0,5), xlim = c(0,5))
-TSPlot(ts.ex1, deltat = model.deltat, dim = 2)
-TSDensity(ts.ex1, dim = 1)
-TSDensity(ts.ex1, dim = 2)
-bounds.x <- c(0, 4)
-bounds.y <- c(0, 4)
-step.number.x <- 1000
-step.number.y <- 1000
+TSPlot(ts_symnoise_ep09_eff05, deltat = 1, ylim = c(0,5), xlim = c(0,5))
+TSPlot(ts_symnoise_ep09_eff05, deltat = 1, dim = 2)
+TSDensity(ts_symnoise_ep09_eff05, dim = 1)
+TSDensity(ts_symnoise_ep09_eff05, dim = 2)
 
-eq1.local <- QPotential(x.rhs = parms.eqn.x, x.start = 2.02, x.bound = bounds.x,x.num.steps = step.number.x, y.rhs = parms.eqn.y, y.start = 1.65, y.bound = bounds.y, y.num.steps = step.number.y)
+qp_symnoise_ep09_eff05 <- QPotential(x.rhs = param_model(param_symnoise_ep09_eff05)[[1]],
+                                      x.start = u0_symnoise_ep09_eff05[1],
+                                      x.bound = bounds.x,
+                                      x.num.steps = step.number.x,
+                                      y.rhs = param_model(param_symnoise_ep09_eff05)[[2]],
+                                      y.start = u0_symnoise_ep09_eff05[2],
+                                      y.bound = bounds.y,
+                                      y.num.steps = step.number.y)
 
-QPContour(surface = eq1.local, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
-#not quite working
-persp3D(z =eq1.local, x=seq(0, 4, length.out=1000), y=seq(0, 4, length.out=1000), xlim=c(0,3), ylim=c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab="Resource", ylab="Consumer", zlab="Quasipotential", ticktype="detailed", theta = 20, phi = 20)
+QPContour(surface = qp_symnoise_ep09_eff05, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
 
-VDAll <- VecDecomAll(surface = eq1.local, x.rhs = parms.eqn.x, y.rhs = parms.eqn.y,x.bound = bounds.x, y.bound = bounds.y)
-## Plot the deterministic skeleton vector field.
-VecDecomPlot(x.field = VDAll[, , 1], y.field = VDAll[, , 2], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, xlim = c(0, 4), ylim = c(0, 4),arrow.type = "equal", tail.length = 0.25, head.length = 0.025)
-## Plot the gradient vector field.
-VecDecomPlot(x.field = VDAll[, , 3], y.field = VDAll[, , 4], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.25, head.length = 0.025)
-## Plot the remainder vector field.
-VecDecomPlot(x.field = VDAll[, , 5], y.field = VDAll[, , 6], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.35, head.length = 0.025)
+persp3D(z = qp_symnoise_ep09_eff05, x = seq(0,4,length.out = 1000),y = seq(0,4,length.out = 1000), xlim = c(0,3), ylim = c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab = "Resource", ylab = "Consumer", zlab = "Quasipotential", ticktype = "detailed", theta = 20, phi = 20)
 
-
+vector_decomp_plot(qp_symnoise_ep09_eff05, bounds.x, bounds.y, param_symnoise_ep09_eff05)
 
 #Quasi-potential with same noise for epsilon of 0.04 (with efficiency of 0.6)
-var.eqn.x <- "( r * x * (1 - ( x / k ) ) ) - ( a * x * y ) / ( 1 +  ( a * h * x ) ) "
-var.eqn.y <- "p * ( ( e * a * x * y ) / (1 + ( a * h * x ) ) - ( m * y ) )"
+param_symnoise_ep004_eff06 <- list(eff = 0.6,
+                                   ep = 0.04,
+                                   res_g = 1.0,
+                                   con_f = 1.0)
 
-model.parms <- c(r = 2.0, k = 3.0, a = 1.1, h = 0.8, e = 0.6, m = 0.4, p = 0.04)
-parms.eqn.x <- Model2String(var.eqn.x, parms = model.parms, supress.print = TRUE)
-parms.eqn.y <- Model2String(var.eqn.y, parms = model.parms, supress.print = TRUE)
+u0_symnoise_ep004_eff06 <- c(x = 1.30, y = 2.21)
 
-model.state <- c(x = 1.30, y = 2.21)
-model.sigma <- 0.01
-model.time <- 1000     # we used 12500 in the figures
-model.deltat <- 1
-ts.ex1 <- TSTraj(y0 = model.state, time = model.time, deltat = model.deltat, x.rhs = parms.eqn.x, y.rhs = parms.eqn.y, sigma = model.sigma, lower.bound = 0)
-#Problem - if using noise on resource - dynamics can flick over to negative because so close to 0 resources for part of canard
-# COuld have been solved with lower.bound = 0
+ts_symnoise_ep004_eff06 <- sto_realization(u0 = u0_symnoise_ep004_eff06, param = param_symnoise_ep004_eff06)
 
-TSPlot(ts.ex1, deltat = model.deltat, ylim = c(0,5), xlim = c(0,5))
-TSPlot(ts.ex1, deltat = model.deltat, dim = 2)
-TSDensity(ts.ex1, dim = 1)
-TSDensity(ts.ex1, dim = 2)
-bounds.x <- c(0, 4)
-bounds.y <- c(0, 4)
-step.number.x <- 1000
-step.number.y <- 1000
+TSPlot(ts_symnoise_ep004_eff06, deltat = 1, ylim = c(0,5), xlim = c(0,5))
+TSPlot(ts_symnoise_ep004_eff06, deltat = 1, dim = 2)
+TSDensity(ts_symnoise_ep004_eff06, dim = 1)
+TSDensity(ts_symnoise_ep004_eff06, dim = 2)
 
-eq1.local <- QPotential(x.rhs = parms.eqn.x, x.start = 1.30, x.bound = bounds.x,x.num.steps = step.number.x, y.rhs = parms.eqn.y, y.start = 2.21, y.bound = bounds.y, y.num.steps = step.number.y)
+qp_symnoise_ep004_eff06 <- QPotential(x.rhs = param_model(param_symnoise_ep004_eff06)[[1]],
+                                      x.start = u0_symnoise_ep004_eff06[1],
+                                      x.bound = bounds.x,
+                                      x.num.steps = step.number.x,
+                                      y.rhs = param_model(param_symnoise_ep004_eff06)[[2]],
+                                      y.start = u0_symnoise_ep004_eff06[2],
+                                      y.bound = bounds.y,
+                                      y.num.steps = step.number.y)
 
-QPContour(surface = eq1.local, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
+QPContour(surface = qp_symnoise_ep004_eff06, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
 
-persp3D(z =eq1.local, x=seq(0,4,length.out = 1000), y=seq(0,4,length.out = 1000), xlim=c(0,3), ylim=c(0,2.5), zlim=c(0,0.0007), col = viridis(n = 100, option = "A"), contour=TRUE, xlab="Resource", ylab="Consumer", zlab="Quasipotential", ticktype="detailed", theta = 40, phi = 20)
+persp3D(z = qp_symnoise_ep004_eff06, x = seq(0,4,length.out = 1000),y = seq(0,4,length.out = 1000), xlim = c(0,3), ylim = c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab = "Resource", ylab = "Consumer", zlab = "Quasipotential", ticktype = "detailed", theta = 20, phi = 20)
 
-VDAll <- VecDecomAll(surface = eq1.local, x.rhs = parms.eqn.x, y.rhs = parms.eqn.y,x.bound = bounds.x, y.bound = bounds.y)
-## Plot the deterministic skeleton vector field.
-VecDecomPlot(x.field = VDAll[, , 1], y.field = VDAll[, , 2], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, xlim = c(0, 4), ylim = c(0, 4), arrow.type = "equal", tail.length = 0.25, head.length = 0.025)
-## Plot the gradient vector field.
-VecDecomPlot(x.field = VDAll[, , 3], y.field = VDAll[, , 4], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.25, head.length = 0.025)
-## Plot the remainder vector field.
-VecDecomPlot(x.field = VDAll[, , 5], y.field = VDAll[, , 6], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.35, head.length = 0.025)
-
+vector_decomp_plot(qp_symnoise_ep004_eff06, bounds.x, bounds.y, param_symnoise_ep004_eff06)
 
 #Quasi-potential with same noise for epsilon of 0.15 (with efficiency of 0.6)
-var.eqn.x <- "( r * x * (1 - ( x / k ) ) ) - ( a * x * y ) / ( 1 +  ( a * h * x ) ) "
-var.eqn.y <- "p * ( ( e * a * x * y ) / (1 + ( a * h * x ) ) - ( m * y ) )"
+param_symnoise_ep015_eff06 <- list(eff = 0.6,
+                                   ep = 0.15,
+                                   res_g = 1.0,
+                                   con_f = 1.0)
 
-model.parms <- c(r = 2.0, k = 3.0, a = 1.1, h = 0.8, e = 0.6, m = 0.4, p = 0.15)
-parms.eqn.x <- Model2String(var.eqn.x, parms = model.parms, supress.print = TRUE)
-parms.eqn.y <- Model2String(var.eqn.y, parms = model.parms, supress.print = TRUE)
+u0_symnoise_ep015_eff06 <- c(x = 1.30, y = 2.21)
 
-model.state <- c(x = 1.30, y = 2.21)
-model.sigma <- 0.01
-model.time <- 1000     # we used 12500 in the figures
-model.deltat <- 1
-ts.ex1 <- TSTraj(y0 = model.state, time = model.time, deltat = model.deltat, x.rhs = parms.eqn.x, y.rhs = parms.eqn.y, sigma = model.sigma, lower.bound = 0)
-#Problem - if using noise on resource - dynamics can flick over to negative because so close to 0 resources for part of canard
-# COuld have been solved with lower.bound = 0
+ts_symnoise_ep015_eff06 <- sto_realization(u0 = u0_symnoise_ep015_eff06, param = param_symnoise_ep015_eff06)
 
-TSPlot(ts.ex1, deltat = model.deltat, ylim = c(0,5), xlim = c(0,5))
-TSPlot(ts.ex1, deltat = model.deltat, dim = 2)
-TSDensity(ts.ex1, dim = 1)
-TSDensity(ts.ex1, dim = 2)
-bounds.x <- c(0, 4)
-bounds.y <- c(0, 4)
+TSPlot(ts_symnoise_ep015_eff06, deltat = 1, ylim = c(0,5), xlim = c(0,5))
+TSPlot(ts_symnoise_ep015_eff06, deltat = 1, dim = 2)
+TSDensity(ts_symnoise_ep015_eff06, dim = 1)
+TSDensity(ts_symnoise_ep015_eff06, dim = 2)
 
-eq1.local <- QPotential(x.rhs = parms.eqn.x, x.start = 1.30, x.bound = bounds.x,x.num.steps = step.number.x, y.rhs = parms.eqn.y, y.start = 2.21, y.bound = bounds.y, y.num.steps = step.number.y)
+qp_symnoise_ep015_eff06 <- QPotential(x.rhs = param_model(param_symnoise_ep015_eff06)[[1]],
+                                      x.start = u0_symnoise_ep015_eff06[1],
+                                      x.bound = bounds.x,
+                                      x.num.steps = step.number.x,
+                                      y.rhs = param_model(param_symnoise_ep015_eff06)[[2]],
+                                      y.start = u0_symnoise_ep015_eff06[2],
+                                      y.bound = bounds.y,
+                                      y.num.steps = step.number.y)
 
-QPContour(surface = eq1.local, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
-#not quite working
-persp3D(z =eq1.local,x=seq(0,4,length.out = 1000),y=seq(0,4,length.out = 1000), xlim=c(0,3), ylim=c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab="Resource", ylab="Consumer", zlab="Quasipotential", ticktype="detailed", theta = 40, phi = 20)
+QPContour(surface = qp_symnoise_ep015_eff06, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
 
-VDAll <- VecDecomAll(surface = eq1.local, x.rhs = parms.eqn.x, y.rhs = parms.eqn.y,x.bound = bounds.x, y.bound = bounds.y)
-## Plot the deterministic skeleton vector field.
-VecDecomPlot(x.field = VDAll[, , 1], y.field = VDAll[, , 2], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, xlim = c(0, 4), ylim = c(0, 4),arrow.type = "equal", tail.length = 0.25, head.length = 0.025)
-## Plot the gradient vector field.
-VecDecomPlot(x.field = VDAll[, , 3], y.field = VDAll[, , 4], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.25, head.length = 0.025)
-## Plot the remainder vector field.
-VecDecomPlot(x.field = VDAll[, , 5], y.field = VDAll[, , 6], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.35, head.length = 0.025)
+persp3D(z = qp_symnoise_ep015_eff06, x = seq(0,4,length.out = 1000),y = seq(0,4,length.out = 1000), xlim = c(0,3), ylim = c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab = "Resource", ylab = "Consumer", zlab = "Quasipotential", ticktype = "detailed", theta = 20, phi = 20)
 
+vector_decomp_plot(qp_symnoise_ep015_eff06, bounds.x, bounds.y, param_symnoise_ep015_eff06)
 
 #Quasi-potential with same noise for epsilon of 0.9 (with efficiency of 0.6)
-var.eqn.x <- "( r * x * (1 - ( x / k ) ) ) - ( a * x * y ) / ( 1 +  ( a * h * x ) ) "
-var.eqn.y <- "p * ( ( e * a * x * y ) / (1 + ( a * h * x ) ) - ( m * y ) )"
+param_symnoise_ep09_eff06 <- list(eff = 0.6,
+                                   ep = 0.9,
+                                   res_g = 1.0,
+                                   con_f = 1.0)
 
-model.parms <- c(r = 2.0, k = 3.0, a = 1.1, h = 0.8, e = 0.6, m = 0.4, p = 0.9)
-parms.eqn.x <- Model2String(var.eqn.x, parms = model.parms, supress.print = TRUE)
-parms.eqn.y <- Model2String(var.eqn.y, parms = model.parms, supress.print = TRUE)
+u0_symnoise_ep09_eff06 <- c(x = 1.30, y = 2.21)
 
-model.state <- c(x = 1.30, y = 2.21)
-model.sigma <- 0.01
-model.time <- 1000     # we used 12500 in the figures
-model.deltat <- 1
-ts.ex1 <- TSTraj(y0 = model.state, time = model.time, deltat = model.deltat, x.rhs = parms.eqn.x, y.rhs = parms.eqn.y, sigma = model.sigma, lower.bound = 0)
-#Problem - if using noise on resource - dynamics can flick over to negative because so close to 0 resources for part of canard
-# COuld have been solved with lower.bound = 0
+ts_symnoise_ep09_eff06 <- sto_realization(u0 = u0_symnoise_ep09_eff06, param = param_symnoise_ep09_eff06)
 
-TSPlot(ts.ex1, deltat = model.deltat, ylim = c(0,5), xlim = c(0,5))
-TSPlot(ts.ex1, deltat = model.deltat, dim = 2)
-TSDensity(ts.ex1, dim = 1)
-TSDensity(ts.ex1, dim = 2)
-bounds.x <- c(0, 4)
-bounds.y <- c(0, 4)
-step.number.x <- 1000
-step.number.y <- 1000
+TSPlot(ts_symnoise_ep09_eff06, deltat = 1, ylim = c(0,5), xlim = c(0,5))
+TSPlot(ts_symnoise_ep09_eff06, deltat = 1, dim = 2)
+TSDensity(ts_symnoise_ep09_eff06, dim = 1)
+TSDensity(ts_symnoise_ep09_eff06, dim = 2)
 
-eq1.local <- QPotential(x.rhs = parms.eqn.x, x.start = 1.30, x.bound = bounds.x,x.num.steps = step.number.x, y.rhs = parms.eqn.y, y.start = 2.21, y.bound = bounds.y, y.num.steps = step.number.y)
+qp_symnoise_ep09_eff06 <- QPotential(x.rhs = param_model(param_symnoise_ep09_eff06)[[1]],
+                                      x.start = u0_symnoise_ep09_eff06[1],
+                                      x.bound = bounds.x,
+                                      x.num.steps = step.number.x,
+                                      y.rhs = param_model(param_symnoise_ep09_eff06)[[2]],
+                                      y.start = u0_symnoise_ep09_eff06[2],
+                                      y.bound = bounds.y,
+                                      y.num.steps = step.number.y)
 
-QPContour(surface = eq1.local, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
-#not quite working
-persp3D(z =eq1.local,x=seq(0,4,length.out = 1000),y=seq(0,4,length.out = 1000), xlim=c(0,3), ylim=c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab="Resource", ylab="Consumer", zlab="Quasipotential", ticktype="detailed", theta = 40, phi = 20)
+QPContour(surface = qp_symnoise_ep09_eff06, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
 
-VDAll <- VecDecomAll(surface = eq1.local, x.rhs = parms.eqn.x, y.rhs = parms.eqn.y,x.bound = bounds.x, y.bound = bounds.y)
-## Plot the deterministic skeleton vector field.
-VecDecomPlot(x.field = VDAll[, , 1], y.field = VDAll[, , 2], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, xlim = c(0, 4), ylim = c(0, 4),arrow.type = "equal", tail.length = 0.25, head.length = 0.025)
-## Plot the gradient vector field.
-VecDecomPlot(x.field = VDAll[, , 3], y.field = VDAll[, , 4], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.25, head.length = 0.025)
-## Plot the remainder vector field.
-VecDecomPlot(x.field = VDAll[, , 5], y.field = VDAll[, , 6], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.35, head.length = 0.025)
+persp3D(z = qp_symnoise_ep09_eff06, x = seq(0,4,length.out = 1000),y = seq(0,4,length.out = 1000), xlim = c(0,3), ylim = c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab = "Resource", ylab = "Consumer", zlab = "Quasipotential", ticktype = "detailed", theta = 20, phi = 20)
 
+vector_decomp_plot(qp_symnoise_ep09_eff06, bounds.x, bounds.y, param_symnoise_ep09_eff06)
 
 #Quasi-potential with different noise for epsilon of 0.9 (with efficiency of 0.6)
-var.eqn.x <- "( r * x * (1 - ( ( x * g ) / k ) ) ) - ( a * x * y * f ) / ( 1 +  ( a * h * x * g ) ) "
-var.eqn.y <- "p * ( ( e * a * x * g * y ) / (1 + ( a * h * x * g ) ) - ( m * y ) )"
+param_asymnoise_ep09_eff06 <- list(eff = 0.6,
+                                   ep = 0.9,
+                                   res_g = 0.447,
+                                   con_f = 0.894)
 
-model.parms <- c(r = 2.0, k = 3.0, a = 1.1, h = 0.8, e = 0.6, m = 0.4, p = 0.9, g = 0.447, f = 0.894)
-parms.eqn.x <- Model2String(var.eqn.x, parms = model.parms, supress.print = TRUE)
-parms.eqn.y <- Model2String(var.eqn.y, parms = model.parms, supress.print = TRUE)
+u0_asymnoise_ep09_eff06 <- c(x = 1.30/0.447, y = 2.21/0.894)
 
-model.state <- c(x = 1.30/0.447, y = 2.21/0.894)
-model.sigma <- 0.01
-model.time <- 1000     # we used 12500 in the figures
-model.deltat <- 1
-ts.ex1 <- TSTraj(y0 = model.state, time = model.time, deltat = model.deltat, x.rhs = parms.eqn.x, y.rhs = parms.eqn.y, sigma = model.sigma, lower.bound = 0)
-#Problem - if using noise on resource - dynamics can flick over to negative because so close to 0 resources for part of canard
-# COuld have been solved with lower.bound = 0
+ts_asymnoise_ep09_eff06 <- sto_realization(u0 = u0_asymnoise_ep09_eff06, param = param_asymnoise_ep09_eff06)
 
-TSPlot(ts.ex1, deltat = model.deltat, ylim = c(0,5), xlim = c(0,5))
-TSPlot(ts.ex1, deltat = model.deltat, dim = 2)
-TSDensity(ts.ex1, dim = 1)
-TSDensity(ts.ex1, dim = 2)
+TSPlot(ts_asymnoise_ep09_eff06, deltat = 1, ylim = c(0,8), xlim = c(0,8))
+TSPlot(ts_asymnoise_ep09_eff06, deltat = 1, dim = 2)
+TSDensity(ts_asymnoise_ep09_eff06, dim = 1)
+TSDensity(ts_asymnoise_ep09_eff06, dim = 2)
+
 bounds.x <- c(0, 8)
 bounds.y <- c(0, 8)
-step.number.x <- 1000
-step.number.y <- 1000
 
-eq1.local <- QPotential(x.rhs = parms.eqn.x, x.start = 1.30/0.447, x.bound = bounds.x,x.num.steps = step.number.x, y.rhs = parms.eqn.y, y.start = 2.21/0.894, y.bound = bounds.y, y.num.steps = step.number.y)
+qp_asymnoise_ep09_eff06 <- QPotential(x.rhs = param_model(param_asymnoise_ep09_eff06)[[1]],
+                                      x.start = u0_asymnoise_ep09_eff06[1],
+                                      x.bound = bounds.x,
+                                      x.num.steps = step.number.x,
+                                      y.rhs = param_model(param_asymnoise_ep09_eff06)[[2]],
+                                      y.start = u0_asymnoise_ep09_eff06[2],
+                                      y.bound = bounds.y,
+                                      y.num.steps = step.number.y)
 
-QPContour(surface = eq1.local, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
+QPContour(surface = qp_asymnoise_ep09_eff06, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
 
 persp3D(z =eq1.local,x=seq(0,8,length.out = 1000),y=seq(0,8,length.out = 1000), xlim=c(0,3), ylim=c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab="Resource", ylab="Consumer", zlab="Quasipotential", ticktype="detailed", theta = 40, phi = 20)
 #Need to put back into coordinates of resource and consumer
-VDAll <- VecDecomAll(surface = eq1.local, x.rhs = parms.eqn.x, y.rhs = parms.eqn.y,x.bound = bounds.x, y.bound = bounds.y)
-## Plot the deterministic skeleton vector field.
-VecDecomPlot(x.field = VDAll[, , 1], y.field = VDAll[, , 2], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, xlim = c(0, 4), ylim = c(0, 4),arrow.type = "equal", tail.length = 0.25, head.length = 0.025)
-## Plot the gradient vector field.
-VecDecomPlot(x.field = VDAll[, , 3], y.field = VDAll[, , 4], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.25, head.length = 0.025)
-## Plot the remainder vector field.
-VecDecomPlot(x.field = VDAll[, , 5], y.field = VDAll[, , 6], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.35, head.length = 0.025)
 
-
+vector_decomp_plot(qp_asymnoise_ep09_eff06, bounds.x, bounds.y, param_symnoise_ep09_eff06)
 
 
 # Quasi-potential testing
@@ -519,6 +415,7 @@ VecDecomPlot(x.field = VDAll[, , 3], y.field = VDAll[, , 4], dens = c(25, 25),x.
 VecDecomPlot(x.field = VDAll[, , 5], y.field = VDAll[, , 6], dens = c(25, 25),x.bound = c(-0.5, 7.5), y.bound = c(-0.5, 7.5), arrow.type = "proportional",tail.length = 0.35, head.length = 0.025)
 
 
+## Deterministic Skeleton Analysis
 sympy("sympify(( r * x * (1 - ( x / k ) ) ) -  ( ( a * x * y ) / ( 1 +  ( a * h * x ) ) ))")
 sympy("sympify(( e * a * x * y ) / (1 + ( a * h * x ) ) - ( m * y ))")
 r <- Var("r")
@@ -561,3 +458,7 @@ parmslc <- c(r = 2.0, k = 3.0, a = 1.1, h = 0.8, e = 0.72, m = 0.4)
 parmslcep <- c(r = 2.0, k = 3.0, a = 1.1, h = 0.8, e = 0.8, m = 0.4, p = 0.01)
 solved <- ode(y = initstate, times = times, func = RM, parms = parmslc)
 plot(solved)
+
+
+# Questions:
+#When does ordered upwind method stop - when does Quasipotential end?
