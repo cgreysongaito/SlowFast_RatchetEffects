@@ -141,7 +141,43 @@ dev.off()
 ## Plot the remainder vector field.
 VecDecomPlot(x.field = VDAll[, , 5], y.field = VDAll[, , 6], dens = c(25, 25),x.bound = c(-0.5, 30), y.bound = c(-0.5, 20), arrow.type = "proportional",tail.length = 0.35, head.length = 0.025)
 
+#Now if we compare to Example 3 in QPot: An R Package for Stochastic Differential Equation Quasi-Potential Analysis by Moore et al. ( a limit cycle ). We can see the bump around the fixed point.
+cycle.eqn.x <- "- (y - beta) + mu * (x - alpha) * (1 - (x - alpha)^2 - (y - beta)^2)"
+cycle.eqn.y <- "(x - alpha) + mu * (y - beta) * (1 - (x - alpha)^2 - (y - beta)^2)"
+model.state <- c(x = 3, y = 3)
+model.parms <- c(alpha = 4, beta = 5, mu = 0.2)
+model.sigma <- 0.1
+model.time <- 1000 # we used 2500 in the figures
+model.deltat <- 0.005
+ts.ex2 <- TSTraj(y0 = model.state, time = model.time, deltat = model.deltat,x.rhs = cycle.eqn.x, y.rhs = cycle.eqn.y, parms = model.parms, sigma = model.sigma)
+TSPlot(ts.ex2, deltat = model.deltat)                                  # Figure 8
+TSPlot(ts.ex2, deltat = model.deltat, dim = 2, line.alpha = 25)        # Figure 9a
+TSDensity(ts.ex2, dim = 1)                                             # Histogram
+TSDensity(ts.ex2, dim = 2)
 
+eqn.x <- Model2String(cycle.eqn.x, parms = model.parms)
+eqn.y <- Model2String(cycle.eqn.y, parms = model.parms)
+eq1.qp <- QPotential(x.rhs = eqn.x, x.start = 4.15611, x.bound = c(-0.5, 7.5),x.num.steps = 4000, y.rhs = eqn.y, y.start = 5.98774, y.bound = c(-0.5, 7.5),y.num.steps = 4000)
+
+QPContour(eq1.qp, dens = c(1000, 1000), x.bound = c(-0.5, 7.5),y.bound = c(-0.5, 7.5), c.parm = 10)
+
+png(filename="figs/3dqpot_limitcycle.png")
+persp3D(z =eq1.qp, x = seq(-0.5,7.5,length.out = 4000), y = seq(-0.5,7.5,length.out = 4000),zlim = c(0,0.8), xlim=c(0,7), ylim=c(0,7), col = viridis(n = 100, option = "A"), contour=TRUE, xlab="X", ylab="Y", zlab="Quasipotential", ticktype="detailed", theta = 20, phi = 80)
+dev.off()
+
+# Calculate all three vector fields.
+VDAll <- VecDecomAll(surface = eq1.qp, x.rhs = eqn.x, y.rhs = eqn.y,x.bound = c(-0.5, 7.5), y.bound = c(-0.5, 7.5))
+## Plot the deterministic skeleton vector field.
+VecDecomPlot(x.field = VDAll[, , 1], y.field = VDAll[, , 2], dens = c(25, 25),x.bound = c(-0.5, 7.5), y.bound = c(-0.5, 7.5), xlim = c(0, 7.5), ylim = c(0, 7.5),arrow.type = "equal", tail.length = 0.25, head.length = 0.025)
+## Plot the gradient vector field.
+VecDecomPlot(x.field = VDAll[, , 3], y.field = VDAll[, , 4], dens = c(25, 25),x.bound = c(-0.5, 7.5), y.bound = c(-0.5, 7.5), arrow.type = "proportional",tail.length = 0.25, head.length = 0.025)
+## Plot the remainder vector field.
+VecDecomPlot(x.field = VDAll[, , 5], y.field = VDAll[, , 6], dens = c(25, 25),x.bound = c(-0.5, 7.5), y.bound = c(-0.5, 7.5), arrow.type = "proportional",tail.length = 0.35, head.length = 0.025)
+
+
+
+
+## Section for manuscript
 #Quasi-potential with same noise for epsilon of 0.01 (with efficiency of 0.8 - canard)
 param_symnoise_ep001_eff08 <- list(eff = 0.8,
                                    ep = 0.01,
@@ -441,38 +477,6 @@ VecDecomPlot(x.field = VDAll[, , 1], y.field = VDAll[, , 2], dens = c(25, 25),x.
 VecDecomPlot(x.field = VDAll[, , 3], y.field = VDAll[, , 4], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.25, head.length = 0.025)
 ## Plot the remainder vector field.
 VecDecomPlot(x.field = VDAll[, , 5], y.field = VDAll[, , 6], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.35, head.length = 0.025)
-
-#Limit cycle
-cycle.eqn.x <- "- (y - beta) + mu * (x - alpha) * (1 - (x - alpha)^2 - (y - beta)^2)"
-cycle.eqn.y <- "(x - alpha) + mu * (y - beta) * (1 - (x - alpha)^2 - (y - beta)^2)"
-model.state <- c(x = 3, y = 3)
-model.parms <- c(alpha = 4, beta = 5, mu = 0.2)
-model.sigma <- 0.1
-model.time <- 1000 # we used 2500 in the figures
-model.deltat <- 0.005
-ts.ex2 <- TSTraj(y0 = model.state, time = model.time, deltat = model.deltat,x.rhs = cycle.eqn.x, y.rhs = cycle.eqn.y, parms = model.parms, sigma = model.sigma)
-TSPlot(ts.ex2, deltat = model.deltat)                                  # Figure 8
-TSPlot(ts.ex2, deltat = model.deltat, dim = 2, line.alpha = 25)        # Figure 9a
-TSDensity(ts.ex2, dim = 1)                                             # Histogram
-TSDensity(ts.ex2, dim = 2)
-
-eqn.x <- Model2String(cycle.eqn.x, parms = model.parms)
-eqn.y <- Model2String(cycle.eqn.y, parms = model.parms)
-eq1.qp <- QPotential(x.rhs = eqn.x, x.start = 4.15611, x.bound = c(-0.5, 7.5),x.num.steps = 4000, y.rhs = eqn.y, y.start = 5.98774, y.bound = c(-0.5, 7.5),y.num.steps = 4000)
-
-QPContour(eq1.qp, dens = c(1000, 1000), x.bound = c(-0.5, 7.5),y.bound = c(-0.5, 7.5), c.parm = 10)
-
-#persp3D(z =eq1.qp, xlim=c(0,7), ylim=c(0,7), col = viridis(n = 100, option = "A"), contour=TRUE)
-
-# Calculate all three vector fields.
-VDAll <- VecDecomAll(surface = eq1.qp, x.rhs = eqn.x, y.rhs = eqn.y,x.bound = c(-0.5, 7.5), y.bound = c(-0.5, 7.5))
-## Plot the deterministic skeleton vector field.
-VecDecomPlot(x.field = VDAll[, , 1], y.field = VDAll[, , 2], dens = c(25, 25),x.bound = c(-0.5, 7.5), y.bound = c(-0.5, 7.5), xlim = c(0, 7.5), ylim = c(0, 7.5),arrow.type = "equal", tail.length = 0.25, head.length = 0.025)
-## Plot the gradient vector field.
-VecDecomPlot(x.field = VDAll[, , 3], y.field = VDAll[, , 4], dens = c(25, 25),x.bound = c(-0.5, 7.5), y.bound = c(-0.5, 7.5), arrow.type = "proportional",tail.length = 0.25, head.length = 0.025)
-## Plot the remainder vector field.
-VecDecomPlot(x.field = VDAll[, , 5], y.field = VDAll[, , 6], dens = c(25, 25),x.bound = c(-0.5, 7.5), y.bound = c(-0.5, 7.5), arrow.type = "proportional",tail.length = 0.35, head.length = 0.025)
-
 
 ## Deterministic Skeleton Analysis
 library(deSolve)
