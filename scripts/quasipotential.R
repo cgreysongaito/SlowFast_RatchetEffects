@@ -1,10 +1,11 @@
+rm(list=ls())
+
 library(QPot)
-library(deSolve)
-library(phaseR)
-library(rSymPy)
-library(plot3D)
 library(zeallot)
+library(plot3D)
 library(viridis)
+
+setwd("/home/chrisgg/julia/TimeDelays/")
 
 #Model Set Up - NOTE g and f parameters added to allow for differential stochastic noise
 res_model <- "( r * x * (1 - ( ( x * g ) / k ) ) ) - ( a * x * y * f ) / ( 1 +  ( a * h * x * g ) ) "
@@ -52,13 +53,16 @@ bounds.y <- c(0, 4)
 step.number.x <- 1000
 step.number.y <- 1000
 
-#Quasi-potential with same noise for epsilon of 1 (with cycling)
-param_symnoise_ep1 <- list(eff = 0.72,
+### Section for Gabriel to look over ###
+
+#Quasi-potential with same noise for epsilon of 1 (with cycling) - using the R-M model parameterized above.
+param_symnoise_ep1 <- list(eff = 0.85,
                            ep = 1.0,
                            res_g = 1.0,
                            con_f = 1.0)
 
-u0_symnoise_ep1 <- c(x = 1.1922515, y = 2.367524)
+# u0_symnoise_ep1 <- c(x = 1.1435249, y = 3.061860) # - starting values "on" the limit cycle
+u0_symnoise_ep1 <- c(x = 0.686, y = 2.249) # starting values near the fixed point
 
 ts_symnoise_ep1 <- sto_realization(u0 = u0_symnoise_ep1, param = param_symnoise_ep1)
 
@@ -77,11 +81,66 @@ qp_symnoise_ep1 <- QPotential(x.rhs = param_model(param_symnoise_ep1)[[1]],
                               y.num.steps = step.number.y)
 
 QPContour(surface = qp_symnoise_ep1, dens = c(1000, 1000), x.bound = bounds.x, y.bound = bounds.y, c.parm = 5)
-# From gradient vector field does not look like upwind method correctly tested area within limit cycle - why?
+# Gabe, this creates the 2d visualisation of the QPotential (where the consumer isocline would cross the resource isocline to the left of the hopf - so cycling). But as can be seen there is no bump in the middle around the (unstable) fixed point.
 
-#persp3D(z = qp_symnoise_ep1, x = seq(0,4,length.out = 1000), y = seq(0,4,length.out = 1000), xlim = c(0,3), ylim = c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,   xlab="Resource", ylab="Consumer", zlab="Quasipotential", ticktype="detailed", theta = 20, phi = 20)
-
+png(filename="figs/decomp_symnoise_ep1.png")
 vector_decomp_plot(qp_symnoise_ep1, bounds.x, bounds.y, param_symnoise_ep1)
+dev.off()
+
+png(filename="figs/3dQPot_symnoise_ep1.png")
+persp3D(z = qp_symnoise_ep1, x = seq(0,4,length.out = 1000), y = seq(0,4,length.out = 1000), xlim = c(0,3), ylim = c(0,3), col = viridis(n = 100, option = "A"), contour=TRUE,   xlab="Resource", ylab="Consumer", zlab="Quasipotential", ticktype="detailed", theta = 20, phi = 70)
+dev.off()
+
+## Now we compare the above QPotential with the Qpotential created by Abbott et al for a Consumer-Resource model (paramterized slightly differently). In the Nolting, Abbott article, this QPotential shows the bump around the unstable fixed point and the cycling.
+## Note, I could not find the R code that created the qpotential in the article (just the mathematica code to make the figure). So this was my attempt.
+## One issue is I'm not sure where they place the starting point for the ordered upwind method. Below I tried both on the cycle and next to the fixed point.
+cycle.eqn.x <- "a * x * ( 1 - ( x / b ) ) - ( d * x * y ) / ( h + x )"
+cycle.eqn.y <- "( e * x * y ) / ( h + x ) - m * y"
+model.state <- c(x = 3, y = 3) # for the stochastic stochastic realization
+model.parms <- c(a = 1.5, b = 45, d = 5, h = 18, m = 4, e = 10)
+model.sigma <- 0.1
+model.time <- 1000 # we used 2500 in the figures
+model.deltat <- 1
+ts.ex2 <- TSTraj(y0 = model.state, time = model.time, deltat = model.deltat,x.rhs = cycle.eqn.x, y.rhs = cycle.eqn.y, parms = model.parms, sigma = model.sigma)
+TSPlot(ts.ex2, deltat = model.deltat)                                  # Figure 8
+TSPlot(ts.ex2, deltat = model.deltat, dim = 2, line.alpha = 25)        # Figure 9a
+TSDensity(ts.ex2, dim = 1)                                             # Histogram
+TSDensity(ts.ex2, dim = 2)
+
+u0_abbottCR_cycle <- c(x = 14.10788, y = 15.24985) #starting values on the cycle
+u0_abbottCR_fixedpoint <- c(x = 12, y = 6.6) #starting balues on the fixed point
+
+eqn.x <- Model2String(cycle.eqn.x, parms = model.parms)
+eqn.y <- Model2String(cycle.eqn.y, parms = model.parms)
+eq1.qp <- QPotential(x.rhs = eqn.x,
+                      x.start = u0_abbottCR_fixedpoint[1],
+                      x.bound = c(-0.5, 30),
+                      x.num.steps = 4000,
+                      y.rhs = eqn.y,
+                      y.start = u0_abbottCR_fixedpoint[2],
+                      y.bound = c(-0.5, 20),
+                      y.num.steps = 4000)
+
+QPContour(eq1.qp, dens = c(1000, 1000), x.bound = c(-0.5, 30),y.bound = c(-0.5, 20), c.parm = 10)
+
+png(filename="figs/3dqpot_cycle.png")
+persp3D(z = eq1.qp,x = seq(-0.5,30,length.out = 4000), y = seq(-0.5,20,length.out = 4000), xlim=c(0,30), ylim=c(0,20), col = viridis(n = 100, option = "A"), contour=TRUE,   xlab="Resource", ylab="Consumer", zlab="Quasipotential", ticktype="detailed", theta = 20, phi = 70)
+dev.off()
+
+# From the 2d and 3d quasipotential functions, again looks like not getting the bump around the fixed point.
+
+# Calculate all three vector fields.
+VDAll <- VecDecomAll(surface = eq1.qp, x.rhs = eqn.x, y.rhs = eqn.y,x.bound = c(-0.5, 30), y.bound = c(-0.5, 20))
+## Plot the deterministic skeleton vector field.
+VecDecomPlot(x.field = VDAll[, , 1], y.field = VDAll[, , 2], dens = c(25, 25),x.bound = c(-0.5, 30), y.bound = c(-0.5, 20, xlim = c(0, 7.5), ylim = c(0, 7.5),arrow.type = "equal", tail.length = 0.25, head.length = 0.025)
+## Plot the gradient vector field.
+png(filename="figs/decomp_cycle.png")
+VecDecomPlot(x.field = VDAll[, , 3], y.field = VDAll[, , 4], dens = c(25, 25),x.bound = c(-0.5, 30), y.bound = c(-0.5, 20), arrow.type = "proportional",tail.length = 0.25, head.length = 0.025)
+dev.off()
+
+## Plot the remainder vector field.
+VecDecomPlot(x.field = VDAll[, , 5], y.field = VDAll[, , 6], dens = c(25, 25),x.bound = c(-0.5, 30), y.bound = c(-0.5, 20), arrow.type = "proportional",tail.length = 0.35, head.length = 0.025)
+
 
 #Quasi-potential with same noise for epsilon of 0.01 (with efficiency of 0.8 - canard)
 param_symnoise_ep001_eff08 <- list(eff = 0.8,
@@ -384,21 +443,21 @@ VecDecomPlot(x.field = VDAll[, , 3], y.field = VDAll[, , 4], dens = c(25, 25),x.
 VecDecomPlot(x.field = VDAll[, , 5], y.field = VDAll[, , 6], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.35, head.length = 0.025)
 
 #Limit cycle
-var.eqn.x <- "- (y - beta) + mu * (x - alpha) * (1 - (x - alpha)^2 - (y - beta)^2)"
-var.eqn.y <- "(x - alpha) + mu * (y - beta) * (1 - (x - alpha)^2 - (y - beta)^2)"
+cycle.eqn.x <- "- (y - beta) + mu * (x - alpha) * (1 - (x - alpha)^2 - (y - beta)^2)"
+cycle.eqn.y <- "(x - alpha) + mu * (y - beta) * (1 - (x - alpha)^2 - (y - beta)^2)"
 model.state <- c(x = 3, y = 3)
 model.parms <- c(alpha = 4, beta = 5, mu = 0.2)
 model.sigma <- 0.1
 model.time <- 1000 # we used 2500 in the figures
 model.deltat <- 0.005
-ts.ex2 <- TSTraj(y0 = model.state, time = model.time, deltat = model.deltat,x.rhs = var.eqn.x, y.rhs = var.eqn.y, parms = model.parms, sigma = model.sigma)
+ts.ex2 <- TSTraj(y0 = model.state, time = model.time, deltat = model.deltat,x.rhs = cycle.eqn.x, y.rhs = cycle.eqn.y, parms = model.parms, sigma = model.sigma)
 TSPlot(ts.ex2, deltat = model.deltat)                                  # Figure 8
 TSPlot(ts.ex2, deltat = model.deltat, dim = 2, line.alpha = 25)        # Figure 9a
 TSDensity(ts.ex2, dim = 1)                                             # Histogram
 TSDensity(ts.ex2, dim = 2)
 
-eqn.x <- Model2String(var.eqn.x, parms = model.parms)
-eqn.y <- Model2String(var.eqn.y, parms = model.parms)
+eqn.x <- Model2String(cycle.eqn.x, parms = model.parms)
+eqn.y <- Model2String(cycle.eqn.y, parms = model.parms)
 eq1.qp <- QPotential(x.rhs = eqn.x, x.start = 4.15611, x.bound = c(-0.5, 7.5),x.num.steps = 4000, y.rhs = eqn.y, y.start = 5.98774, y.bound = c(-0.5, 7.5),y.num.steps = 4000)
 
 QPContour(eq1.qp, dens = c(1000, 1000), x.bound = c(-0.5, 7.5),y.bound = c(-0.5, 7.5), c.parm = 10)
@@ -416,6 +475,11 @@ VecDecomPlot(x.field = VDAll[, , 5], y.field = VDAll[, , 6], dens = c(25, 25),x.
 
 
 ## Deterministic Skeleton Analysis
+library(deSolve)
+library(phaseR)
+library(rSymPy)
+
+
 sympy("sympify(( r * x * (1 - ( x / k ) ) ) -  ( ( a * x * y ) / ( 1 +  ( a * h * x ) ) ))")
 sympy("sympify(( e * a * x * y ) / (1 + ( a * h * x ) ) - ( m * y ))")
 r <- Var("r")
@@ -451,13 +515,26 @@ RMep <- function(t, state, parameters) {
   })
 }
 
+RM_abbott <- function(t, state, parameters) {
+  with(as.list(c(state, parameters)), {
+    dX <- a * X * ( 1 - ( X / b ) ) - ( d * X * Y ) / ( h + X )
+    dY <- ( e * X * Y ) / ( h + X ) - m * Y
+
+    list(c(dX, dY))
+  })
+}
+
 times <- seq(0, 600, by = 1)
 initstate = c(X = 0.75, Y = 2.26)
-parmslc <- c(r = 2.0, k = 3.0, a = 1.1, h = 0.8, e = 0.72, m = 0.4)
+parmslc <- c(r = 2.0, k = 3.0, a = 1.1, h = 0.8, e = 0.85, m = 0.4)
+
+initstate_abbott = c(X = 3, Y = 3)
+parms_abbott <- c(a = 1.5, b = 45, d = 5, h = 18, m = 4, e = 10)
 
 parmslcep <- c(r = 2.0, k = 3.0, a = 1.1, h = 0.8, e = 0.8, m = 0.4, p = 0.01)
 solved <- ode(y = initstate, times = times, func = RM, parms = parmslc)
-plot(solved)
+plot(solved[,2],solved[,3])
+
 
 
 # Questions:
