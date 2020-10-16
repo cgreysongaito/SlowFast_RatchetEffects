@@ -190,25 +190,6 @@ let
 end
 
 
-#When efficiency is 0.55, find epsilon value where imaginary numbers start
-
-
-par = RozMacPar()
-par.e = 0.55
-equ = eq_II(par)
-epvals = 0.00001:0.000001:1
-
-for (epi, epval) in enumerate(epvals)
-    par.ε = epval
-    eig1 = imag.(eigvals(jacmat(roz_mac_II, equ, par))[1])
-    #println(eig1)
-    if eig1 < 0 || eig1 > 0
-         return epval
-         break
-         #println(epval)
-    end
-end
-
 # When epp is 1, find the excitable and non excitable phases for e - deterministic
 function findRCdivide(ep)
     par = RozMacPar()
@@ -226,50 +207,96 @@ function findRCdivide(ep)
     end
 end
 
-findRCdivide(1.0)
+findRCdivide(0.01)
 
 # # create graph of epsilon on x and efficiency value where RC divide by transposing graph of efficiency on x and epsilon value that creates RC divide
-function findRCdivide_effx(eff)
+function findRCdivide_epx(ep)
     par = RozMacPar()
-    par.e = eff
-    epvals = 0.00001:0.000001:1
+    par.ε = ep
+    evals = 0.441:0.00005:0.71
 
-    for (epi, epval) in enumerate(epvals)
-        par.ε = epval
+    for (ei, eval) in enumerate(evals)
+        par.e = eval
         equ = eq_II(par)
         eig1 = imag.(eigvals(jacmat(roz_mac_II, equ, par))[1])
         if eig1 < 0 || eig1 > 0
-            return epval
+            return eval
             break
         end
     end
 end
 
-findRCdivide_effx(0.5225)
+findRCdivide_epx(0.01)
 
-function findRCdivide_effx_plot()
-    evals = 0.5225:0.0005:1
-    epRC = fill(0.0, length(evals))
-    for (ei, eval) in enumerate(evals)
-        epRC[ei] = findRCdivide_effx(eval)
+function findRCdivide_epx_plot()
+    epvals = 0.01:0.005:2.0
+    effRC = fill(0.0, length(epvals))
+    for (epi, epval) in enumerate(epvals)
+        effRC[epi] = findRCdivide_epx(epval)
     end
-    return hcat(reverse(epRC), reverse(collect(evals)))
+    effRC_minus_hopf = 0.71 .- effRC
+    effRC_propC = effRC_minus_hopf ./ (0.71-0.441)
+    effRC_propR = 1 .- effRC_propC
+    return hcat(collect(epvals), effRC_propR)
 end
 
 let
-    figure()
-    data = findRCdivide_effx_plot()
+    propreal = figure()
+    data = findRCdivide_epx_plot()
     plot(data[:,1], data[:,2])
-    xlim(-0.05,1.05)
-    ylim(0.410, 1)
-    ylabel("Efficiency where R/C divide occurs", fontsize = 15)
+    xlim(-0.05,2.05)
+    #ylim(0.410, 1)
+    ylabel("Proportion Real", fontsize = 15)
     xlabel("ε", fontsize = 15)
-    hlines([0.441,0.5225, 0.710], xmin = -0.05, xmax = 1.05, linestyles = "dashed")
-    annotate("TC", (408, 54), xycoords = "figure points", fontsize = 12)
-    annotate("R/C", (408, 89), xycoords = "figure points", fontsize = 12)
-    annotate("H", (408, 175), xycoords = "figure points", fontsize = 12)
-    # gcf()
-    savefig(joinpath(abpath(), "figs/epsilonxaxis_RCdivide.png"))
+    #hlines([0.441,0.5225, 0.710], xmin = -0.05, xmax = 1.05, linestyles = "dashed")
+    #annotate("TC", (408, 54), xycoords = "figure points", fontsize = 12)
+    #annotate("R/C", (408, 89), xycoords = "figure points", fontsize = 12)
+    # annotate("H", (408, 175), xycoords = "figure points", fontsize = 12)
+    return prop_real
+    # savefig(joinpath(abpath(), "figs/epsilonxaxis_RCdivide.png"))
+end
+
+function eff_maxeigen_plot(ep)
+    par = RozMacPar()
+    par.ε = ep
+    evals = 0.4:0.0001:0.8
+    max_eig = fill(0.0, length(evals))
+
+    for (ei, eval) in enumerate(evals)
+        par.e = eval
+        equ = eq_II(par)
+        max_eig[ei] = λ_stability(jacmat(roz_mac_II, equ, par))
+    end
+
+    # return max_eig
+    PyPlot.plot(collect(evals), max_eig, color = "black")
+    ylabel("Re(λ max)", fontsize = 15)
+    xlim(0.4, 0.8)
+    # ylim(-0.4, 0.1)
+    xlabel("Efficiency", fontsize = 15)
+end
+
+
+let
+    test = figure()
+    eff_maxeigen_plot(0.01)
+    vlines([0.441, 0.710], ymin = -0.05, ymax = 0.05, linestyles = "dashed")
+    fill([0.441,0.65415, 0.65415, 0.441], [0.05, 0.05, -0.05, -0.05], "blue", alpha=0.3)
+    fill([0.65415,0.71, 0.71, 0.65415], [0.05, 0.05, -0.05, -0.05], "orange", alpha=0.3)
+    annotate("TC", (90, 298), xycoords = "figure points", fontsize = 12)
+    annotate("H", (335, 298), xycoords = "figure points", fontsize = 12)
+    return test
+end
+
+let
+    test = figure()
+    eff_maxeigen_plot(0.8)
+    vlines([0.441, 0.710], ymin = -0.4, ymax = 0.1, linestyles = "dashed")
+    fill([0.441,0.529, 0.529, 0.441], [0.1, 0.1, -0.4, -0.4], "blue", alpha=0.3)
+    fill([0.529,0.71, 0.71, 0.529], [0.1, 0.1, -0.4, -0.4], "orange", alpha=0.3)
+    annotate("TC", (86, 298), xycoords = "figure points", fontsize = 12)
+    annotate("H", (330, 298), xycoords = "figure points", fontsize = 12)
+    return test
 end
 
 
