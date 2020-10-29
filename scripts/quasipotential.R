@@ -47,11 +47,15 @@ vector_decomp_plot <- function(qpotential, bounds.x, bounds.y, param) {
   VecDecomPlot(x.field = VDAll[, , 5], y.field = VDAll[, , 6], dens = c(25, 25),x.bound = bounds.x, y.bound = bounds.y, arrow.type = "proportional",tail.length = 0.35, head.length = 0.025)
 }
 
+unit_conv <- 1/sqrt(2)
+
 # Set bounds and step numbers for QPotential calculation
-bounds.x <- c(0, 4)
-bounds.y <- c(0, 4)
+bounds.x <- c(0, 4/unit_conv)
+bounds.y <- c(0, 4/unit_conv)
 step.number.x <- 1000
 step.number.y <- 1000
+
+
 
 ### Section for Gabriel to look over ###
 
@@ -218,10 +222,10 @@ vector_decomp_plot(qp_symnoise_ep001_eff08, bounds.x, bounds.y, param_symnoise_e
 #Quasi-potential with same noise for epsilon of 0.1 (with efficiency of 0.5)
 param_symnoise_ep01_eff05 <- list(eff = 0.5,
                                    ep = 0.1,
-                                   res_g = 1.0,
-                                   con_f = 1.0)
+                                   res_g = unit_conv,
+                                   con_f = unit_conv)
 
-u0_symnoise_ep01_eff05 <- c(x = 2.02, y = 1.65)
+u0_symnoise_ep01_eff05 <- c(x = 2.02/unit_conv, y = 1.65/unit_conv)
 
 ts_symnoise_ep01_eff05 <- sto_realization(u0 = u0_symnoise_ep01_eff05, param = param_symnoise_ep01_eff05)
 
@@ -239,19 +243,21 @@ qp_symnoise_ep01_eff05 <- QPotential(x.rhs = param_model(param_symnoise_ep01_eff
                                       y.bound = bounds.y,
                                       y.num.steps = step.number.y)
 
-QPContour(surface = qp_symnoise_ep01_eff05, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
+QPContour(surface = qp_symnoise_ep01_eff05, dens = c(1000, 1000), x.bound = c(0,4),y.bound = c(0,4), c.parm = 5)
 
-persp3D(z = qp_symnoise_ep001_eff08, x = seq(0,4,length.out = 1000),y = seq(0,4,length.out = 1000), xlim = c(0,3), ylim = c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab = "Resource", ylab = "Consumer", zlab = "Quasipotential", ticktype = "detailed", theta = 20, phi = 20)
+png(filename="figs/3dqpot_symnoise_ep01_eff05.png")
+persp3D(z = qp_symnoise_ep01_eff05, x = seq(0,4,length.out = 1000),y = seq(0,4,length.out = 1000), xlim = c(0,3), ylim = c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab = "Resource", ylab = "Consumer", zlab = "Quasipotential", ticktype = "detailed", theta = 20, phi = 20)
+dev.off()
 
 vector_decomp_plot(qp_symnoise_ep001_eff08, bounds.x, bounds.y, param_symnoise_ep01_eff05)
 
 #Quasi-potential with same noise for epsilon of 0.5 (with efficiency of 0.5)
 param_symnoise_ep05_eff05 <- list(eff = 0.5,
                                    ep = 0.5,
-                                   res_g = 1.0,
-                                   con_f = 1.0)
+                                   res_g = unit_conv,
+                                   con_f = unit_conv)
 
-u0_symnoise_ep05_eff05 <- c(x = 2.02, y = 1.65)
+u0_symnoise_ep05_eff05 <- c(x = 2.02/unit_conv, y = 1.65/unit_conv)
 
 ts_symnoise_ep05_eff05 <- sto_realization(u0 = u0_symnoise_ep05_eff05, param = param_symnoise_ep05_eff05)
 
@@ -269,19 +275,21 @@ qp_symnoise_ep05_eff05 <- QPotential(x.rhs = param_model(param_symnoise_ep05_eff
                                       y.bound = bounds.y,
                                       y.num.steps = step.number.y)
 
-QPContour(surface = qp_symnoise_ep05_eff05, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
+QPContour(surface = qp_symnoise_ep05_eff05, dens = c(1000, 1000), x.bound = c(0,4),y.bound = c(0,4), c.parm = 5)
 
+png(filename="figs/3dqpot_symnoise_ep05_eff05.png")
 persp3D(z = qp_symnoise_ep05_eff05, x = seq(0,4,length.out = 1000),y = seq(0,4,length.out = 1000), xlim = c(0,3), ylim = c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab = "Resource", ylab = "Consumer", zlab = "Quasipotential", ticktype = "detailed", theta = 20, phi = 20)
+dev.off()
 
 vector_decomp_plot(qp_symnoise_ep05_eff05, bounds.x, bounds.y, param_symnoise_ep05_eff05)
 
 #Quasi-potential with same noise for epsilon of 0.9 (with efficiency of 0.5)
 param_symnoise_ep09_eff05 <- list(eff = 0.5,
                                    ep = 0.9,
-                                   res_g = 1.0,
-                                   con_f = 1.0)
+                                   res_g = unit_conv,
+                                   con_f = unit_conv)
 
-u0_symnoise_ep09_eff05 <- c(x = 2.02, y = 1.65)
+u0_symnoise_ep09_eff05 <- c(x = 2.02/unit_conv, y = 1.65/unit_conv)
 
 ts_symnoise_ep09_eff05 <- sto_realization(u0 = u0_symnoise_ep09_eff05, param = param_symnoise_ep09_eff05)
 
@@ -299,25 +307,26 @@ qp_symnoise_ep09_eff05 <- QPotential(x.rhs = param_model(param_symnoise_ep09_eff
                                       y.bound = bounds.y,
                                       y.num.steps = step.number.y)
 
-QPContour(surface = qp_symnoise_ep09_eff05, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
+QPContour(surface = qp_symnoise_ep09_eff05, dens = c(1000, 1000), x.bound = c(0,4),y.bound = c(0,4), c.parm = 5)
 
+png(filename="figs/3dqpot_symnoise_ep09_eff05.png")
 persp3D(z = qp_symnoise_ep09_eff05, x = seq(0,4,length.out = 1000),y = seq(0,4,length.out = 1000), xlim = c(0,3), ylim = c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab = "Resource", ylab = "Consumer", zlab = "Quasipotential", ticktype = "detailed", theta = 20, phi = 20)
+dev.off()
 
 vector_decomp_plot(qp_symnoise_ep09_eff05, bounds.x, bounds.y, param_symnoise_ep09_eff05)
 
 #Quasi-potential with same noise for epsilon of 0.04 (with efficiency of 0.6)
 param_symnoise_ep004_eff06 <- list(eff = 0.6,
                                    ep = 0.04,
-                                   res_g = 1.0,
-                                   con_f = 1.0)
+                                   res_g = unit_conv,
+                                   con_f = unit_conv)
 
-u0_symnoise_ep004_eff06 <- c(x = 1.30, y = 2.21)
+u0_symnoise_ep004_eff06 <- c(x = 1.30/unit_conv, y = 2.21/unit_conv)
 
 ts_symnoise_ep004_eff06 <- sto_realization(u0 = u0_symnoise_ep004_eff06, param = param_symnoise_ep004_eff06)
 
 TSPlot(ts_symnoise_ep004_eff06, deltat = 1, ylim = c(0,5), xlim = c(0,5))
 TSPlot(ts_symnoise_ep004_eff06, deltat = 1, dim = 2)
-TSDensity(ts_symnoise_ep004_eff06, dim = 1)
 TSDensity(ts_symnoise_ep004_eff06, dim = 2)
 
 qp_symnoise_ep004_eff06 <- QPotential(x.rhs = param_model(param_symnoise_ep004_eff06)[[1]],
@@ -329,19 +338,21 @@ qp_symnoise_ep004_eff06 <- QPotential(x.rhs = param_model(param_symnoise_ep004_e
                                       y.bound = bounds.y,
                                       y.num.steps = step.number.y)
 
-QPContour(surface = qp_symnoise_ep004_eff06, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
+QPContour(surface = qp_symnoise_ep004_eff06, dens = c(1000, 1000), x.bound = c(0,4),y.bound = c(0,4), c.parm = 5)
 
+png(filename="figs/3dqpot_symnoise_ep004_eff06.png")
 persp3D(z = qp_symnoise_ep004_eff06, x = seq(0,4,length.out = 1000),y = seq(0,4,length.out = 1000), xlim = c(0,3), ylim = c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab = "Resource", ylab = "Consumer", zlab = "Quasipotential", ticktype = "detailed", theta = 20, phi = 20)
+dev.off()
 
 vector_decomp_plot(qp_symnoise_ep004_eff06, bounds.x, bounds.y, param_symnoise_ep004_eff06)
 
 #Quasi-potential with same noise for epsilon of 0.15 (with efficiency of 0.6)
 param_symnoise_ep015_eff06 <- list(eff = 0.6,
                                    ep = 0.15,
-                                   res_g = 1.0,
-                                   con_f = 1.0)
+                                   res_g = unit_conv,
+                                   con_f = unit_conv)
 
-u0_symnoise_ep015_eff06 <- c(x = 1.30, y = 2.21)
+u0_symnoise_ep015_eff06 <- c(x = 1.30/unit_conv, y = 2.21/unit_conv)
 
 ts_symnoise_ep015_eff06 <- sto_realization(u0 = u0_symnoise_ep015_eff06, param = param_symnoise_ep015_eff06)
 
@@ -359,19 +370,21 @@ qp_symnoise_ep015_eff06 <- QPotential(x.rhs = param_model(param_symnoise_ep015_e
                                       y.bound = bounds.y,
                                       y.num.steps = step.number.y)
 
-QPContour(surface = qp_symnoise_ep015_eff06, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
+QPContour(surface = qp_symnoise_ep015_eff06, dens = c(1000, 1000), x.bound = c(0,4),y.bound = c(0,4), c.parm = 5)
 
+png(filename="figs/3dqpot_symnoise_ep015_eff06.png")
 persp3D(z = qp_symnoise_ep015_eff06, x = seq(0,4,length.out = 1000),y = seq(0,4,length.out = 1000), xlim = c(0,3), ylim = c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab = "Resource", ylab = "Consumer", zlab = "Quasipotential", ticktype = "detailed", theta = 20, phi = 20)
+dev.off()
 
 vector_decomp_plot(qp_symnoise_ep015_eff06, bounds.x, bounds.y, param_symnoise_ep015_eff06)
 
 #Quasi-potential with same noise for epsilon of 0.9 (with efficiency of 0.6)
 param_symnoise_ep09_eff06 <- list(eff = 0.6,
                                    ep = 0.9,
-                                   res_g = 1.0,
-                                   con_f = 1.0)
+                                   res_g = unit_conv,
+                                   con_f = unit_conv)
 
-u0_symnoise_ep09_eff06 <- c(x = 1.30, y = 2.21)
+u0_symnoise_ep09_eff06 <- c(x = 1.30/unit_conv, y = 2.21/unit_conv)
 
 ts_symnoise_ep09_eff06 <- sto_realization(u0 = u0_symnoise_ep09_eff06, param = param_symnoise_ep09_eff06)
 
@@ -389,45 +402,81 @@ qp_symnoise_ep09_eff06 <- QPotential(x.rhs = param_model(param_symnoise_ep09_eff
                                       y.bound = bounds.y,
                                       y.num.steps = step.number.y)
 
-QPContour(surface = qp_symnoise_ep09_eff06, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
+QPContour(surface = qp_symnoise_ep09_eff06, dens = c(1000, 1000), x.bound = c(0,4),y.bound = c(0,4), c.parm = 5)
 
+png(filename="figs/3dqpot_symnoise_ep09_eff06.png")
 persp3D(z = qp_symnoise_ep09_eff06, x = seq(0,4,length.out = 1000),y = seq(0,4,length.out = 1000), xlim = c(0,3), ylim = c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab = "Resource", ylab = "Consumer", zlab = "Quasipotential", ticktype = "detailed", theta = 20, phi = 20)
+dev.off()
 
 vector_decomp_plot(qp_symnoise_ep09_eff06, bounds.x, bounds.y, param_symnoise_ep09_eff06)
 
-#Quasi-potential with different noise for epsilon of 0.9 (with efficiency of 0.6)
-param_asymnoise_ep09_eff06 <- list(eff = 0.6,
-                                   ep = 0.9,
+#Quasi-potential with different noise (1:2) for epsilon of 0.04 (with efficiency of 0.6)
+param_asymnoise_ep004_eff06 <- list(eff = 0.6,
+                                   ep = 0.04,
                                    res_g = 0.447,
                                    con_f = 0.894)
 
-u0_asymnoise_ep09_eff06 <- c(x = 1.30/0.447, y = 2.21/0.894)
+u0_asymnoise_ep004_eff06 <- c(x = 1.30/0.447, y = 2.21/0.894)
 
-ts_asymnoise_ep09_eff06 <- sto_realization(u0 = u0_asymnoise_ep09_eff06, param = param_asymnoise_ep09_eff06)
+ts_asymnoise_ep004_eff06 <- sto_realization(u0 = u0_asymnoise_ep004_eff06, param = param_asymnoise_ep004_eff06)
 
-TSPlot(ts_asymnoise_ep09_eff06, deltat = 1, ylim = c(0,8), xlim = c(0,8))
-TSPlot(ts_asymnoise_ep09_eff06, deltat = 1, dim = 2)
-TSDensity(ts_asymnoise_ep09_eff06, dim = 1)
-TSDensity(ts_asymnoise_ep09_eff06, dim = 2)
+TSPlot(ts_asymnoise_ep004_eff06, deltat = 1, ylim = c(0,8), xlim = c(0,8))
+TSPlot(ts_asymnoise_ep004_eff06, deltat = 1, dim = 2)
+TSDensity(ts_asymnoise_ep004_eff06, dim = 2)
 
 bounds.x <- c(0, 8)
 bounds.y <- c(0, 8)
 
-qp_asymnoise_ep09_eff06 <- QPotential(x.rhs = param_model(param_asymnoise_ep09_eff06)[[1]],
-                                      x.start = u0_asymnoise_ep09_eff06[1],
+qp_asymnoise_ep004_eff06 <- QPotential(x.rhs = param_model(param_asymnoise_ep004_eff06)[[1]],
+                                      x.start = u0_asymnoise_ep004_eff06[1],
                                       x.bound = bounds.x,
                                       x.num.steps = step.number.x,
-                                      y.rhs = param_model(param_asymnoise_ep09_eff06)[[2]],
-                                      y.start = u0_asymnoise_ep09_eff06[2],
+                                      y.rhs = param_model(param_asymnoise_ep004_eff06)[[2]],
+                                      y.start = u0_asymnoise_ep004_eff06[2],
                                       y.bound = bounds.y,
                                       y.num.steps = step.number.y)
 
-QPContour(surface = qp_asymnoise_ep09_eff06, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
+QPContour(surface = qp_asymnoise_ep004_eff06, dens = c(1000, 1000), x.bound = c(0,8*0.447),y.bound = c(0,8*0.8894), c.parm = 5)
 
-persp3D(z =eq1.local,x=seq(0,8,length.out = 1000),y=seq(0,8,length.out = 1000), xlim=c(0,3), ylim=c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab="Resource", ylab="Consumer", zlab="Quasipotential", ticktype="detailed", theta = 40, phi = 20)
-#Need to put back into coordinates of resource and consumer
+png(filename="figs/3dqpot_asymnoise_ep004_eff06.png")
+persp3D(z =qp_asymnoise_ep004_eff06,x=seq(0,8*0.447,length.out = 1000),y=seq(0,8*0.894,length.out = 1000), xlim=c(0,3), ylim=c(0,3), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab="Resource", ylab="Consumer", zlab="Quasipotential", ticktype="detailed", theta = 40, phi = 20)
+dev.off()
 
-vector_decomp_plot(qp_asymnoise_ep09_eff06, bounds.x, bounds.y, param_symnoise_ep09_eff06)
+vector_decomp_plot(qp_asymnoise_ep004_eff06, bounds.x, bounds.y, param_symnoise_ep09_eff06)
+
+#Quasi-potential with different noise (1:4) for epsilon of 0.04 (with efficiency of 0.6)
+param_asymnoise14_ep09_eff06 <- list(eff = 0.6,
+                                   ep = 0.04,
+                                   res_g = 1/sqrt(17),
+                                   con_f = 4/sqrt(17))
+
+u0_asymnoise14_ep09_eff06 <- c(x = 1.30/(1/sqrt(17)), y = 2.21/(4/sqrt(17)))
+
+ts_asymnoise14_ep09_eff06 <- sto_realization(u0 = u0_asymnoise_ep09_eff06, param = param_asymnoise_ep09_eff06)
+
+TSPlot(ts_asymnoise14_ep09_eff06, deltat = 1, ylim = c(0,8), xlim = c(0,8))
+TSPlot(ts_asymnoise14_ep09_eff06, deltat = 1, dim = 2)
+TSDensity(ts_asymnoise14_ep09_eff06, dim = 2)
+
+bounds.x <- c(0, 4/(1/sqrt(17)))
+bounds.y <- c(0, 4/(4/sqrt(17)))
+
+qp_asymnoise14_ep09_eff06 <- QPotential(x.rhs = param_model(param_asymnoise14_ep09_eff06)[[1]],
+                                      x.start = u0_asymnoise14_ep09_eff06[1],
+                                      x.bound = bounds.x,
+                                      x.num.steps = step.number.x,
+                                      y.rhs = param_model(param_asymnoise14_ep09_eff06)[[2]],
+                                      y.start = u0_asymnoise14_ep09_eff06[2],
+                                      y.bound = bounds.y,
+                                      y.num.steps = step.number.y)
+
+QPContour(surface = qp_asymnoise14_ep09_eff06, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
+
+png(filename="figs/3dqpot_asymnoise14_ep004_eff06.png")
+persp3D(z =qp_asymnoise14_ep09_eff06,x=seq(0,4,length.out = 1000),y=seq(0,4,length.out = 1000), xlim=c(0,3), ylim=c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab="Resource", ylab="Consumer", zlab="Quasipotential", ticktype="detailed", theta = 40, phi = 20)
+dev.off()
+
+vector_decomp_plot(qp_asymnoise14_ep09_eff06, bounds.x, bounds.y, param_asymnoise14_ep09_eff06)
 
 
 # Quasi-potential testing

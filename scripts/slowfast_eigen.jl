@@ -226,8 +226,6 @@ function findRCdivide_epx(ep)
     end
 end
 
-findRCdivide_epx(0.01)
-
 function findRCdivide_epx_plot()
     epvals = 0.01:0.005:2.0
     effRC = fill(0.0, length(epvals))
@@ -241,7 +239,7 @@ function findRCdivide_epx_plot()
 end
 
 let
-    propreal = figure()
+    prop_real = figure()
     data = findRCdivide_epx_plot()
     plot(data[:,1], data[:,2])
     xlim(-0.05,2.05)
@@ -252,8 +250,8 @@ let
     #annotate("TC", (408, 54), xycoords = "figure points", fontsize = 12)
     #annotate("R/C", (408, 89), xycoords = "figure points", fontsize = 12)
     # annotate("H", (408, 175), xycoords = "figure points", fontsize = 12)
-    return prop_real
-    # savefig(joinpath(abpath(), "figs/epsilonxaxis_RCdivide.png"))
+    # return prop_real
+    savefig(joinpath(abpath(), "figs/epsilonxaxis_propReal.png"))
 end
 
 function eff_maxeigen_plot(ep)
@@ -278,25 +276,27 @@ end
 
 
 let
-    test = figure()
+    maxeigen_ep001 = figure()
     eff_maxeigen_plot(0.01)
     vlines([0.441, 0.710], ymin = -0.05, ymax = 0.05, linestyles = "dashed")
     fill([0.441,0.65415, 0.65415, 0.441], [0.05, 0.05, -0.05, -0.05], "blue", alpha=0.3)
     fill([0.65415,0.71, 0.71, 0.65415], [0.05, 0.05, -0.05, -0.05], "orange", alpha=0.3)
     annotate("TC", (90, 298), xycoords = "figure points", fontsize = 12)
     annotate("H", (335, 298), xycoords = "figure points", fontsize = 12)
-    return test
+    # return maxeigen_ep001
+    savefig(joinpath(abpath(), "figs/maxeigen_ep001.png"))
 end
 
 let
-    test = figure()
+    maxeigen_ep08 = figure()
     eff_maxeigen_plot(0.8)
     vlines([0.441, 0.710], ymin = -0.4, ymax = 0.1, linestyles = "dashed")
     fill([0.441,0.529, 0.529, 0.441], [0.1, 0.1, -0.4, -0.4], "blue", alpha=0.3)
     fill([0.529,0.71, 0.71, 0.529], [0.1, 0.1, -0.4, -0.4], "orange", alpha=0.3)
     annotate("TC", (86, 298), xycoords = "figure points", fontsize = 12)
     annotate("H", (330, 298), xycoords = "figure points", fontsize = 12)
-    return test
+    # return maxeigen_ep08
+    savefig(joinpath(abpath(), "figs/maxeigen_ep08.png"))
 end
 
 
