@@ -8,13 +8,13 @@ include("slowfast_commoncode.jl")
 # Time series and phase plots of stochastic canards
 let
     test = figure()
-    pert_timeseries_plot(0.01, 0.6, 0.0, 1, 1234, 10000.0, 2000.0:100.0:10000.0)
+    pert_timeseries_plot(0.01, 0.6, 0.0, 1, 1234, 5000.0, 2000.0:1.0:5000.0)
     return test
 end
 
 let
     test = figure()
-    pert_phase_plot(0.01, 0.7, 0.0, 1, 1234, 5000.0, 2000.0:1.0:5000.0)
+    pert_phase_plot(0.01, 0.6, 0.0, 1, 1234, 5000.0, 2000.0:1.0:5000.0)
     vlines(0.9318181818181819, ymin = 2.1, ymax = 2.4, linestyles = `dashed`)
     return test
 end
@@ -50,26 +50,33 @@ function dointersect(p1, p2, q1, q2) # https://www.geeksforgeeks.org/check-if-tw
     end
 end
 
-function cf_returnmap(ep, eff, mean, freq, seed, tsend, tvals)
-    sol = RozMac_pert(ep, eff, mean, freq, seed, tsend, tvals)
-    rm_point1 = [0.9318181818181819, 2.1] #NOTE THIS ONLY WORKS IF DON"T CHANGE a or k #TODO need to code in more general method - ie calculating max resisocline then adding error
-    rm_point2 = [0.9318181818181819, 2.4]#NOTE THIS ONLY WORKS IF DON"T CHANGE a or k
+function cf_returnmap_check(sol, pass_points, rm_point1, rm_point2)
     rm_pass_points = []
-    rm2_pass_points = []
-    count = 0
-    for i in 1:length(sol)-1
-        if sol.u[i+1][1] < 0.9318181818181819 && sol.u[i][1] > 0.9318181818181819
-            if dointersect(sol.u[i],sol.u[i+1],rm_point1,rm_point2) == true #Stricter condition for intersection of return map
-                append!(rm_pass_points, [[i , sol.u[i][1], sol.u[i][2]]])
+    for j in 1:length(pass_points)
+        for l in Int64(pass_points[j][1]):length(sol)-1
+            if sol.u[l+1][1] < rm_point1[1] && sol.u[l][1] > rm_point1[1]
+                if dointersect(sol.u[l],sol.u[l+1],rm_point1,rm_point2) == true #Stricter condition for intersection of return map
+                    append!(rm_pass_points, [[l , sol.u[l][1], sol.u[l][2]]])
+                end
             end
         end
     end
+    if length(rm_pass_points) < 1
+        return false
+    else
+        return [true, rm_pass_points]
+    end
+end
 
-    for j in 1:length(rm_pass_points)
-        for l in Int64(rm_pass_points[j][1]):length(sol)-1
-            if sol.u[l+1][1] < 0.9318181818181819
-                if 0 < sol.u[l][1] < 0.1 && 2.1 < sol.u[l][2] < 2.4
-                    append!(rm2_pass_points, [rm_pass_points[j]])
+points = cf_returnmap_check(test, [[1 , test.u[1][1], test.u[1][2]]], [0.9318181818181819, 2.1], [0.9318181818181819, 2.4] )
+
+function cf_resaxis_check(sol, pass_points, res_Hopf_point, res_lims, con_lims)
+    resaxis_pass_points = []
+    for j in 1:length(pass_points)
+        for l in Int64(pass_points[j][1]):length(sol)-1
+            if sol.u[l+1][1] < res_Hopf_point
+                if res_lims[1] < sol.u[l][1] < res_lims[2] && con_lims[1] < sol.u[l][2] < con_lims[2]
+                    append!(resaxis_pass_points, [[l , sol.u[l][1], sol.u[l][2]]])
                     break
                 end
             else
@@ -77,21 +84,54 @@ function cf_returnmap(ep, eff, mean, freq, seed, tsend, tvals)
             end
         end
     end
-    for j in 1:length(rm2_pass_points)
-        for l in Int64(rm2_pass_points[j][1]):length(sol)-1
-            if sol.u[l+1][1] < 0.9318181818181819 && sol.u[l][1] > 0.9318181818181819
-                if dointersect(sol.u[l],sol.u[l+1],rm_point1,rm_point2) == true #Stricter condition for intersection of return map
-                    count +=1
-                end
+    if length(resaxis_pass_points) < 1
+        return false
+    else
+        return [true, resaxis_pass_points]
+    end
+end
+
+points2 = cf_resaxis_check(test, points[2], 0.9318181818181819, [0.0,0.1], [2.1,2.3])
+
+function cf_box_check(sol, pass_points, res_lims, con_lims)
+    new_pass_points = []
+    for j in 1:length(pass_points)
+        for l in Int64(pass_points[j][1]):length(sol)-1
+            if res_lims[1] < sol.u[l][1] < res_lims[2] && con_lims[1] < sol.u[l][2] < con_lims[2]
+                append!(new_pass_points, [[l , sol.u[l][1], sol.u[l][2]]])
+                break
             end
         end
     end
-
-    if count > 0
-        return true
-    else
+    if length(new_pass_points) < 1
         return false
+    else
+        return [true, new_pass_points]
     end
+end
+
+points3 = cf_box_check(test, points2[2], [0.0,0.1], [0.0,1.8])
+cf_returnmap_check(test, points3[2], [0.9318181818181819, 2.1], [0.9318181818181819, 2.4] )
+
+function cf_ressiocline_check(sol, pass_points)
+    #TODO how to check when point crosses isocline - vector of all values on res isocline, thecn check if sol same values (with lower tolerance)
+    # then find slope of 5 points ahead vector and compare to isocline slope at point cross
+    if length(new_pass_points) < 1
+        return false
+    else
+        return [true, new_pass_points]
+    end
+end
+
+
+function cf_returnmap(ep, eff, mean, freq, seed, tsend, tvals)
+    sol = RozMac_pert(ep, eff, mean, freq, seed, tsend, tvals)
+    rm_point1 = [0.9318181818181819, 2.1] #NOTE THIS ONLY WORKS IF DON"T CHANGE a or k #TODO need to code in more general method - ie calculating max resisocline then adding error
+    rm_point2 = [0.9318181818181819, 2.4]#NOTE THIS ONLY WORKS IF DON"T CHANGE a or k
+    rm_pass_points = cf_returnmap_check1(sol, rm_point1, rm_point2)
+    resaxis_pass_points = cf_resaxis_check2(sol, rm_pass_points, 0.9318181818181819, res_lims = [0.0, 0.1], con_lims = [2.1, 2.4])
+
+
 end
 
 
