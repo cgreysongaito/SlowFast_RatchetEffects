@@ -33,6 +33,8 @@ SymPy.solve(g(R,C),C)
 
 f(R) = r * (a * h * k * R - a * h * R^2 + k - R) / (a * k)
 
+SymPy.diff(f(R), R)
+
 SymPy.solve(SymPy.diff(f(R), R),R)
 
 3.0 / 2 - 1 / ( 2 * 1.1 * 0.8)

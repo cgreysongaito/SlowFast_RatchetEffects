@@ -68,8 +68,6 @@ function cf_returnmap_check(sol, pass_points, rm_point1, rm_point2)
     end
 end
 
-points = cf_returnmap_check(test, [[1 , test.u[1][1], test.u[1][2]]], [0.9318181818181819, 2.1], [0.9318181818181819, 2.4] )
-
 function cf_resaxis_check(sol, pass_points, res_Hopf_point, res_lims, con_lims)
     resaxis_pass_points = []
     for j in 1:length(pass_points)
@@ -91,8 +89,6 @@ function cf_resaxis_check(sol, pass_points, res_Hopf_point, res_lims, con_lims)
     end
 end
 
-points2 = cf_resaxis_check(test, points[2], 0.9318181818181819, [0.0,0.1], [2.1,2.3])
-
 function cf_box_check(sol, pass_points, res_lims, con_lims)
     new_pass_points = []
     for j in 1:length(pass_points)
@@ -110,12 +106,17 @@ function cf_box_check(sol, pass_points, res_lims, con_lims)
     end
 end
 
-points3 = cf_box_check(test, points2[2], [0.0,0.1], [0.0,1.8])
-cf_returnmap_check(test, points3[2], [0.9318181818181819, 2.1], [0.9318181818181819, 2.4] )
+function cf_ressiocline_check(sol, pass_points, res_Hopf_point, par) #TODO maybe do it so checks whether stays within bubble for certain period of time?
+    new_pass_points = []
+    for j in 1:length(pass_points)
+        for l in Int64(pass_points[j][1]):length(sol)-5
+            if sol.u[l][1] > res_Hopf_point && isapprox(sol.u[l][2], res_iso(sol.u[l][1], par); atol = 1e-1)
+                append!(new_pass_points, [[l , sol.u[l][1], sol.u[l][2]]])
+                break
+            end
+        end
+    end
 
-function cf_ressiocline_check(sol, pass_points)
-    #TODO how to check when point crosses isocline - vector of all values on res isocline, thecn check if sol same values (with lower tolerance)
-    # then find slope of 5 points ahead vector and compare to isocline slope at point cross
     if length(new_pass_points) < 1
         return false
     else
@@ -123,20 +124,51 @@ function cf_ressiocline_check(sol, pass_points)
     end
 end
 
-
 function cf_returnmap(ep, eff, mean, freq, seed, tsend, tvals)
     sol = RozMac_pert(ep, eff, mean, freq, seed, tsend, tvals)
+    par = RozMacPar(e = eff, ε = ep, μ = mean)
+    res_Hopf_point = 0.9318181818181819 # TODO make this general
     rm_point1 = [0.9318181818181819, 2.1] #NOTE THIS ONLY WORKS IF DON"T CHANGE a or k #TODO need to code in more general method - ie calculating max resisocline then adding error
     rm_point2 = [0.9318181818181819, 2.4]#NOTE THIS ONLY WORKS IF DON"T CHANGE a or k
-    rm_pass_points = cf_returnmap_check1(sol, rm_point1, rm_point2)
-    resaxis_pass_points = cf_resaxis_check2(sol, rm_pass_points, 0.9318181818181819, res_lims = [0.0, 0.1], con_lims = [2.1, 2.4])
-
-
+    rm_pass_points1 = cf_returnmap_check(sol, [[1 , sol.u[1][1], sol.u[1][2]]], rm_point1, rm_point2)
+    if rm_pass_points1 == false
+        return false
+    else
+        resaxis_pass_points = cf_resaxis_check(sol, rm_pass_points1[2], res_Hopf_point, [0.0, 0.1], [2.1, 2.3])
+    end
+    if resaxis_pass_points == false
+        return false
+    else
+        resaxisbox_pass_points = cf_box_check(sol, resaxis_pass_points[2], [0.0,0.1], [0.0,1.8])
+    end
+    if resaxisbox_pass_points == false
+        return false
+    else
+        resiso_pass_points = cf_ressiocline_check(sol, resaxisbox_pass_points[2], res_Hopf_point, par)
+    end
+    if resiso_pass_points == false
+        return false
+    else
+        rm_pass_points2 = cf_returnmap_check(sol, resiso_pass_points[2],  rm_point1, rm_point2)
+    end
+    if rm_pass_points2 == false
+        return false
+    else
+        return true
+    end
 end
 
 
-#TODO what about if we don't get full canard but start of canard then won't get second  intersection
-cf_returnmap(0.01, 0.7, 0.0, 1, 1234, 5000.0, 2000.0:1.0:5000.0)
+cf_returnmap(0.01, 0.6, 0.0, 1, 1234, 5000.0, 2000.0:1.0:5000.0)
+
+let
+    test = figure()
+    pert_phase_plot(0.8, 0.72, 0.0, 1, 1234, 5000.0, 2000.0:1.0:5000.0)
+    vlines(0.9318181818181819, ymin = 2.1, ymax = 2.4, linestyles = `dashed`)
+    return test
+end
+cf_returnmap(0.8, 0.72, 0.0, 1, 1234, 5000.0, 2000.0:1.0:5000.0)
+
 #Idea size of resource vector - decrease from maximum to 0 axis and increase from zero to some point
 # dot product of two othogonal vectors is equal to 0
 function magnitude(vec)
