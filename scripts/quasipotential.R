@@ -592,3 +592,77 @@ plot(solved[,2],solved[,3])
 
 # Questions:
 #When does ordered upwind method stop - when does Quasipotential end?
+
+# Quasipotential presentation
+
+bounds.x <- c(0, 4)
+bounds.y <- c(0, 4)
+#Quasi-potential with same noise for epsilon of 1 (with efficiency of 0.48)
+param_symnoise_ep1_eff048 <- list(eff = 0.48,
+                                   ep = 1.00,
+                                   res_g = 1.0,
+                                   con_f = 1.0)
+
+u0_symnoise_ep1_eff048 <- c(x = 2.272727, y = 1.322314)
+
+ts_symnoise_ep1_eff048 <- sto_realization(u0 = u0_symnoise_ep1_eff048, param = param_symnoise_ep1_eff048)
+
+TSPlot(ts_symnoise_ep1_eff048, deltat = 1, ylim = c(0,5), xlim = c(0,5))
+TSPlot(ts_symnoise_ep1_eff048, deltat = 1, dim = 2)
+TSDensity(ts_symnoise_ep1_eff048, dim = 1)
+TSDensity(ts_symnoise_ep1_eff048, dim = 2)
+
+
+
+qp_symnoise_ep1_eff048 <- QPotential(x.rhs = param_model(param_symnoise_ep1_eff048)[[1]],
+                                      x.start = u0_symnoise_ep1_eff048[1],
+                                      x.bound = bounds.x,
+                                      x.num.steps = step.number.x,
+                                      y.rhs = param_model(param_symnoise_ep1_eff048)[[2]],
+                                      y.start = u0_symnoise_ep1_eff048[2],
+                                      y.bound = bounds.y,
+                                      y.num.steps = step.number.y)
+
+#not working - need to change where qp began?
+QPContour(surface = qp_symnoise_ep1_eff048, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
+
+png(filename="figs/3dqpot_ep1_eff048.png")
+persp3D(z = qp_symnoise_ep1_eff048, x = seq(0,4,length.out = 1000),y = seq(0,4,length.out = 1000), xlim = c(0,3), ylim = c(0,2.5), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab = "Resource", ylab = "Consumer", zlab = "Quasipotential", ticktype = "detailed", theta = 20, phi = 20)
+dev.off()
+
+vector_decomp_plot(qp_symnoise_ep001_eff08, bounds.x, bounds.y, param_symnoise_ep001_eff08)
+
+#Quasi-potential with same noise for epsilon of 1 (with efficiency of 0.48)
+param_symnoise_ep1_eff065 <- list(eff = 0.65,
+                                   ep = 1.00,
+                                   res_g = 1.0,
+                                   con_f = 1.0)
+
+u0_symnoise_ep1_eff065 <- c(x = 1.101928, y = 2.265833)
+
+ts_symnoise_ep1_eff065 <- sto_realization(u0 = u0_symnoise_ep1_eff065, param = param_symnoise_ep1_eff065)
+
+TSPlot(ts_symnoise_ep1_eff065, deltat = 1, ylim = c(0,5), xlim = c(0,5))
+TSPlot(ts_symnoise_ep1_eff065, deltat = 1, dim = 2)
+TSDensity(ts_symnoise_ep1_eff065, dim = 1)
+TSDensity(ts_symnoise_ep1_eff065, dim = 2)
+
+
+
+qp_symnoise_ep1_eff065 <- QPotential(x.rhs = param_model(param_symnoise_ep1_eff065)[[1]],
+                                      x.start = u0_symnoise_ep1_eff065[1],
+                                      x.bound = bounds.x,
+                                      x.num.steps = step.number.x,
+                                      y.rhs = param_model(param_symnoise_ep1_eff065)[[2]],
+                                      y.start = u0_symnoise_ep1_eff065[2],
+                                      y.bound = bounds.y,
+                                      y.num.steps = step.number.y)
+
+#not working - need to change where qp began?
+QPContour(surface = qp_symnoise_ep1_eff065, dens = c(1000, 1000), x.bound = bounds.x,y.bound = bounds.y, c.parm = 5)
+
+png(filename="figs/3dqpot_ep1_eff065.png")
+persp3D(z = qp_symnoise_ep1_eff065, x = seq(0,4,length.out = 1000),y = seq(0,4,length.out = 1000), xlim = c(0,3), ylim = c(0,3), col = viridis(n = 100, option = "A"), contour=TRUE,  xlab = "Resource", ylab = "Consumer", zlab = "Quasipotential", ticktype = "detailed", theta = 20, phi = 20)
+dev.off()
+
+vector_decomp_plot(qp_symnoise_ep001_eff08, bounds.x, bounds.y, param_symnoise_ep001_eff08)

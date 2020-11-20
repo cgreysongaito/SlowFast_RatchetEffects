@@ -1,31 +1,30 @@
-include("packages.jl")
+# include("packages.jl")
+#
+# include("slowfast_commoncode.jl")
+#
+#
+# #Maximum value of resource isocline
+# 0.9318181818181819
+# # Time series and phase plots of stochastic canards
+# let
+#     test = figure()
+#     pert_timeseries_plot(0.01, 0.6, 0.0, 1, 1234, 5000.0, 2000.0:1.0:5000.0)
+#     return test
+# end
+#
+# let
+#     test = figure()
+#     pert_phase_plot(0.01, 0.6, 0.0, 1, 1234, 5000.0, 2000.0:1.0:5000.0)
+#     vlines(0.9318181818181819, ymin = 2.1, ymax = 2.4, linestyles = `dashed`)
+#     return test
+# end
+#
+#
+# #Examination of what sto solver spits out
+# test = RozMac_pert(0.01, 0.6, 0.0, 1, 1234, 5000.0, 2000.0:1.0:5000.0)
 
-include("slowfast_commoncode.jl")
 
 
-#Maximum value of resource isocline
-0.9318181818181819
-# Time series and phase plots of stochastic canards
-let
-    test = figure()
-    pert_timeseries_plot(0.01, 0.6, 0.0, 1, 1234, 5000.0, 2000.0:1.0:5000.0)
-    return test
-end
-
-let
-    test = figure()
-    pert_phase_plot(0.01, 0.6, 0.0, 1, 1234, 5000.0, 2000.0:1.0:5000.0)
-    vlines(0.9318181818181819, ymin = 2.1, ymax = 2.4, linestyles = `dashed`)
-    return test
-end
-
-
-#Examination of what sto solver spits out
-test = RozMac_pert(0.01, 0.6, 0.0, 1, 1234, 5000.0, 2000.0:1.0:5000.0)
-
-
-
-# Idea 1 return map taking both vector of deterministic and vector or noise (only in C direction)nmbvcy
 function orientation(p1, p2, p3)
     val = (p2[2] - p1[2]) * (p3[1] - p2[1]) - (p3[2] - p2[2]) * (p2[1] - p1[1])
     if (val == 0)
@@ -157,71 +156,3 @@ function cf_returnmap(ep, eff, mean, freq, seed, tsend, tvals)
         return true
     end
 end
-
-
-cf_returnmap(0.01, 0.6, 0.0, 1, 1234, 5000.0, 2000.0:1.0:5000.0)
-
-let
-    test = figure()
-    pert_phase_plot(0.8, 0.72, 0.0, 1, 1234, 5000.0, 2000.0:1.0:5000.0)
-    vlines(0.9318181818181819, ymin = 2.1, ymax = 2.4, linestyles = `dashed`)
-    return test
-end
-cf_returnmap(0.8, 0.72, 0.0, 1, 1234, 5000.0, 2000.0:1.0:5000.0)
-
-#Idea size of resource vector - decrease from maximum to 0 axis and increase from zero to some point
-# dot product of two othogonal vectors is equal to 0
-function magnitude(vec)
-    return sqrt(vec[1]^2 + vec[2]^2)
-end
-
-function cf_othogvectors(ep, eff, mean, freq, seed, tsend, tvals)
-    sol = RozMac_pert(ep, eff, mean, freq, seed, tsend, tvals)
-    # count = 0
-    angledata = fill(0.0, length(sol)-1)
-    for i in 1:length(sol)-2
-        vector1 = [sol.u[i+1][1]-sol.u[i][1], sol.t[i+1]-sol.t[i]]
-        vector2 = [sol.u[i+2][1]-sol.u[i+1][1], sol.t[i+2]-sol.t[i+1]]
-        check = dot(vector1,vector2) / ( magnitude(vector1) * magnitude(vector2) )
-        if check > 1
-        angledata[i] = rad2deg(acos(round(check;digits = 4)) )
-        else
-        angledata[i] = rad2deg(acos(check))
-        end
-        # if 50 < angle < 100
-        #     count += 1
-        # end
-    end
-    return angledata
-end
-
-
-#angle data does show spikes for each canard so vector angle method is finding canards BUT probably dependent on peturbation frequency - need to make generalizable
-vectors = cf_othogvectors(0.01, 0.6, 0.0, 1, 1234, 10000.0, 2000.0:1.0:10000.0)
-
-let
-    test = figure()
-    plot(collect(2000.0:1.0:9999.0), vectors)
-    return test
-end
-#Problem - after 16 decimal places sqrt rounds up
-
-v1 = [-1.2900372381423753e-7, 1.0]
-v2 = [-1.0658821740539145e-7, 1.0]
-
-v1 = vectors[1]
-v2 = vectors[2]
-rad2deg(acos(dot(v1,v2) / ( magnitude(v1) * magnitude(v2) )))
-( magnitude(v1) * magnitude(v2) )
-dot(v1,v2)
-dot(v1,v2)/( magnitude(v1) * magnitude(v2) )
-magnitude(v1)
-magnitude(v2)
-v1[1]*v2[1]
-v1[1]^2
-
-magnitude(v1)
-v1[1]^2 +1
-sqrt(v1[1]^2 +1)
-# examine heat map of stochastic realization should be over certain colour
-erer

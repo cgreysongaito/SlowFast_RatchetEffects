@@ -1,8 +1,39 @@
 include("packages.jl")
-
 include("slowfast_commoncode.jl")
+include("slowfast_canardfinder.jl")
 
 
+## Figure 2 (proportion quasi-canard with different consumer isoclines)
+function prop_canard(ep, eff)
+    res_start = 0.0:0.1:3.0
+    con_start = 0.0:0.1:2.5
+    count_true = 0
+    for (resi, resvalue) in enumerate(res_start)
+        for (coni, convalue) in enumerate(con_start)
+            if cf_returnmap(ep, eff, 0.0, 1, 1234, 5000.0, 2000.0:1.0:5000.0) == true
+                count_true += 1
+            end
+        end
+    end
+    return count_true / (length(res_start)*length(con_start))
+end
+
+prop_canard(1,0.5)
+
+function prop_canard_data(eff)
+    epsilon_range = 0.0:0.1:1.0
+    propcanard = fill(0.0,length(epsilon_range))
+    for (epi, epvalue) in enumerate(epsilon_range)
+        propcanard[epi] = prop_canard(epvalue, eff)
+    end
+    return propcanard
+end
+
+let
+    test = figure()
+    plot(collect(0.0:0.1:1.0), prop_canard_data(0.45))
+    return test
+end
 
 function pert_cvsdmean(ep)
     evals = 0.441:0.005:0.9
