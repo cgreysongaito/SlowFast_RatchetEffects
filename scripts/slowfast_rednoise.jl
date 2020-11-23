@@ -1,187 +1,102 @@
 include("packages.jl")
+include("slowfast_commoncode.jl")
+include("slowfast_canardfinder.jl")
 
-map = 0.0:1.0:10
-phase  = 2*pi*rand()
-s = sin.((2 * pi * map/maximum(map)) + phase)
-
-s = fill(0.0, length(map))
-for i in 1:length(map)
-    s[i] = sin(2 * pi * map[i]/maximum(map) + phase)
-end
-
-
-
-function sine_prep(freq::Int64, map)
-    phase = 2*pi*rand()
-    s = fill(0.0, length(map))
-    for i in 1:length(map)
-        s[i] = sin(2 * pi * freq * map[i]/maximum(map) + phase)
-    end
-    return s
-end
-
-
-let
-    map = 0.0:1.0:100
-    test = figure()
-    plot(map, sine_prep(1, map))
-    return test
-end
-
-function weighted_sum(amplitudes, noises, map)
-    output = fill(0.0, length(map))
-    for k in 1:length(noises)
-        for x in 1:length(map)
-            output[x] += amplitudes[k] * noises[k][x]
+# Figure 3
+function prop_canard_rednoise(ep, r)
+    res_start = 0.0:0.1:3.0
+    con_start = 0.0:0.1:2.5
+    count_true = 0
+    for (resi, resvalue) in enumerate(res_start)
+        for (coni, convalue) in enumerate(con_start)
+            if cf_returnmap(ep, 0.55, 1, r, 1234, resvalue, convalue, 5000.0, 2000.0:1.0:5000.0) == true
+                count_true += 1
+            end
         end
     end
-    return output
+    return count_true / (length(res_start)*length(con_start))
 end
 
-
-amplitudes = [0.1, 0.1, 0.2, 0.3, 0.5, 1.0]
-frequencies = [1, 2, 4, 8, 16, 32]
-
-noisestest = [sine_prep(f, 0.0:1.0:100) for f in frequencies]
-sumofnoises = weighted_sum(amplitudes, noisestest, 0.0:1.0:100)
-
-let
-    map = 0.0:1.0:100
-    test = figure()
-    plot(map, sumofnoises)
-    return test
-end
-
-
-
-frequencies = 1.0:1.0:30
-
-amplitudes = [f^1 for f in frequencies]
-
-function noise(f_exp, map, freq)
-    amplitudes = [f^f_exp for f in freq]
-    noises = [sine_prep(f, map) for f in freq]
-    sum_of_noises = weighted_sum(amplitudes, noises, map)
-    return sum_of_noises
-end
-
-let
-    map = 0.0:1.0:100
-    freq = 1.0:1.0:30
-    test = figure()
-    plot(map, noise(0, map, freq))
-    return test
-end
-
-
-# problem looks like we need to standardise variation
-
-
-#https://atmos.washington.edu/~breth/classes/AM582/lect/lect8-notes.pdf
-
-
-function noise2(r, len)
-    white = rand(Normal(0.0, 0.01), Int64(len))
-    finalnoise = [white[1]]
-    for i in 2:Int64(len)
-        finalnoise = append!(finalnoise, r * finalnoise[i-1] + white[i] * ( 1 - r^2 )^(1/2))
+function prop_canard_rednoise_data(ep)
+    corr_range = 0.0:0.1:0.9
+    propcanard = fill(0.0,length(epsilon_range))
+    for (corri, corrvalue) in enumerate(corr_range)
+        propcanard[corri] = prop_canard_rednoise(ep, corrvalue)
     end
-    return finalnoise
+    return propcanard
 end
 
-noise2(0.8, 50.0)
+fulldataset = [prop_canard_rednoise_data(0.1), prop_canard_rednoise_data(0.5), prop_canard_rednoise_data(0.8)]
+
+let
+    figure2 = figure()
+    subplot(1,4,1)
+    plot(collect(0.0:0.1:0.9), fulldataset[1])
+    subplot(1,4,2)
+    plot(collect(0.0:0.1:0.9), fulldataset[2])
+    subplot(1,4,3)
+    plot(collect(0.0:0.1:0.9), fulldataset[3])
+    subplot(1,4,4)
+    plot(collect(0.0:0.1:0.9), fulldataset[4])
+    return figure2
+end
+
+
+
+
+#testing red noise perturbation
+using DSP
 
 let
     test = figure()
-    plot(0.0:1.0:49, noise2(0.8, 50))
+    plot(0.0:1.0:49, noise(0.8, 50))
     return test
 end
 
-
-
-
-@with_kw mutable struct RozMacPar
-    r = 2.0
-    k = 3.0
-    a = 1.1
-    h = 0.8
-    e = 0.7
-    m = 0.4
-    σ = 0.1
-    ε = 0.1
-end
-
-par_rozmac = RozMacPar()
-
-function roz_mac_II!(du, u, p, t,)
-    @unpack r, k, a, h, e, m, ε = p
+function redtest!(du, u, p, t,)
     R, C = u
-    du[1] = r * R * (1 - R / k) - a * R * C / (1 + a * h * R)
-    du[2] = ε * ( e * a * R * C / (1 + a * h * R) - m * C )
+    du[1] = 0
+    du[2] = 0
     return
 end
 
-function roz_mac_II(u, par)
-    du = similar(u)
-    roz_mac_II!(du, u, par, 0.0)
-    return du
-end
-
-function eq_II(p)
-    @unpack r, a, k, h, m, e = p
-    eq_II_R = m / (a * (e - h * m))
-    eq_II_C = r * (a * h * k * eq_II_R - a * h * eq_II_R^2 + k - eq_II_R) / (a * k)
-    return vcat(eq_II_R, eq_II_C)
-end
-
-
-
-
-function pert_cb(integrator)
-    count += 1
-    if isapprox(integrator.u[2], 0.00000000; atol = 1e-8)
-        integrator.u[2] = 0.00000000
-    else
-        integrator.u[2] = maximum([integrator.u[2] + noise[count], 0.0])
-    end
-end
-
-
-function RozMac_pert(ep, eff, freq, r, seed, tsend, tvals)
+function redtest_pert(freq, r, seed, tsend, tvals)
     Random.seed!(seed)
     par = RozMacPar()
-    par.ε = ep
-    par.e = eff
-    noise = noise2(r, tsend / freq)
+    noise = noise(r, tsend / freq)
     count = 1
-    u0 = [eq_II(par)[1], eq_II(par)[2] + noise[1]]
+    u0 = [0.0, noise[1]]
     tspan = (0, tsend)
 
     function pert_cb2(integrator)
         count += 1
-        if isapprox(integrator.u[2], 0.00000000; atol = 1e-8)
-            integrator.u[2] = 0.00000000
-        else
-            integrator.u[2] = maximum([integrator.u[2] + noise[count], 0.0])
-        end
+        integrator.u[2] = noise[count]
     end
 
     cb = PeriodicCallback(pert_cb2, freq, initial_affect = false) #as of may 29th - initial_affect does not actually do the affect on the first time point
-    prob = ODEProblem(roz_mac_II!, u0, tspan, par)
+    prob = ODEProblem(redtest!, u0, tspan, par)
     sol = DifferentialEquations.solve(prob, callback = cb, reltol = 1e-8)
     return solend = sol(tvals)
 end
 
-RozMac_pert(1.0, 0.6,1.0, 1234, 5000.0, 2000.0:1.0:5000.0)
-
-function pert_timeseries_plot(ep, eff, freq, r, seed, tsend, tvals)
-    sol = RozMac_pert(ep, eff, freq, r, seed, tsend, tvals)
+function redtest_pert_plot(freq, r, seed, tsend, tvals)
+    sol = redtest_pert(freq, r, seed, tsend, tvals)
     plot(sol.t, sol.u)
     return ylabel("Resource & \n Consumer Biomass")
 end
 
 let
     test = figure()
-    pert_timeseries_plot(1.0, 0.6, 1.0, 0.0, 1234, 5000.0, 2000.0:1.0:5000.0)
+    pert_timeseries_plot(1.0, -0.8, 1234, 500.0, 200.0:1.0:500.0)
+    return test
+end
+
+ps = periodogram(redtest_pert(1.0, 0.0, 1234, 500.0, 200.0:1.0:500.0)[2,:])
+
+ps.freq
+
+let
+    test = figure()
+    plot(ps.freq,ps.power)
     return test
 end

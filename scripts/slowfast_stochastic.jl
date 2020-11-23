@@ -10,7 +10,7 @@ function prop_canard(ep, eff)
     count_true = 0
     for (resi, resvalue) in enumerate(res_start)
         for (coni, convalue) in enumerate(con_start)
-            if cf_returnmap(ep, eff, 0.0, 1, 1234, 5000.0, 2000.0:1.0:5000.0) == true
+            if cf_returnmap(ep, eff, 1, 0.0, 1234, resvalue, convalue, 5000.0, 2000.0:1.0:5000.0) == true
                 count_true += 1
             end
         end
@@ -18,10 +18,20 @@ function prop_canard(ep, eff)
     return count_true / (length(res_start)*length(con_start))
 end
 
-prop_canard(1,0.5)
+cf_returnmap(0.1, 0.6, 1, 0.0, 1234, 0.1, 0.1, 5000.0, 2000.0:1.0:5000.0)
+
+prop_canard(0.01,0.6)
+
+let
+    test = figure()
+    pert_phase_plot(0.1, 0.6, 1, 0.0, rand, 0.1, 0.1, 5000.0, 2000.0:1.0:5000.0)
+    return test
+end
+
+# pert_phase_plot(0.1, 0.6, 1, 0.0, 7, 0.1, 0.1, 5000.0, 2000.0:1.0:5000.0) - why shows nothing
 
 function prop_canard_data(eff)
-    epsilon_range = 0.0:0.1:1.0
+    epsilon_range = 0.0:0.01:1.0 #shouldn't include 0.0
     propcanard = fill(0.0,length(epsilon_range))
     for (epi, epvalue) in enumerate(epsilon_range)
         propcanard[epi] = prop_canard(epvalue, eff)
@@ -29,11 +39,24 @@ function prop_canard_data(eff)
     return propcanard
 end
 
+fulldataset = [prop_canard_data(0.5), prop_canard_data(0.6), prop_canard_data(0.7), prop_canard_data(0.8)]
+fulldataset[1]
 let
-    test = figure()
-    plot(collect(0.0:0.1:1.0), prop_canard_data(0.45))
-    return test
+    figure2 = figure()
+    subplot(1,4,1)
+    plot(collect(0.0:0.1:1.0), fulldataset[1])
+    subplot(1,4,2)
+    plot(collect(0.0:0.1:1.0), fulldataset[2])
+    subplot(1,4,3)
+    plot(collect(0.0:0.1:1.0), fulldataset[3])
+    subplot(1,4,4)
+    plot(collect(0.0:0.1:1.0), fulldataset[4])
+    return figure2
 end
+
+
+
+
 
 function pert_cvsdmean(ep)
     evals = 0.441:0.005:0.9

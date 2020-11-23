@@ -13,7 +13,6 @@ end
     m = 0.4
     σ = 0.1
     ε = 0.1
-    μ  = 0.0
 end
 
 par_rozmac = RozMacPar()
@@ -82,44 +81,57 @@ function roz_mac_plot(ep, eff)
     return iso_plot(resconrange, RozMacPar(e = eff))
 end
 
-function pert_cb(integrator)
-    if isapprox(integrator.u[2], 0.00000000; atol = 1e-8)
-        integrator.u[2] = 0.00000000
-    else
-        integrator.u[2] = maximum([integrator.u[2] + rand(Normal(integrator.p.μ, 0.01)), 0.0])
+function noise_creation(r, len)
+    #https://atmos.washington.edu/~breth/classes/AM582/lect/lect8-notes.pdf
+    white = rand(Normal(0.0, 0.01), Int64(len))
+    finalnoise = [white[1]]
+    for i in 2:Int64(len)
+        finalnoise = append!(finalnoise, r * finalnoise[i-1] + white[i] * ( 1 - r^2 )^(1/2))
     end
+    return finalnoise
 end
 
 
-function RozMac_pert(ep, eff, mean, freq, seed, tsend, tvals)
+function RozMac_pert(ep, eff, freq, r, seed, R0, C0, tsend, tvals)
     Random.seed!(seed)
     par = RozMacPar()
     par.ε = ep
     par.e = eff
-    par.μ = mean
-    u0 = [eq_II(par)[1], eq_II(par)[2] + rand(Normal(mean, 0.01))]
+    noise = noise_creation(r, tsend / freq)
+    count = 1
+    u0 = [R0, C0 + noise[1]]
     tspan = (0, tsend)
-    cb = PeriodicCallback(pert_cb, freq, initial_affect = false) #as of may 29th - initial_affect does not actually do the affect on the first time point
+
+    function pert_cb2(integrator)
+        count += 1
+        if isapprox(integrator.u[2], 0.00000000; atol = 1e-8)
+            integrator.u[2] = 0.00000000
+        else
+            integrator.u[2] = maximum([integrator.u[2] + noise[count], 0.0])
+        end
+    end
+
+    cb = PeriodicCallback(pert_cb2, freq, initial_affect = false) #as of may 29th - initial_affect does not actually do the affect on the first time point
     prob = ODEProblem(roz_mac_II!, u0, tspan, par)
     sol = DifferentialEquations.solve(prob, callback = cb, reltol = 1e-8)
     return solend = sol(tvals)
 end
 
 
-function pert_timeseries_plot(ep, eff, mean, freq, seed, tsend, tvals)
-    sol = RozMac_pert(ep, eff, mean, freq, seed, tsend, tvals)
+function pert_timeseries_plot(ep, eff, freq, r, seed, R0, C0, tsend, tvals)
+    sol = RozMac_pert(ep, eff, freq, r, seed, R0, C0, tsend, tvals)
     plot(sol.t, sol.u)
     return ylabel("Resource & \n Consumer Biomass")
 end
 
-function pert_consumer_timeseries_plot(ep, eff, mean, freq, seed, tsend, tvals)
-    sol = RozMac_pert(ep, eff, mean, freq, seed, tsend, tvals)
+function pert_consumer_timeseries_plot(ep, eff, freq, seed, R0, C0, tsend, tvals)
+    sol = RozMac_pert(ep, eff, freq, r, seed, R0, C0, tsend, tvals)
     plot(sol.t, sol[2, :])
     return ylabel("Consumer biomass")
 end
 
-function pert_phase_plot(ep, eff, mean, freq, seed, tsend, tvals)
-    sol = RozMac_pert(ep, eff, mean, freq, seed, tsend, tvals)
+function pert_phase_plot(ep, eff, freq, r, seed, R0, C0, tsend, tvals)
+    sol = RozMac_pert(ep, eff, freq, r, seed, R0, C0, tsend, tvals)
     plot(sol[1, :], sol[2, :])
     xlabel("Resource")
     return ylabel("Consumer")
