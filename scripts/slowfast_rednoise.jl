@@ -3,30 +3,31 @@ include("slowfast_commoncode.jl")
 include("slowfast_canardfinder.jl")
 
 # Figure 3
-function prop_canard_rednoise(ep, r)
-    res_start = 0.0:0.1:3.0
-    con_start = 0.0:0.1:2.5
+@everywhere function prop_canard_rednoise(ep, r, reps)
     count_true = 0
-    for (resi, resvalue) in enumerate(res_start)
-        for (coni, convalue) in enumerate(con_start)
-            if cf_returnmap(ep, 0.55, 1, r, 1234, resvalue, convalue, 5000.0, 2000.0:1.0:5000.0) == true
-                count_true += 1
-            end
+    tsend = 6000.0
+    for i in 1:reps
+        if cf_returnmap(ep, 0.55, 1, r, i, tsend, 2000.0:1.0:tsend) == true
+            count_true += 1
         end
     end
-    return count_true / (length(res_start)*length(con_start))
+    return count_true / reps
 end
 
-function prop_canard_rednoise_data(ep)
-    corr_range = 0.0:0.1:0.9
-    propcanard = fill(0.0,length(epsilon_range))
-    for (corri, corrvalue) in enumerate(corr_range)
-        propcanard[corri] = prop_canard_rednoise(ep, corrvalue)
-    end
-    return propcanard
+function prop_canard_rednoise_data(ep, reps)
+    r_range = 0.0:0.1:0.9
+    data = pmap(r -> prop_canard_rednoise(ep, r, reps), r_range)
+    # for (corri, corrvalue) in enumerate(corr_range)
+    #     propcanard[corri] = prop_canard_rednoise(ep, corrvalue)
+    # end
+    return data
 end
 
-fulldataset = [prop_canard_rednoise_data(0.1), prop_canard_rednoise_data(0.5), prop_canard_rednoise_data(0.8)]
+prop_canard_rednoise_data(0.01, 100)
+
+#could be to do with sensitivity of return map
+
+rn_fulldataset = [prop_canard_rednoise_data(0.1, 50), prop_canard_rednoise_data(0.5, 50), prop_canard_rednoise_data(0.8, 50)]
 
 let
     figure2 = figure()

@@ -123,8 +123,8 @@ function cf_ressiocline_check(sol, pass_points, res_Hopf_point, par) #TODO maybe
     end
 end
 
-function cf_returnmap(ep, eff, freq, r, seed, R0, C0, tsend, tvals)
-    sol = RozMac_pert(ep, eff, freq, r, seed, R0, C0, tsend, tvals)
+function cf_returnmap(ep, eff, freq, r, seed, tsend, tvals)
+    sol = RozMac_pert(ep, eff, freq, r, seed, tsend, tvals)
     par = RozMacPar(e = eff, ε = ep)
     res_Hopf_point = 0.9318181818181819 # TODO make this general
     rm_point1 = [0.9318181818181819, 2.1] #NOTE THIS ONLY WORKS IF DON"T CHANGE a or k #TODO need to code in more general method - ie calculating max resisocline then adding error

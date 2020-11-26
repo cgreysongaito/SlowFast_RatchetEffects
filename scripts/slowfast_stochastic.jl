@@ -7,27 +7,24 @@ addprocs(length(Sys.cpu_info())-1)
 
 
 ## Figure 2 (proportion quasi-canard with different consumer isoclines)
-@everywhere function prop_canard(ep, eff)
-    res_start = 0.1:0.1:3.0
-    con_start = 0.1:0.1:2.5
+@everywhere function prop_canard(ep, eff, iter)
     count_true = 0
-    for (resi, resvalue) in enumerate(res_start)
-        for (coni, convalue) in enumerate(con_start)
-            if cf_returnmap(ep, eff, 1, 0.0, 1234, resvalue, convalue, 5000.0, 2000.0:1.0:5000.0) == true
-                count_true += 1
-            end
+    tsend = 6000.0
+    for i in 1:iter
+        if cf_returnmap(ep, eff, 1, 0.0, i, tsend, 2000.0:1.0:tsend) == true
+            count_true += 1
         end
     end
-    return count_true / (length(res_start)*length(con_start))
+    return count_true / iter
 end
 
-cf_returnmap(0.1, 0.6, 1, 0.0, 1234, 0.1, 0.1, 5000.0, 2000.0:1.0:5000.0)
+cf_returnmap(0.01, 0.8, 1, 0.9, 1234, 5000.0, 2000.0:1.0:5000.0)
 
-prop_canard(0.01,0.6)
+prop_canard(0.01, 0.8, 10)
 
 let
     test = figure()
-    pert_phase_plot(0.1, 0.6, 1, 0.0, rand, 0.1, 0.1, 5000.0, 2000.0:1.0:5000.0)
+    pert_phase_plot(0.073, 0.5, 1, 0.9, rand(1:50), 20000.0, 2000.0:1.0:20000.0)
     return test
 end
 
@@ -42,35 +39,48 @@ end
 #     return propcanard
 # end
 
-function prop_canard_data(eff)
+function prop_canard_data(eff, iter)
     epsilon_range1 = 0.001:0.001:0.12
     epsilon_range2 = 0.2:0.1:1.0
-    data1 = pmap(ep -> prop_canard(ep, eff), epsilon_range1)
-    data2 = pmap(ep -> prop_canard(ep, eff), epsilon_range2)
+    data1 = pmap(ep -> prop_canard(ep, eff, iter), epsilon_range1)
+    data2 = pmap(ep -> prop_canard(ep, eff, iter), epsilon_range2)
     return vcat(data1, data2)
 end
 #break up epsilonrange - small diff for 0.01to 0.1 then large after ward
 
+prop_canard_data(0.7, 10)
 
-fulldataset = [prop_canard_data(0.5), prop_canard_data(0.6), prop_canard_data(0.7), prop_canard_data(0.8)]
+fulldataset = [prop_canard_data(0.5, 1000), prop_canard_data(0.6, 1000), prop_canard_data(0.7, 1000), prop_canard_data(0.8, 1000)]
 
-CSV.write("/home/chrisgg/julia/TimeDelays/canard05.csv", DataFrame(prop = fulldataset[1]))
-CSV.write("/home/chrisgg/julia/TimeDelays/canard06.csv", DataFrame(prop = fulldataset[2]))
-CSV.write("/home/chrisgg/julia/TimeDelays/canard07.csv", DataFrame(prop = fulldataset[3]))
-CSV.write("/home/chrisgg/julia/TimeDelays/canard08.csv", DataFrame(prop = fulldataset[4]))
+fulldataset[3]
+
+using DataFrames
+using CSV
+CSV.write("/home/chrisgg/julia/TimeDelays/canard_whitenoise.csv", DataFrame(prop05 = fulldataset[1], prop06 = fulldataset[2], prop07 = fulldataset[3], prop08 = fulldataset[4]))
+
+
+data05 = CSV.read("/home/chrisgg/julia/TimeDelays/canard05eq.csv", DataFrame)
+data06 = CSV.read("/home/chrisgg/julia/TimeDelays/canard06eq.csv", DataFrame)
+data07 = CSV.read("/home/chrisgg/julia/TimeDelays/canard07eq.csv", DataFrame)
+data08 = CSV.read("/home/chrisgg/julia/TimeDelays/canard08eq.csv", DataFrame)
 
 
 let
     figure2 = figure()
     subplot(4,1,1)
-    plot(collect(0.01:0.01:1.0), fulldataset[1])
+    plot(collect(0.001:0.001:0.12), data05.prop[1:120])
+    plot(collect(0.2:0.1:1.0), data05.prop[121:end])
     subplot(4,1,2)
-    plot(collect(0.01:0.01:1.0), fulldataset[2])
+    plot(collect(0.001:0.001:0.12), data06.prop[1:120])
+    plot(collect(0.2:0.1:1.0), data06.prop[121:end])
     subplot(4,1,3)
-    plot(collect(0.01:0.01:1.0), fulldataset[3])
+    plot(collect(0.001:0.001:0.12), data07.prop[1:120])
+    plot(collect(0.2:0.1:1.0), data07.prop[121:end])
     subplot(4,1,4)
-    plot(collect(0.01:0.01:1.0), fulldataset[4])
-    return figure2
+    plot(collect(0.001:0.001:0.12), data08.prop[1:120])
+    plot(collect(0.2:0.1:1.0), data08.prop[121:end])
+    # return figure2
+    savefig(joinpath(abpath(), "figs/canard_whitenoise_prop.png"))
 end
 
 

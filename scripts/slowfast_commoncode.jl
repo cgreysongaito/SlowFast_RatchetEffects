@@ -92,14 +92,14 @@ function noise_creation(r, len)
 end
 
 
-function RozMac_pert(ep, eff, freq, r, seed, R0, C0, tsend, tvals)
+function RozMac_pert(ep, eff, freq, r, seed, tsend, tvals)
     Random.seed!(seed)
     par = RozMacPar()
     par.ε = ep
     par.e = eff
     noise = noise_creation(r, tsend / freq)
     count = 1
-    u0 = [R0, C0 + noise[1]]
+    u0 = [eq_II(par)[1], eq_II(par)[2] + noise[1]]
     tspan = (0, tsend)
 
     function pert_cb2(integrator)
@@ -118,20 +118,20 @@ function RozMac_pert(ep, eff, freq, r, seed, R0, C0, tsend, tvals)
 end
 
 
-function pert_timeseries_plot(ep, eff, freq, r, seed, R0, C0, tsend, tvals)
-    sol = RozMac_pert(ep, eff, freq, r, seed, R0, C0, tsend, tvals)
+function pert_timeseries_plot(ep, eff, freq, r, seed, tsend, tvals)
+    sol = RozMac_pert(ep, eff, freq, r, seed, tsend, tvals)
     plot(sol.t, sol.u)
     return ylabel("Resource & \n Consumer Biomass")
 end
 
-function pert_consumer_timeseries_plot(ep, eff, freq, seed, R0, C0, tsend, tvals)
-    sol = RozMac_pert(ep, eff, freq, r, seed, R0, C0, tsend, tvals)
+function pert_consumer_timeseries_plot(ep, eff, freq, seed, tsend, tvals)
+    sol = RozMac_pert(ep, eff, freq, r, seed, tsend, tvals)
     plot(sol.t, sol[2, :])
     return ylabel("Consumer biomass")
 end
 
-function pert_phase_plot(ep, eff, freq, r, seed, R0, C0, tsend, tvals)
-    sol = RozMac_pert(ep, eff, freq, r, seed, R0, C0, tsend, tvals)
+function pert_phase_plot(ep, eff, freq, r, seed, tsend, tvals)
+    sol = RozMac_pert(ep, eff, freq, r, seed, tsend, tvals)
     plot(sol[1, :], sol[2, :])
     xlabel("Resource")
     return ylabel("Consumer")
