@@ -120,8 +120,7 @@ end
 
 function pert_timeseries_plot(ep, eff, freq, r, seed, tsend, tvals)
     sol = RozMac_pert(ep, eff, freq, r, seed, tsend, tvals)
-    plot(sol.t, sol.u)
-    return ylabel("Resource & \n Consumer Biomass")
+    return plot(sol.t, sol.u)
 end
 
 function pert_consumer_timeseries_plot(ep, eff, freq, seed, tsend, tvals)

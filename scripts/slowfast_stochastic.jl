@@ -1,4 +1,6 @@
 using Distributed
+using CSV
+using DataFrames
 addprocs(length(Sys.cpu_info())-1)
 
 @everywhere include("/home/chrisgg/julia/TimeDelays/scripts/packages.jl")
@@ -18,13 +20,9 @@ addprocs(length(Sys.cpu_info())-1)
     return count_true / iter
 end
 
-cf_returnmap(0.01, 0.8, 1, 0.9, 1234, 5000.0, 2000.0:1.0:5000.0)
-
-prop_canard(0.01, 0.8, 10)
-
 let
     test = figure()
-    pert_phase_plot(0.073, 0.5, 1, 0.9, rand(1:50), 20000.0, 2000.0:1.0:20000.0)
+    pert_phase_plot(0.07, 0.95, 1, 0.0, 5, 7000.0, 2000.0:1.0:7000.0)
     return test
 end
 
@@ -40,7 +38,7 @@ end
 # end
 
 function prop_canard_data(eff, iter)
-    epsilon_range1 = 0.001:0.001:0.12
+    epsilon_range1 = 0.001:0.001:0.2
     epsilon_range2 = 0.2:0.1:1.0
     data1 = pmap(ep -> prop_canard(ep, eff, iter), epsilon_range1)
     data2 = pmap(ep -> prop_canard(ep, eff, iter), epsilon_range2)
@@ -50,13 +48,13 @@ end
 
 prop_canard_data(0.7, 10)
 
-fulldataset = [prop_canard_data(0.5, 1000), prop_canard_data(0.6, 1000), prop_canard_data(0.7, 1000), prop_canard_data(0.8, 1000)]
+fulldataset = [prop_canard_data(0.75, 1000), prop_canard_data(0.85, 1000), prop_canard_data(0.9, 1000), prop_canard_data(0.95, 1000)]
 
 fulldataset[3]
 
 using DataFrames
 using CSV
-CSV.write("/home/chrisgg/julia/TimeDelays/canard_whitenoise.csv", DataFrame(prop05 = fulldataset[1], prop06 = fulldataset[2], prop07 = fulldataset[3], prop08 = fulldataset[4]))
+CSV.write("/home/chrisgg/julia/TimeDelays/canard_whitenoise_afterhopf.csv", DataFrame(prop075 = fulldataset[1], prop085 = fulldataset[2], prop09 = fulldataset[3], prop095 = fulldataset[4]))
 
 
 data05 = CSV.read("/home/chrisgg/julia/TimeDelays/canard05eq.csv", DataFrame)
@@ -64,28 +62,39 @@ data06 = CSV.read("/home/chrisgg/julia/TimeDelays/canard06eq.csv", DataFrame)
 data07 = CSV.read("/home/chrisgg/julia/TimeDelays/canard07eq.csv", DataFrame)
 data08 = CSV.read("/home/chrisgg/julia/TimeDelays/canard08eq.csv", DataFrame)
 
+data = CSV.read("/home/chrisgg/julia/TimeDelays/canard_whitenoise_afterhopf.csv", DataFrame)
 
 let
     figure2 = figure()
-    subplot(4,1,1)
-    plot(collect(0.001:0.001:0.12), data05.prop[1:120])
-    plot(collect(0.2:0.1:1.0), data05.prop[121:end])
-    subplot(4,1,2)
-    plot(collect(0.001:0.001:0.12), data06.prop[1:120])
-    plot(collect(0.2:0.1:1.0), data06.prop[121:end])
-    subplot(4,1,3)
-    plot(collect(0.001:0.001:0.12), data07.prop[1:120])
-    plot(collect(0.2:0.1:1.0), data07.prop[121:end])
-    subplot(4,1,4)
-    plot(collect(0.001:0.001:0.12), data08.prop[1:120])
-    plot(collect(0.2:0.1:1.0), data08.prop[121:end])
-    # return figure2
-    savefig(joinpath(abpath(), "figs/canard_whitenoise_prop.png"))
+    subplot(1,4,1)
+    plot(collect(0.001:0.001:0.2), data.prop075[1:200], color = "black")
+    # plot(collect(0.2:0.1:1.0), data05.prop[121:end], color = "black")
+    ylabel("Proportion with quasi-canard")
+    ylim(0,1)
+    subplot(1,4,2)
+    plot(collect(0.001:0.001:0.2), data.prop085[1:200], color = "black")
+    # plot(collect(0.2:0.1:1.0), data06.prop[121:end], color = "black")
+    ylim(0,1)
+    xlabel("ϵ")
+    subplot(1,4,3)
+    plot(collect(0.001:0.001:0.2), data.prop09[1:200], color = "black")
+    # plot(collect(0.2:0.1:1.0), data07.prop[121:end], color = "black")
+    ylim(0,1)
+    subplot(1,4,4)
+    plot(collect(0.001:0.001:0.2), data.prop095[1:200], color = "black")
+    # plot(collect(0.2:0.1:1.0), data08.prop[121:end], color = "black")
+    ylim(0,1)
+    tight_layout()
+    return figure2
+    # savefig(joinpath(abpath(), "figs/canard_whitenoise_prop.png"))
 end
 
 
-
-
+let
+    test = figure()
+    iso_plot(0.0:0.1:3.0, RozMacPar(e=1))
+    return test
+end
 
 function pert_cvsdmean(ep)
     evals = 0.441:0.005:0.9

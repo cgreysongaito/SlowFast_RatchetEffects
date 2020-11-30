@@ -1,29 +1,4 @@
-# include("packages.jl")
-#
-# include("slowfast_commoncode.jl")
-#
-#
-# #Maximum value of resource isocline
-# 0.9318181818181819
-# # Time series and phase plots of stochastic canards
-# let
-#     test = figure()
-#     pert_timeseries_plot(0.01, 0.6, 0.0, 1, 1234, 5000.0, 2000.0:1.0:5000.0)
-#     return test
-# end
-#
-# let
-#     test = figure()
-#     pert_phase_plot(0.01, 0.6, 0.0, 1, 1234, 5000.0, 2000.0:1.0:5000.0)
-#     vlines(0.9318181818181819, ymin = 2.1, ymax = 2.4, linestyles = `dashed`)
-#     return test
-# end
-#
-#
-# #Examination of what sto solver spits out
-# test = RozMac_pert(0.01, 0.6, 0.0, 1, 1234, 5000.0, 2000.0:1.0:5000.0)
-
-
+# Functions for quasi-canard finder
 
 function orientation(p1, p2, p3)
     val = (p2[2] - p1[2]) * (p3[1] - p2[1]) - (p3[2] - p2[2]) * (p2[1] - p1[1])
