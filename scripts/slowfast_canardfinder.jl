@@ -24,13 +24,21 @@ function dointersect(p1, p2, q1, q2) # https://www.geeksforgeeks.org/check-if-tw
     end
 end
 
-function cf_returnmap_check(sol, pass_points, rm_point1, rm_point2)
+function cf_returnmap_check(sol, pass_points, rm_point1, rm_point2, which_pass)
+    if which_pass ∈ ["first", "second"] == false
+        error("which_pass must be either first or second")
+    end
     rm_pass_points = []
     for j in 1:length(pass_points)
         for l in Int64(pass_points[j][1]):length(sol)-1
             if sol.u[l+1][1] < rm_point1[1] && sol.u[l][1] > rm_point1[1]
                 if dointersect(sol.u[l],sol.u[l+1],rm_point1,rm_point2) == true #Stricter condition for intersection of return map
-                    append!(rm_pass_points, [[l , sol.u[l][1], sol.u[l][2]]])
+                    if which_pass == "first"
+                        append!(rm_pass_points, [[l , sol.u[l][1], sol.u[l][2]]])
+                    else
+                        append!(rm_pass_points, [[l , sol.u[l][1], sol.u[l][2]]])
+                        break
+                    end
                 end
             end
         end
@@ -104,7 +112,7 @@ function cf_returnmap(ep, eff, freq, r, seed, tsend, tvals)
     res_Hopf_point = 0.9318181818181819 # TODO make this general
     rm_point1 = [0.9318181818181819, 2.1] #NOTE THIS ONLY WORKS IF DON"T CHANGE a or k #TODO need to code in more general method - ie calculating max resisocline then adding error
     rm_point2 = [0.9318181818181819, 2.4]#NOTE THIS ONLY WORKS IF DON"T CHANGE a or k
-    rm_pass_points1 = cf_returnmap_check(sol, [[1 , sol.u[1][1], sol.u[1][2]]], rm_point1, rm_point2)
+    rm_pass_points1 = cf_returnmap_check(sol, [[1 , sol.u[1][1], sol.u[1][2]]], rm_point1, rm_point2, "first")
     if rm_pass_points1 == false
         return false
     else
@@ -123,7 +131,7 @@ function cf_returnmap(ep, eff, freq, r, seed, tsend, tvals)
     if resiso_pass_points == false
         return false
     else
-        rm_pass_points2 = cf_returnmap_check(sol, resiso_pass_points[2],  rm_point1, rm_point2)
+        rm_pass_points2 = cf_returnmap_check(sol, resiso_pass_points[2],  rm_point1, rm_point2, "second")
     end
     if rm_pass_points2 == false
         return false

@@ -9,9 +9,8 @@ addprocs(length(Sys.cpu_info())-1)
 
 
 ## Figure 2 (proportion quasi-canard with different consumer isoclines)
-@everywhere function prop_canard(ep, eff, iter)
+@everywhere function prop_canard(ep, eff, iter, tsend)
     count_true = 0
-    tsend = 6000.0
     for i in 1:iter
         if cf_returnmap(ep, eff, 1, 0.0, i, tsend, 2000.0:1.0:tsend) == true
             count_true += 1
@@ -26,14 +25,16 @@ let
     return test
 end
 
-function prop_canard_data(eff, iter)
-    epsilon_range1 = 0.001:0.001:0.2
-    epsilon_range2 = 0.2:0.1:1.0
-    data1 = pmap(ep -> prop_canard(ep, eff, iter), epsilon_range1)
-    data2 = pmap(ep -> prop_canard(ep, eff, iter), epsilon_range2)
-    return vcat(data1, data2)
+function prop_canard_data(eff, iter, tsend)
+    epsilon_range = 0.001:0.001:0.15
+    data = pmap(ep -> prop_canard(ep, eff, iter, tsend), epsilon_range)
+    return data
 end
 
-wn_dataset = [prop_canard_data(0.75, 1000), prop_canard_data(0.85, 1000), prop_canard_data(0.9, 1000), prop_canard_data(0.95, 1000)]
+wn_short_dataset = [prop_canard_data(0.5, 1000, 6000.0), prop_canard_data(0.6, 1000, 6000.0), prop_canard_data(0.7, 1000, 6000.0), prop_canard_data(0.8, 1000, 6000.0)]
+wn_long_dataset = [prop_canard_data(0.5, 1000, 12000.0), prop_canard_data(0.6, 1000, 12000.0), prop_canard_data(0.7, 1000, 12000.0), prop_canard_data(0.8, 1000, 12000.0)]
+wn_longer_dataset = [prop_canard_data(0.5, 1000, 24000.0), prop_canard_data(0.6, 1000, 24000.0), prop_canard_data(0.7, 1000, 24000.0), prop_canard_data(0.8, 1000, 24000.0)]
 
-CSV.write("/home/chrisgg/julia/TimeDelays/canard_whitenoise.csv", DataFrame(prop05 = fulldataset[1], prop06 = fulldataset[2], prop07 = fulldataset[3], prop08 = fulldataset[4]))
+CSV.write("/home/chrisgg/julia/TimeDelays/canard_whitenoise_short.csv", DataFrame(prop05 = wn_short_dataset[1], prop06 = wn_short_dataset[2], prop07 = wn_short_dataset[3], prop08 = wn_short_dataset[4]))
+CSV.write("/home/chrisgg/julia/TimeDelays/canard_whitenoise_long.csv", DataFrame(prop05 = wn_long_dataset[1], prop06 = wn_long_dataset[2], prop07 = wn_long_dataset[3], prop08 = wn_long_dataset[4]))
+CSV.write("/home/chrisgg/julia/TimeDelays/canard_whitenoise_longer.csv", DataFrame(prop05 = wn_longer_dataset[1], prop06 = wn_longer_dataset[2], prop07 = wn_longer_dataset[3], prop08 = wn_longer_dataset[4]))
