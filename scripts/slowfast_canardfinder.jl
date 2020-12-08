@@ -134,8 +134,12 @@ function cf_returnmap(ep, eff, freq, r, seed, tsend, tvals)
         rm_pass_points2 = cf_returnmap_check(sol, resiso_pass_points[2],  rm_point1, rm_point2, "second")
     end
     if rm_pass_points2 == false
-        return false
+        if sol.u[end][1] == 3.00 && sol.u[end][2] == 0.00
+            return "axial"
+        else
+            return "nothing"
+        end
     else
-        return true
+        return "canard"
     end
 end

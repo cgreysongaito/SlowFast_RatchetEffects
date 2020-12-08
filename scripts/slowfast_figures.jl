@@ -61,23 +61,14 @@ end
 using DataFrames
 using CSV
 
-data05 = CSV.read("/home/chrisgg/julia/TimeDelays/canard05eq.csv", DataFrame)
-data06 = CSV.read("/home/chrisgg/julia/TimeDelays/canard06eq.csv", DataFrame)
-data07 = CSV.read("/home/chrisgg/julia/TimeDelays/canard07eq.csv", DataFrame)
-data08 = CSV.read("/home/chrisgg/julia/TimeDelays/canard08eq.csv", DataFrame)
-
-using Plots
-pyplot()
-
-short_data = CSV.read("/home/chrisgg/julia/TimeDelays/canard_whitenoise_short.csv", DataFrame)
-long_data = CSV.read("/home/chrisgg/julia/TimeDelays/canard_whitenoise_long.csv", DataFrame)
-longer_data = CSV.read("/home/chrisgg/julia/TimeDelays/canard_whitenoise_longer.csv", DataFrame)
-
-begin
-    plot(collect(0.001:0.001:0.12), data05.prop[1:120], color = "black")
-    ylims!(0,1)
-    lens!([0,0.008], [0,0.003], inset = (1, bbox(0.5, 0.0, 0.4, 0.4)))
-end
+wn_data05_short = CSV.read("/home/chrisgg/julia/TimeDelays/data/wn_eff05_short.csv", DataFrame)
+wn_data07_short = CSV.read("/home/chrisgg/julia/TimeDelays/data/wn_eff07_short.csv", DataFrame)
+wn_data06_short = CSV.read("/home/chrisgg/julia/TimeDelays/data/wn_eff06_short.csv", DataFrame)
+wn_data08_short = CSV.read("/home/chrisgg/julia/TimeDelays/data/wn_eff08_short.csv", DataFrame)
+wn_data05_long = CSV.read("/home/chrisgg/julia/TimeDelays/data/wn_eff05_long.csv", DataFrame)
+wn_data06_long = CSV.read("/home/chrisgg/julia/TimeDelays/data/wn_eff06_long.csv", DataFrame)
+wn_data07_long = CSV.read("/home/chrisgg/julia/TimeDelays/data/wn_eff07_long.csv", DataFrame)
+wn_data08_long = CSV.read("/home/chrisgg/julia/TimeDelays/data/wn_eff08_long.csv", DataFrame)
 
 let
     figure2 = figure(figsize = (10,5))
@@ -107,39 +98,40 @@ let
     title("Canard")
     xlabel("Resource")
     subplot(2,4,5)
-    plot(collect(0.001:0.001:0.15), short_data.prop05, color = "black", linestyle = "dashed")
-    # plot(collect(0.001:0.001:0.15), long_data.prop05, color = "black", linestyle = "dashed")
-    plot(collect(0.001:0.001:0.15), longer_data.prop05, color = "black", linestyle = "dotted")
-    # plot(collect(0.2:0.1:1.0), data05.prop[121:end], color = "black")
+    plot(wn_data05_short.xrange, wn_data05_short.canard, color = "black", linestyle = "dashed")
+    plot(wn_data05_long.xrange, wn_data05_long.canard, color = "black", linestyle = "dotted")
     ylabel("Proportion with\nquasi-canard")
     xlabel("ϵ")
     ylim(0,1)
     subplot(2,4,6)
-    plot(collect(0.001:0.001:0.15), short_data.prop06, color = "black", linestyle = "dashed")
-    # plot(collect(0.001:0.001:0.15), long_data.prop06, color = "black", linestyle = "dashed")
-    plot(collect(0.001:0.001:0.15), longer_data.prop06, color = "black", linestyle = "dotted")
-    # plot(collect(0.2:0.1:1.0), data06.prop[121:end], color = "black")
+    plot(wn_data06_short.xrange, wn_data06_short.canard, color = "black", linestyle = "dashed")
+    plot(wn_data06_long.xrange, wn_data06_long.canard, color = "black", linestyle = "dotted")
     ylim(0,1)
     xlabel("ϵ")
     subplot(2,4,7)
-    plot(collect(0.001:0.001:0.15), short_data.prop07, color = "black", linestyle = "dashed")
-    # plot(collect(0.001:0.001:0.15), long_data.prop07, color = "black", linestyle = "dashed")
-    plot(collect(0.001:0.001:0.15), longer_data.prop07, color = "black", linestyle = "dotted")
+    plot(wn_data07_short.xrange, wn_data07_short.canard, color = "black", linestyle = "dashed")
+    plot(wn_data07_long.xrange, wn_data07_long.canard, color = "black", linestyle = "dotted")
     xlabel("ϵ")
-    # plot(collect(0.2:0.1:1.0), data07.prop[121:end], color = "black")
     ylim(0,1)
     subplot(2,4,8)
-    plot(collect(0.001:0.001:0.15), short_data.prop08, color = "black", linestyle = "dashed")
-    # plot(collect(0.001:0.001:0.15), long_data.prop08, color = "black", linestyle = "dashed")
-    plot(collect(0.001:0.001:0.15), longer_data.prop08, color = "black", linestyle = "dotted")
+    plot(wn_data08_short.xrange, wn_data08_short.canard, color = "black", linestyle = "dashed")
+    plot(wn_data08_long.xrange, wn_data08_long.canard, color = "black", linestyle = "dotted")
     xlabel("ϵ")
-    # plot(collect(0.2:0.1:1.0), data08.prop[121:end], color = "black")
     ylim(0,1)
     tight_layout()
-    return figure2
-    # savefig(joinpath(abpath(), "figs/canard_whitenoise_prop.png"))
+    # return figure2
+    savefig(joinpath(abpath(), "figs/canard_whitenoise_prop.png"))
 end
 
+#Inset plot in figure 2
+let
+    inset = figure()
+    plot(wn_data05_short.xrange[1:7], wn_data05_short.canard[1:7], color = "black", linestyle = "dashed", linewidth=10)
+    plot(wn_data05_long.xrange[1:7], wn_data05_long.canard[1:7], color = "black", linestyle = "dotted", linewidth=10)
+    ylim(0,0.25)
+    # return inset
+    savefig(joinpath(abpath(), "figs/canard_whitenoise_prop_inset.png"))
+end
 
 # Figure 3 (time series of canards)
 let
@@ -180,37 +172,96 @@ let
     # savefig(joinpath(abpath(), "figs/figure2b.png"))
 end
 
+# TODO need to add phase plot
+
+
 # Figure 4
 
+rn_data_ep0004eff05 = CSV.read("/home/chrisgg/julia/TimeDelays/data/rn_ep0004eff05.csv", DataFrame)
+rn_data_ep0004eff06 = CSV.read("/home/chrisgg/julia/TimeDelays/data/rn_ep0004eff06.csv", DataFrame)
+rn_data_ep0004eff07 = CSV.read("/home/chrisgg/julia/TimeDelays/data/rn_ep0004eff07.csv", DataFrame)
+rn_data_ep0079eff05 = CSV.read("/home/chrisgg/julia/TimeDelays/data/rn_ep0079eff05.csv", DataFrame)
+rn_data_ep0079eff06 = CSV.read("/home/chrisgg/julia/TimeDelays/data/rn_ep0079eff06.csv", DataFrame)
+rn_data_ep0079eff07 = CSV.read("/home/chrisgg/julia/TimeDelays/data/rn_ep0079eff07.csv", DataFrame)
+
+
 let
-    figure2 = figure(figsize = (6,3))
-    subplot(1,3,1)
-    plot(collect(0.0:0.1:0.9), rn_fulldataset[1], color="black")
-    fill_between(collect(0.0:0.1:0.9), fill(1.0,10), rn_fulldataset[1], color="#E66100", alpha = 0.3)
-    fill_between(collect(0.0:0.1:0.9), rn_fulldataset[1], color="#5D3A9B", alpha = 0.3)
-    ylabel("Proportion with quasi-canards")
+    tickmark0004 = eff_maxeigen_data(0.0004)
+    tickmark0079 = eff_maxeigen_data(0.079)
+    figure4 = figure(figsize = (8,4))
+    subplot(2,4,1)
+    fill_between(rn_data_ep0004eff05.xrange, rn_data_ep0004eff05.canard, color="#5D3A9B", alpha = 0.3)
+    fill_between(rn_data_ep0004eff05.xrange, rn_data_ep0004eff05.canard, rn_data_ep0004eff05.canard_plus_axial, color="blue", alpha = 0.3)
+    fill_between(rn_data_ep0004eff05.xrange, fill(1.0,10), rn_data_ep0004eff05.canard_plus_axial, color="#E66100", alpha = 0.3)
+    ylabel("Proportion")
     ylim(0,1)
-    title("e = 0.5, ϵ = 0.079")
-    subplot(1,3,2)
-    plot(collect(0.0:0.1:0.9), rn_fulldataset[2], color="black")
-    fill_between(collect(0.0:0.1:0.9), fill(1.0,10), rn_fulldataset[2], color="#E66100", alpha = 0.3)
-    fill_between(collect(0.0:0.1:0.9), rn_fulldataset[2], color="#5D3A9B", alpha = 0.3)
+    title("a) e = 0.5,\nϵ = 0.004")
+    subplot(2,4,2)
+    fill_between(rn_data_ep0004eff06.xrange, rn_data_ep0004eff06.canard, color="#5D3A9B", alpha = 0.3)
+    fill_between(rn_data_ep0004eff06.xrange, rn_data_ep0004eff06.canard, rn_data_ep0004eff06.canard_plus_axial, color="blue", alpha = 0.3)
+    fill_between(rn_data_ep0004eff06.xrange, fill(1.0,10), rn_data_ep0004eff06.canard_plus_axial, color="#E66100", alpha = 0.3)
     xlabel("Noise correlation (t = -1)")
     ylim(0,1)
-    title("e = 0.6, ϵ = 0.079")
-    subplot(1,3,3)
-    plot(collect(0.0:0.1:0.9), rn_fulldataset[3], color="black")
-    fill_between(collect(0.0:0.1:0.9), fill(1.0,10), rn_fulldataset[3], color="#E66100", alpha = 0.3)
-    fill_between(collect(0.0:0.1:0.9), rn_fulldataset[3], color="#5D3A9B", alpha = 0.3)
+    title("b) e = 0.6,\nϵ = 0.004")
+    subplot(2,4,3)
+    fill_between(rn_data_ep0004eff07.xrange, rn_data_ep0004eff07.canard, color="#5D3A9B", alpha = 0.3)
+    fill_between(rn_data_ep0004eff07.xrange, rn_data_ep0004eff07.canard, rn_data_ep0004eff07.canard_plus_axial, color="blue", alpha = 0.3)
+    fill_between(rn_data_ep0004eff07.xrange, fill(1.0,10), rn_data_ep0004eff07.canard_plus_axial, color="#E66100", alpha = 0.3)
     ylim(0,1)
-    title("e = 0.7, ϵ = 0.079")
+    title("c) e = 0.7,\nϵ = 0.004")
+    subplot(2,4,4)
+    plot(tickmark0004[:,1], tickmark0004[:,2], color = "black")
+    fill([0.441,0.696, 0.696, 0.441], [0.1, 0.1, -0.35, -0.35], "blue", alpha=0.3)
+    fill([0.696,0.71, 0.71, 0.696], [0.1, 0.1, -0.35, -0.35], "orange", alpha=0.3)
+    hlines(0.0, 0.4,0.8, linestyles = "dashed", linewidth = 0.5)
+    vlines([0.5,0.6,0.7], ymin = -0.35, ymax = 0.1, color = "green")
+    vlines([0.441, 0.710], ymin = -0.35, ymax = 0.1, linestyles = "dashed")
+    xlabel("Efficiency")
+    ylabel("Re(λₘₐₓ)")
+    xlim(0.4, 0.8)
+    ylim(-0.35, 0.1)
+    title("d) ϵ = 0.004")
+
+    subplot(2,4,5)
+    fill_between(rn_data_ep0079eff05.xrange, rn_data_ep0079eff05.canard, color="#5D3A9B", alpha = 0.3)
+    fill_between(rn_data_ep0079eff05.xrange, rn_data_ep0079eff05.canard, rn_data_ep0079eff05.canard_plus_axial, color="blue", alpha = 0.3)
+    fill_between(rn_data_ep0079eff05.xrange, fill(1.0,10), rn_data_ep0079eff05.canard_plus_axial, color="#E66100", alpha = 0.3)
+    ylabel("Proportion")
+    ylim(0,1)
+    title("e) e = 0.5,\nϵ = 0.079")
+    subplot(2,4,6)
+    fill_between(rn_data_ep0079eff06.xrange, rn_data_ep0079eff06.canard, color="#5D3A9B", alpha = 0.3)
+    fill_between(rn_data_ep0079eff06.xrange, rn_data_ep0079eff06.canard, rn_data_ep0079eff06.canard_plus_axial, color="blue", alpha = 0.3)
+    fill_between(rn_data_ep0079eff06.xrange, fill(1.0,10), rn_data_ep0079eff06.canard_plus_axial, color="#E66100", alpha = 0.3)
+    xlabel("Noise correlation (t = -1)")
+    ylim(0,1)
+    title("f) e = 0.6,\nϵ = 0.079")
+    subplot(2,4,7)
+    fill_between(rn_data_ep0079eff07.xrange, rn_data_ep0079eff07.canard, color="#5D3A9B", alpha = 0.3)
+    fill_between(rn_data_ep0079eff07.xrange, rn_data_ep0079eff07.canard, rn_data_ep0079eff07.canard_plus_axial, color="blue", alpha = 0.3)
+    fill_between(rn_data_ep0079eff07.xrange, fill(1.0,10), rn_data_ep0079eff07.canard_plus_axial, color="#E66100", alpha = 0.3)
+    ylim(0,1)
+    title("g) e = 0.7,\nϵ = 0.079")
+    subplot(2,4,8)
+    plot(tickmark0079[:,1], tickmark0079[:,2], color = "black")
+    fill([0.441,0.60055, 0.60055, 0.441], [0.1, 0.1, -0.35, -0.35], "blue", alpha=0.3)
+    fill([0.60055,0.71, 0.71, 0.60055], [0.1, 0.1, -0.35, -0.35], "orange", alpha=0.3)
+    hlines(0.0, 0.4,0.8, linestyles = "dashed", linewidth = 0.5)
+    vlines([0.5,0.6,0.7], ymin = -0.35, ymax = 0.1, color = "green")
+    vlines([0.441, 0.710], ymin = -0.35, ymax = 0.1, linestyles = "dashed")
+    xlabel("Efficiency")
+    ylabel("Re(λₘₐₓ)")
+    xlim(0.4, 0.8)
+    ylim(-0.35, 0.1)
+    title("h) ϵ = 0.079")
+
     tight_layout()
-    # return figure2
+    # return figure4
     savefig(joinpath(abpath(), "figs/canard_rednoise_prop.png"))
 end
 
 let
-    data = eff_maxeigen_data(0.079)
+    data = eff_maxeigen_data(0.004)
     maxeigen_ep0079 = figure()
     plot(data[:,1], data[:,2], color = "black")
     ylabel("Re(λₘₐₓ)", fontsize = 15)
