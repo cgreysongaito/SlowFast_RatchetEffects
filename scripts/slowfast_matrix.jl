@@ -1,7 +1,7 @@
 include("packages.jl")
 include("slowfast_commoncode.jl")
 using Reduce
-@vars R C r a h e m k ε y
+SymPy.@vars R C r a h e m k ε y
 
 function percapR(equ)
     return SymPy.simplify(eval(Expr(:call, :(/), equ, :R)))

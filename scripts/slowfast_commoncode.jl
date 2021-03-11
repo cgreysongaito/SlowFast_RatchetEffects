@@ -100,7 +100,7 @@ function RozMac_pert(ep, eff, freq, r, seed, tsend, tvals)
     noise = noise_creation(r, tsend / freq)
     count = 1
     u0 = [eq_II(par)[1], eq_II(par)[2] + noise[1]]
-    tspan = (0, tsend)
+    tspan = (0.0, tsend)
 
     function pert_cb2(integrator)
         count += 1
@@ -134,4 +134,15 @@ function pert_phase_plot(ep, eff, freq, r, seed, tsend, tvals)
     plot(sol[1, :], sol[2, :])
     xlabel("Resource")
     return ylabel("Consumer")
+end
+
+
+function prep_data(data, range)
+    canard_prop = zeros(length(data))
+    canard_plus_axial_prop = zeros(length(data))
+    for i in 1:length(data)
+        canard_prop[i] = data[i][1]
+        canard_plus_axial_prop[i] = data[i][1] + data[i][2]
+    end
+    return DataFrame(xrange = range, canard = canard_prop, canard_plus_axial = canard_plus_axial_prop)
 end
