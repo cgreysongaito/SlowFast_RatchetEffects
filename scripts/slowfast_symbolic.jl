@@ -58,6 +58,10 @@ g2 = simplify(diff(g(x,y), y))
 tr = SymPy.simplify(f1 + 0) #trying kevin's idea of leaving in R* and C*
 det = SymPy.simplify((f1 * 0) - (f2 * g1))
 
+trsq = SymPy.simplify(tr^2)
+det4 = SymPy.simplify(4 * det)
+imag = SymPy.simplify(trsq - det4)
+
 eq_R = m / (a * (e - h * m))
 eq_C = SymPy.simplify(r * (a * h * k * (m / (a * (e - h * m))) - a * h * (m / (a * (e - h * m)))^2 + k - (m / (a * (e - h * m)))) / (a * k))
 
@@ -105,9 +109,42 @@ trsq = SymPy.simplify(tr^2)
 det4 = SymPy.simplify(4 * det)
 imag = SymPy.simplify(trsq - det4)
 
+using Parameters
+@with_kw mutable struct RozMacPar
+    r = 2.0
+    k = 3.0
+    a = 1.1
+    h = 0.8
+    e = 0.7
+    m = 0.4
+    σ = 0.1
+    ε = 0.1
+end
 
+function test(p)
+    @unpack r, a, k, h, m, e= p
+    return h * k - ( (m / (a * (e - h * m))) * (e + h))
+end
+
+test(RozMacPar(e=0.45))^2
+test(RozMacPar(e=0.5))^2
+test(RozMacPar(e=0.52))^2
+test(RozMacPar(e=0.75))^2
+
+function test2(p)
+    @unpack r, a, k, h, m, e= p
+    R = m / (a * (e - h * m))
+    return (R * r * a * (h * k - e * R - h * R)^2 ) / (4 * k *e * (k - R))
+end
+
+
+test2(RozMacPar(e=0.45))
+test2(RozMacPar(e=0.5))
+test2(RozMacPar(e=0.52))
+test2(RozMacPar(e=0.75))
 # need to simplify - maybe find eigenvalues of normal model first and put epsilon back in - or find part that is complex and deal only with this - or pick parameters (apart from e and ϵ)
 # need to input the interior equlibrium
+
 x, y, r, k, a, m, e, h = symbols("x, y, r, k, a, m, e, h", real = true)
 
 i(x, y) = r * x * (1 - x / k) - a * x * y / (1 + a * h * x)
@@ -194,10 +231,10 @@ trsq = SymPy.simplify(tr^2)
 det4 = SymPy.simplify(4 * det)
 imag = SymPy.simplify(trsq - det4)
 
-
 SymPy.solve(imag, ϵ)
 
 SymPy.simplify(SymPy.diff((-β*(c^2*β - c*α + c*β + α)^2)/(4*α*(c*β - α)^2*(c*β - α + β)),α))
+
 
 SymPy.solve( 4 * α * ϵ * (c * β - α)^2 * (c * β - α + β) + β * (c^2 * β - c * α + c * β + α)^2, α)
 
