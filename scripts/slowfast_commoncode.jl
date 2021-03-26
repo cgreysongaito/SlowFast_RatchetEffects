@@ -71,13 +71,13 @@ function iso_plot(resrange, par)
     return plot(repeat([con_iso(par)], length(resrange)),collect(resrange))
 end
 
-function roz_mac_plot(ep, eff, width)
+function roz_mac_plot(ep, eff, width, dens)
     resconrange = range(0, stop = 3, length=100)
     U = [roz_mac_res(R, C, par_rozmac) for C in resconrange, R in resconrange]
     V = [roz_mac_con(R, C, eff, ep, par_rozmac) for C in resconrange, R in resconrange]
     speed = sqrt.(U.^2 .+ V.^2)
     lw = width .* speed ./ maximum(speed) # Line Widths
-    streamplot(collect(resconrange), collect(resconrange), U, V, density = 0.6, color = "k", linewidth = lw)
+    streamplot(collect(resconrange), collect(resconrange), U, V, density = dens, color = "k", linewidth = lw)
     return iso_plot(resconrange, RozMacPar(e = eff))
 end
 

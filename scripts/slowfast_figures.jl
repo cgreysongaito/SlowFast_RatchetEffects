@@ -1,9 +1,51 @@
 include("packages.jl")
 include("slowfast_commoncode.jl")
 
+# Figure 2 (primer of different trajectories)
 
 
-# Figure 2 (white noise and isoclines)
+#should I have deterministic canard in this figure to link to other papers
+
+let
+    sol_axial = RozMac_pert(0.01, 0.48, 1, 0.8, 9, 5000.0, 0.0:2.0:5000.0)
+    sol_qc = RozMac_pert(0.01, 0.48, 1, 0.8, 123, 2500.0, 0.0:2.0:2500.0)
+    sol_equil = RozMac_pert(0.01, 0.48, 1, 0.0, 1234, 5000.0, 0.0:2.0:5000.0)
+    figure2 = figure(figsize=(6,4))
+    subplot(2,2,1)
+    plot(sol_05_ep001.t, sol_05_ep001.u)
+    title("e = 0.5, 1/ϵ = 100")
+    ylim(0,2.5)
+    ylabel("Biomass")
+    subplot(2,2,2)
+    plot(sol_06_ep001.t, sol_06_ep001.u)
+    title("e = 0.6, 1/ϵ = 100")
+    ylim(0,2.5)
+    xlabel("Time")
+    subplot(2,2,3)
+    plot(sol_07_ep001.t, sol_07_ep001.u)
+    title("e = 0.7, 1/ϵ = 100")
+    ylabel("Biomass")
+    ylim(0,2.5)
+    subplot(2,2,4)
+    iso_plot(0.0:0.1:3.0, RozMacPar(e = 0.5))
+    plot(sol_07_ep001[1, :], sol_07_ep001[2, :], color = "purple", label = "e = 0.7, 1/ϵ = 100")
+    plot(sol_05_ep001[1, :], sol_05_ep001[2, :], color = "red", label = "e = 0.5, 1/ϵ = 100")
+    xlabel("Resource")
+    ylabel("Consumer")
+    ylim(0,2.5)
+    xlim(0,3)
+    legend()
+    tight_layout()
+    annotate("a)", (12, 265), xycoords = "figure points", fontsize = 15)
+    annotate("b)", (220, 265), xycoords = "figure points", fontsize = 15)
+    annotate("c)", (12, 130), xycoords = "figure points", fontsize = 15)
+    annotate("d)", (220, 130), xycoords = "figure points", fontsize = 15)
+    # return timeseries
+    savefig(joinpath(abpath(), "figs/figure3.png"))
+end
+
+
+# Figure 3 (white noise and isoclines)
 using DataFrames
 using CSV
 
@@ -17,7 +59,7 @@ wn_data07_long = CSV.read("/home/chrisgg/julia/TimeDelays/data/wn_eff07_long.csv
 wn_data08_long = CSV.read("/home/chrisgg/julia/TimeDelays/data/wn_eff08_long.csv", DataFrame)
 
 let
-    figure2 = figure(figsize = (10,5))
+    figure3 = figure(figsize = (10,5))
     subplot(2,4,1)
     iso_plot(0.0:0.1:3.0, RozMacPar(e = 0.5))
     title("Non-excitable\n(Real λ)")
@@ -74,58 +116,10 @@ let
     annotate("g)", (370, 165), xycoords = "figure points", fontsize = 15)
     annotate("h)", (545, 165), xycoords = "figure points", fontsize = 15)
     
-    # return figure2
+    # return figure3
     savefig(joinpath(abpath(), "figs/canard_whitenoise_prop.pdf"))
 end
 
-#Inset plot in figure 2
-# let
-#     inset = figure()
-#     plot(wn_data05_short.xrange[1:7], wn_data05_short.canard[1:7], color = "black", linestyle = "dashed", linewidth=10)
-#     plot(wn_data05_long.xrange[1:7], wn_data05_long.canard[1:7], color = "black", linestyle = "dotted", linewidth=10)
-#     ylim(0,0.25)
-#     # return inset
-#     savefig(joinpath(abpath(), "figs/canard_whitenoise_prop_inset.png"))
-# end
-
-# Figure 3 (time series of canards)
-let
-    sol_05_ep001 = RozMac_pert(0.01, 0.5, 1, 0.0, 1234, 5000.0, 3500.0:2.0:5000.0)
-    sol_06_ep001 = RozMac_pert(0.01, 0.6, 1, 0.0, 1234, 5000.0, 3500.0:2.0:5000.0)
-    sol_07_ep001 = RozMac_pert(0.01, 0.7, 1, 0.0, 1234, 5000.0, 3500.0:2.0:5000.0)
-    timeseries = figure(figsize=(6,4))
-    subplot(2,2,1)
-    plot(sol_05_ep001.t, sol_05_ep001.u)
-    title("e = 0.5, 1/ϵ = 100")
-    ylim(0,2.5)
-    ylabel("Biomass")
-    subplot(2,2,2)
-    plot(sol_06_ep001.t, sol_06_ep001.u)
-    title("e = 0.6, 1/ϵ = 100")
-    ylim(0,2.5)
-    xlabel("Time")
-    subplot(2,2,3)
-    plot(sol_07_ep001.t, sol_07_ep001.u)
-    title("e = 0.7, 1/ϵ = 100")
-    ylabel("Biomass")
-    ylim(0,2.5)
-    subplot(2,2,4)
-    iso_plot(0.0:0.1:3.0, RozMacPar(e = 0.5))
-    plot(sol_07_ep001[1, :], sol_07_ep001[2, :], color = "purple", label = "e = 0.7, 1/ϵ = 100")
-    plot(sol_05_ep001[1, :], sol_05_ep001[2, :], color = "red", label = "e = 0.5, 1/ϵ = 100")
-    xlabel("Resource")
-    ylabel("Consumer")
-    ylim(0,2.5)
-    xlim(0,3)
-    legend()
-    tight_layout()
-    annotate("a)", (12, 265), xycoords = "figure points", fontsize = 15)
-    annotate("b)", (220, 265), xycoords = "figure points", fontsize = 15)
-    annotate("c)", (12, 130), xycoords = "figure points", fontsize = 15)
-    annotate("d)", (220, 130), xycoords = "figure points", fontsize = 15)
-    # return timeseries
-    savefig(joinpath(abpath(), "figs/figure3.png"))
-end
 
 # Figure 4
 
@@ -138,8 +132,6 @@ rn_data_ep0079eff07 = CSV.read("/home/chrisgg/julia/TimeDelays/data/rn_ep0079eff
 
 
 let
-    # tickmark0004 = eff_maxeigen_data(0.0004)
-    # tickmark0079 = eff_maxeigen_data(0.079)
     figure4 = figure(figsize = (8,4))
     subplot(2,3,1)
     fill_between(rn_data_ep0004eff05.xrange, rn_data_ep0004eff05.canard, color="#5D3A9B", alpha = 0.3)
@@ -147,32 +139,17 @@ let
     fill_between(rn_data_ep0004eff05.xrange, fill(1.0,10), rn_data_ep0004eff05.canard_plus_axial, color="#E66100", alpha = 0.3)
     ylabel("Proportion")
     ylim(0,1)
-    # title("a) e = 0.5,\nϵ = 0.004")
     subplot(2,3,2)
     fill_between(rn_data_ep0004eff06.xrange, rn_data_ep0004eff06.canard, color="#5D3A9B", alpha = 0.3)
     fill_between(rn_data_ep0004eff06.xrange, rn_data_ep0004eff06.canard, rn_data_ep0004eff06.canard_plus_axial, color="blue", alpha = 0.3)
     fill_between(rn_data_ep0004eff06.xrange, fill(1.0,10), rn_data_ep0004eff06.canard_plus_axial, color="#E66100", alpha = 0.3)
     xlabel("Noise correlation (t = -1)")
     ylim(0,1)
-    # title("b) e = 0.6,\nϵ = 0.004")
     subplot(2,3,3)
     fill_between(rn_data_ep0004eff07.xrange, rn_data_ep0004eff07.canard, color="#5D3A9B", alpha = 0.3)
     fill_between(rn_data_ep0004eff07.xrange, rn_data_ep0004eff07.canard, rn_data_ep0004eff07.canard_plus_axial, color="blue", alpha = 0.3)
     fill_between(rn_data_ep0004eff07.xrange, fill(1.0,10), rn_data_ep0004eff07.canard_plus_axial, color="#E66100", alpha = 0.3)
     ylim(0,1)
-    # title("c) e = 0.7,\nϵ = 0.004")
-    # subplot(2,4,4)
-    # plot(tickmark0004[:,1], tickmark0004[:,2], color = "black")
-    # fill([0.441,0.696, 0.696, 0.441], [0.1, 0.1, -0.35, -0.35], "blue", alpha=0.3)
-    # fill([0.696,0.71, 0.71, 0.696], [0.1, 0.1, -0.35, -0.35], "orange", alpha=0.3)
-    # hlines(0.0, 0.4,0.8, linestyles = "dashed", linewidth = 0.5)
-    # vlines([0.5,0.6,0.7], ymin = -0.35, ymax = 0.1, color = "green")
-    # vlines([0.441, 0.710], ymin = -0.35, ymax = 0.1, linestyles = "dashed")
-    # xlabel("Efficiency")
-    # ylabel("Re(λₘₐₓ)")
-    # xlim(0.4, 0.8)
-    # ylim(-0.35, 0.1)
-    # title("d) ϵ = 0.004")
 
     subplot(2,3,4)
     fill_between(rn_data_ep0079eff05.xrange, rn_data_ep0079eff05.canard, color="#5D3A9B", alpha = 0.3)
@@ -180,32 +157,17 @@ let
     fill_between(rn_data_ep0079eff05.xrange, fill(1.0,10), rn_data_ep0079eff05.canard_plus_axial, color="#E66100", alpha = 0.3)
     ylabel("Proportion")
     ylim(0,1)
-    # title("e) e = 0.5,\nϵ = 0.079")
     subplot(2,3,5)
     fill_between(rn_data_ep0079eff06.xrange, rn_data_ep0079eff06.canard, color="#5D3A9B", alpha = 0.3)
     fill_between(rn_data_ep0079eff06.xrange, rn_data_ep0079eff06.canard, rn_data_ep0079eff06.canard_plus_axial, color="blue", alpha = 0.3)
     fill_between(rn_data_ep0079eff06.xrange, fill(1.0,10), rn_data_ep0079eff06.canard_plus_axial, color="#E66100", alpha = 0.3)
     xlabel("Noise correlation (t = -1)")
     ylim(0,1)
-    # title("f) e = 0.6,\nϵ = 0.079")
     subplot(2,3,6)
     fill_between(rn_data_ep0079eff07.xrange, rn_data_ep0079eff07.canard, color="#5D3A9B", alpha = 0.3)
     fill_between(rn_data_ep0079eff07.xrange, rn_data_ep0079eff07.canard, rn_data_ep0079eff07.canard_plus_axial, color="blue", alpha = 0.3)
     fill_between(rn_data_ep0079eff07.xrange, fill(1.0,10), rn_data_ep0079eff07.canard_plus_axial, color="#E66100", alpha = 0.3)
     ylim(0,1)
-    # title("g) e = 0.7,\nϵ = 0.079")
-    # subplot(2,4,8)
-    # plot(tickmark0079[:,1], tickmark0079[:,2], color = "black")
-    # fill([0.441,0.60055, 0.60055, 0.441], [0.1, 0.1, -0.35, -0.35], "blue", alpha=0.3)
-    # fill([0.60055,0.71, 0.71, 0.60055], [0.1, 0.1, -0.35, -0.35], "orange", alpha=0.3)
-    # hlines(0.0, 0.4,0.8, linestyles = "dashed", linewidth = 0.5)
-    # vlines([0.5,0.6,0.7], ymin = -0.35, ymax = 0.1, color = "green")
-    # vlines([0.441, 0.710], ymin = -0.35, ymax = 0.1, linestyles = "dashed")
-    # xlabel("Efficiency")
-    # ylabel("Re(λₘₐₓ)")
-    # xlim(0.4, 0.8)
-    # ylim(-0.35, 0.1)
-    # title("h) ϵ = 0.079")
     tight_layout()
     annotate("a)", (20, 280), xycoords = "figure points", fontsize = 15)
     annotate("b)", (205, 280), xycoords = "figure points", fontsize = 15)
@@ -225,12 +187,17 @@ end
 let 
     figure5 = figure(figsize = (3,4))
     subplot(2,1,1)
-    roz_mac_plot(0.01, 0.45, 2, 0.3)
+    roz_mac_plot(0.01, 0.48, 2, 0.3)
     subplot(2,1,2)
-    roz_mac_plot(0.01, 0.45, 2, 0.3)
+    roz_mac_plot(0.01, 0.48, 2, 0.3)
     tight_layout()
     # return figure5
     savefig(joinpath(abpath(), "figs/figure5.pdf"))
+end
+
+
+let 
+    
 end
 
 #Original Figure 1 (proportion real) - replaced with proof

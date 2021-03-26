@@ -267,9 +267,13 @@ tr = SymPy.simplify(f1e)
 tr^2
 det = SymPy.simplify((f1e * g2e) - (f2e * g1e))
 
-imag = SymPy.simplify(tr - det)
+imag = SymPy.simplify(tr^2 - 4*det)
 
 SymPy.solve(imag, α)
+
+SymPy.simplify(diff(sqrt(β * ϵ * (β * ϵ + 1)), ϵ))
+
+SymPy.simplify(diff((β*ϵ + sqrt(β*ϵ*(β*ϵ + 1)))/(2*ϵ), ϵ))
 
 using PyPlot
 using Parameters
