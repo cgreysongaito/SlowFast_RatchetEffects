@@ -82,15 +82,20 @@ function roz_mac_plot(ep, eff, width, dens)
 end
 
 function noise_creation(r, len)
-    #https://atmos.washington.edu/~breth/classes/AM582/lect/lect8-notes.pdf
+    #scaling variance using method in Wichmann et al. 2005
     white = rand(Normal(0.0, 0.01), Int64(len))
-    finalnoise = [white[1]]
+    intnoise = [white[1]]
     for i in 2:Int64(len)
-        finalnoise = append!(finalnoise, r * finalnoise[i-1] + white[i] * ( 1 - r^2 )^(1/2))
+        intnoise = append!(intnoise, r * intnoise[i-1] + white[i] )
     end
-    return finalnoise
+    c = std(white)/std(intnoise)
+    meanintnoise = mean(intnoise)
+    scalednoise = zeros(len)
+    for i in 1:Int64(len)
+        scalednoise[i] = c * (intnoise[i] - meanintnoise)
+    end
+    return scalednoise
 end
-
 
 function RozMac_pert(ep, eff, freq, r, seed, tsend, tvals)
     Random.seed!(seed)
