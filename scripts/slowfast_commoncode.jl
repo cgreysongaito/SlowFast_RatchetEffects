@@ -90,7 +90,7 @@ function noise_creation(r, len)
     end
     c = std(white)/std(intnoise)
     meanintnoise = mean(intnoise)
-    scalednoise = zeros(len)
+    scalednoise = zeros(Int64(len))
     for i in 1:Int64(len)
         scalednoise[i] = c * (intnoise[i] - meanintnoise)
     end
