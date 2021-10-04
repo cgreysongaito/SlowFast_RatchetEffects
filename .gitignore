@@ -1,2 +1,8 @@
 *.pdf
 figs/
+*.mkv
+*.pptx
+Audio/
+*.docx
+*.mp4
+
