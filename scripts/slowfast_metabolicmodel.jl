@@ -1,5 +1,6 @@
 include("packages.jl")
 
+
 @with_kw mutable struct YodInnPar
     aₜ = 54.9
     aᵣ = 34.3
@@ -78,6 +79,31 @@ let
 end
 
 #write code that scales rat by epsilon and then scales fe accordingly
+@with_kw mutable struct YodInnScalePar
+    aₜ = 54.9
+    aᵣ = 34.3
+    rat = 10^-6
+    δ = 0.55
+    fⱼ = 0.99
+    aⱼ = 89.2
+    k = 3.0
+    R₀ = 1.0
+    ϵ = 0.1
+    fe = 
+    x = ( aₜ / aᵣ ) * rat^0.25
+    y = fⱼ * aⱼ / aₜ
+end
+
+par_yodinnscale = YodInnScalePar()
+
+function yod_inn_scale_II!(du, u, p, t)
+    @unpack x, y, δ, k, R₀ = p
+    R, C = u
+    du[1] = R * (1 - R / k) -  ( x * y / (1 - δ) )  * R * C  / (R₀ + R)
+    du[2] = x * y * R * C  / (R₀ + R) - x * C
+    return
+end
+
 #test with stochasticity if get quasi-canards
 
 
