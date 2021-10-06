@@ -106,12 +106,22 @@ function cf_ressiocline_check(sol, pass_points, res_Hopf_point, par) #TODO maybe
     end
 end
 
-function cf_returnmap(ep, eff, freq, r, seed, tsend, tvals)
-    sol = RozMac_pert(ep, eff, freq, r, seed, tsend, tvals)
-    par = RozMacPar(e = eff, ε = ep)
-    res_Hopf_point = 0.9318181818181819 # TODO make this general
-    rm_point1 = [0.9318181818181819, 2.1] #NOTE THIS ONLY WORKS IF DON"T CHANGE a or k #TODO need to code in more general method - ie calculating max resisocline then adding error
-    rm_point2 = [0.9318181818181819, 2.4]#NOTE THIS ONLY WORKS IF DON"T CHANGE a or k
+function cf_returnmap(model, ep, effR0, freq, r, seed, tsend, tvals)
+    if model == "RozMac"
+        sol = RozMac_pert(ep, effR0, freq, r, seed, tsend, tvals)
+        par = RozMacPar(e = effR0, ε = ep)
+        hopfpoints = [0.9318181818181819, 2.1, 2.4]
+        
+    else if model == "YodInn"
+        sol = YodInn_pert(ep, effR0, freq, r, seed, tsend, tvals)
+        par = YodInnScalePar(R₀ = effR0, ε = ep)
+        hopfpoints = [1.1, 6.5, 6.7]
+    else
+        error("model must be either "RozMac" or "YodInn"")
+    end
+    res_Hopf_point = hopfpoints[1] # TODO make this general
+    rm_point1 = [hopfpoints[1], hopfpoints[2]] #NOTE THIS ONLY WORKS IF DON"T CHANGE a or k #TODO need to code in more general method - ie calculating max resisocline then adding error (RozMac)
+    rm_point2 = [hopfpoints[1], hopfpoints[3]]#NOTE THIS ONLY WORKS IF DON"T CHANGE a or k (RozMac)
     rm_pass_points1 = cf_returnmap_check(sol, [[1 , sol.u[1][1], sol.u[1][2]]], rm_point1, rm_point2, "first")
     if rm_pass_points1 == false
         return false
