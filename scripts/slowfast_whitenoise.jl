@@ -76,6 +76,3 @@ begin
     wn_eff07_long_YodInn = prop_canard_whitenoise_data("YodInn", 0.7, 1000, 24000.0)
     CSV.write("/home/chrisgg/julia/TimeDelays/data/wn_eff07_long_YodInn.csv", wn_eff07_long_YodInn)
 end
-
-test = prop_canard_whitenoise_data("YodInn", 0.7, 50, 6000.0)
-CSV.write("/home/chrisgg/julia/TimeDelays/data/test.csv", test)
