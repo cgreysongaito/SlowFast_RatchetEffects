@@ -56,12 +56,12 @@ function roz_mac_con(R, C, eff, ep, p)
     return ep * ( ( eff * a * R * C ) / (1 + a * h * R) - m * C )
 end
 
-function con_iso(p)
+function con_iso_roz_mac(p)
     @unpack m, a, h, e = p
     m / (a * (e - h * m))
 end
 
-function res_iso(R, p)
+function res_iso_roz_mac(R, p)
     @unpack a, k, r, h = p
     r * (a * h * k * R - a * h * R^2 + k - R) / (a * k)
 end

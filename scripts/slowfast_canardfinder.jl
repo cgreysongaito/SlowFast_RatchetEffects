@@ -88,11 +88,21 @@ function cf_box_check(sol, pass_points, res_lims, con_lims)
     end
 end
 
-function cf_ressiocline_check(sol, pass_points, res_Hopf_point, par) #TODO maybe do it so checks whether stays within bubble for certain period of time?
+function res_iso(model, R, p)
+    if model == "RozMac"
+        @unpack a, k, r, h = p
+        return r * (a * h * k * R - a * h * R^2 + k - R) / (a * k)
+    else
+        @unpack x, y, δ, R₀, k  = p
+        return (R*(R*δ - R + R₀*δ - R₀) + k*(-R*δ + R - R₀*δ + R₀))/(k*x*y)
+    end
+end
+
+function cf_ressiocline_check(model, sol, pass_points, res_Hopf_point, par) #TODO maybe do it so checks whether stays within bubble for certain period of time?
     new_pass_points = []
     for j in 1:length(pass_points)
         for l in Int64(pass_points[j][1]):length(sol)-5
-            if sol.u[l][1] > res_Hopf_point && isapprox(sol.u[l][2], res_iso(sol.u[l][1], par); atol = 1e-1)
+            if sol.u[l][1] > res_Hopf_point && isapprox(sol.u[l][2], res_iso(model, sol.u[l][1], par); atol = 1e-1)
                 append!(new_pass_points, [[l , sol.u[l][1], sol.u[l][2]]])
                 break
             end
@@ -106,37 +116,59 @@ function cf_ressiocline_check(sol, pass_points, res_Hopf_point, par) #TODO maybe
     end
 end
 
+#need to make hopfpoints and resaxischeckpoints more general
+#take the resource isocline functions, calculate maximum value of C, and the C at R=0
+#plus minus 0.1 about C hopf point. resaxischeckpoints are between C at R=0 and C hopf point
+
+function hopfpointsfinder(model, effR0)
+    if model == "RozMac"
+        @unpack k, a, h, r, m = RozMacPar(e = effR0)
+        hopf_R = k / 2 - 1 / (2 * a * h)
+        hopf_C = r * (a * h * k * hopf_R - a * h * hopf_R^2 + k - hopf_R) / (a * k)
+        zero_C = r * k  / (a * k)
+    elseif model == "YodInn"
+        @unpack k, R₀, δ, x, y = YodInnScalePar(R₀ = effR0)
+        hopf_R = -R₀/2 + k/2
+        hopf_C = (hopf_R*(hopf_R*δ - hopf_R + R₀*δ - R₀) + k*(-hopf_R*δ + hopf_R - R₀*δ + R₀))/(k*x*y)
+        zero_C = (k*(- R₀*δ + R₀))/(k*x*y)
+    else
+        error("model must be either RozMac or YodInn")
+    end
+    return vcat(hopf_R, hopf_C, zero_C)
+end
+
+
 function cf_returnmap(model, ep, effR0, freq, r, seed, tsend, tvals)
     if model == "RozMac"
         sol = RozMac_pert(ep, effR0, freq, r, seed, tsend, tvals)
         par = RozMacPar(e = effR0, ε = ep)
-        hopfpoints = [0.9318181818181819, 2.1, 2.4]
-        
-    else if model == "YodInn"
+        resaxisboxcheckpoints = [0.0,1.8] 
+    elseif model == "YodInn"
         sol = YodInn_pert(ep, effR0, freq, r, seed, tsend, tvals)
         par = YodInnScalePar(R₀ = effR0, ε = ep)
-        hopfpoints = [1.1, 6.5, 6.7]
+        resaxisboxcheckpoints = [0.0,4.0]
     else
-        error("model must be either "RozMac" or "YodInn"")
+        error("model must be either RozMac or YodInn")
     end
-    res_Hopf_point = hopfpoints[1] # TODO make this general
-    rm_point1 = [hopfpoints[1], hopfpoints[2]] #NOTE THIS ONLY WORKS IF DON"T CHANGE a or k #TODO need to code in more general method - ie calculating max resisocline then adding error (RozMac)
-    rm_point2 = [hopfpoints[1], hopfpoints[3]]#NOTE THIS ONLY WORKS IF DON"T CHANGE a or k (RozMac)
+    hopfpoints = hopfpointsfinder(model, effR0)
+    res_Hopf_point = hopfpoints[1]
+    rm_point1 = [hopfpoints[1], hopfpoints[2]-(hopfpoints[2]*0.05)] 
+    rm_point2 = [hopfpoints[1], hopfpoints[2]+(hopfpoints[2]*0.05)]
     rm_pass_points1 = cf_returnmap_check(sol, [[1 , sol.u[1][1], sol.u[1][2]]], rm_point1, rm_point2, "first")
     if rm_pass_points1 == false
         return false
     else
-        resaxis_pass_points = cf_resaxis_check(sol, rm_pass_points1[2], res_Hopf_point, [0.0, 0.1], [2.1, 2.3])
+        resaxis_pass_points = cf_resaxis_check(sol, rm_pass_points1[2], res_Hopf_point, [0.0, 0.1], [hopfpoints[3], hopfpoints[2]])
     end
     if resaxis_pass_points == false
         return false
     else
-        resaxisbox_pass_points = cf_box_check(sol, resaxis_pass_points[2], [0.0,0.1], [0.0,1.8])
+        resaxisbox_pass_points = cf_box_check(sol, resaxis_pass_points[2], [0.0,0.1], resaxisboxcheckpoints)
     end
     if resaxisbox_pass_points == false
         return false
     else
-        resiso_pass_points = cf_ressiocline_check(sol, resaxisbox_pass_points[2], res_Hopf_point, par)
+        resiso_pass_points = cf_ressiocline_check(model, sol, resaxisbox_pass_points[2], res_Hopf_point, par)
     end
     if resiso_pass_points == false
         return false

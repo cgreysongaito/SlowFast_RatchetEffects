@@ -40,8 +40,12 @@ end
 transcrit(par) #0.441
 
 #when res_iso has a differential of 0 (max)
+using SymPy
+using Calculus
 Calculus.simplify(Calculus.differentiate("r * (a * h * k * R - a * h * R^2 + k - R) / (a * k)", :R))
 
+@vars R C
+@vars r a h k
 y(R) = (((r * ((a * h * k - a * h * (2 * R)) - 1)) * (a * k)) / (a * k) ^ 2)
 
 SymPy.solve(y(R), R)
