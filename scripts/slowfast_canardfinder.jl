@@ -142,11 +142,9 @@ function cf_returnmap(model, ep, effR0, freq, r, seed, tsend, tvals)
     if model == "RozMac"
         sol = RozMac_pert(ep, effR0, freq, r, seed, tsend, tvals)
         par = RozMacPar(e = effR0, ε = ep)
-        resaxisboxcheckpoints = [0.0,1.8] 
     elseif model == "YodInn"
         sol = YodInn_pert(ep, effR0, freq, r, seed, tsend, tvals)
         par = YodInnScalePar(R₀ = effR0, ε = ep)
-        resaxisboxcheckpoints = [0.0,4.0]
     else
         error("model must be either RozMac or YodInn")
     end
@@ -154,6 +152,7 @@ function cf_returnmap(model, ep, effR0, freq, r, seed, tsend, tvals)
     res_Hopf_point = hopfpoints[1]
     rm_point1 = [hopfpoints[1], hopfpoints[2]-(hopfpoints[2]*0.05)] 
     rm_point2 = [hopfpoints[1], hopfpoints[2]+(hopfpoints[2]*0.05)]
+    resaxisboxcheckpoints = [0.0, hopfpoints[3]*0.75]
     rm_pass_points1 = cf_returnmap_check(sol, [[1 , sol.u[1][1], sol.u[1][2]]], rm_point1, rm_point2, "first")
     if rm_pass_points1 == false
         return false

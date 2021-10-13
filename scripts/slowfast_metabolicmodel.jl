@@ -4,7 +4,7 @@
 @with_kw mutable struct YodInnScalePar
     aₜ = 54.9
     aᵣ = 34.3
-    rat = 10^-6
+    rat = 10^-4
     δ = 0.55
     fⱼ = 0.99
     aⱼ = 89.2
