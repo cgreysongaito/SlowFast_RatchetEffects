@@ -84,7 +84,7 @@ end
 
 # let
 #     isoclines = figure()
-#     iso_plot(0.0:0.1:3.0, YodInnScalePar(R₀ = 0.72))
+#     iso_plot(0.0:0.1:3.0, YodInnScalePar(R₀ = 0.8))
 #     return isoclines
 # end
 

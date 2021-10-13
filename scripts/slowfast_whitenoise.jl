@@ -60,19 +60,19 @@ end
 
 ### YodInn model
 begin
-    wn_eff05_short_YodInn = prop_canard_whitenoise_data("YodInn",0.5, 1000, 6000.0)
-    CSV.write("/home/chrisgg/julia/TimeDelays/data/wn_eff05_short_YodInn.csv", wn_eff05_short_YodInn)
-    wn_eff06_short_YodInn = prop_canard_whitenoise_data("YodInn", 0.6, 1000, 6000.0)
-    CSV.write("/home/chrisgg/julia/TimeDelays/data/wn_eff06_short_YodInn.csv", wn_eff06_short_YodInn)
-    wn_eff07_short_YodInn = prop_canard_whitenoise_data("YodInn", 0.7, 1000, 6000.0)
-    CSV.write("/home/chrisgg/julia/TimeDelays/data/wn_eff07_short_YodInn.csv", wn_eff07_short_YodInn)
+    wn_R12_short_YodInn = prop_canard_whitenoise_data("YodInn", 1.2, 1000, 6000.0)
+    CSV.write("/home/chrisgg/julia/TimeDelays/data/wn_R12_short_YodInn.csv", wn_R12_short_YodInn)
+    wn_R10_short_YodInn = prop_canard_whitenoise_data("YodInn", 1.0, 1000, 6000.0)
+    CSV.write("/home/chrisgg/julia/TimeDelays/data/wn_R10_short_YodInn.csv", wn_R10_short_YodInn)
+    wn_R08_short_YodInn = prop_canard_whitenoise_data("YodInn", 0.8, 1000, 6000.0)
+    CSV.write("/home/chrisgg/julia/TimeDelays/data/wn_R08_short_YodInn.csv", wn_R08_short_YodInn)
 end
 
 begin
-    wn_eff05_long_YodInn = prop_canard_whitenoise_data("YodInn", 0.5, 1000, 24000.0)
-    CSV.write("/home/chrisgg/julia/TimeDelays/data/wn_eff05_long_YodInn.csv", wn_eff05_long_YodInn)
-    wn_eff06_long_YodInn = prop_canard_whitenoise_data("YodInn", 0.6, 1000, 24000.0)
-    CSV.write("/home/chrisgg/julia/TimeDelays/data/wn_eff06_long_YodInn.csv", wn_eff06_long_YodInn)
-    wn_eff07_long_YodInn = prop_canard_whitenoise_data("YodInn", 0.7, 1000, 24000.0)
-    CSV.write("/home/chrisgg/julia/TimeDelays/data/wn_eff07_long_YodInn.csv", wn_eff07_long_YodInn)
+    wn_R12_long_YodInn = prop_canard_whitenoise_data("YodInn", 1.2, 1000, 24000.0)
+    CSV.write("/home/chrisgg/julia/TimeDelays/data/wn_R12_long_YodInn.csv", wn_R12_long_YodInn)
+    wn_R10_long_YodInn = prop_canard_whitenoise_data("YodInn", 1.0, 1000, 24000.0)
+    CSV.write("/home/chrisgg/julia/TimeDelays/data/wn_R10_long_YodInn.csv", wn_R10_long_YodInn)
+    wn_R08_long_YodInn = prop_canard_whitenoise_data("YodInn", 0.8, 1000, 24000.0)
+    CSV.write("/home/chrisgg/julia/TimeDelays/data/wn_R08_long_YodInn.csv", wn_R08_long_YodInn)
 end
