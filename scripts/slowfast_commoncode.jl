@@ -67,8 +67,8 @@ function res_iso_roz_mac(R, p)
 end
 
 function iso_plot(resrange, par)
-    plot(collect(resrange), [res_iso(R, par) for R in resrange])
-    return plot(repeat([con_iso(par)], length(resrange)),collect(resrange))
+    plot(collect(resrange), [res_iso_roz_mac(R, par) for R in resrange])
+    return plot(repeat([con_iso_roz_mac(par)], length(resrange)),collect(resrange))
 end
 
 function roz_mac_plot(ep, eff, width, dens)
