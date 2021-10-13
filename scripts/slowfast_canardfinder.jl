@@ -116,9 +116,13 @@ function cf_ressiocline_check(model, sol, pass_points, res_Hopf_point, par) #TOD
     end
 end
 
-#need to make hopfpoints and resaxischeckpoints more general
-#take the resource isocline functions, calculate maximum value of C, and the C at R=0
-#plus minus 0.1 about C hopf point. resaxischeckpoints are between C at R=0 and C hopf point
+function axial_checker(sol)
+    if sol.u[end][1] == 3.00 && sol.u[end][2] == 0.00
+            return "axial"
+        else
+            return "nothing"
+    end
+end
 
 function hopfpointsfinder(model, effR0)
     if model == "RozMac"
@@ -137,7 +141,7 @@ function hopfpointsfinder(model, effR0)
     return vcat(hopf_R, hopf_C, zero_C)
 end
 
-
+#### NEED TO FIX AXIAL CHECKER - must check after finding any false not just at the end.
 function cf_returnmap(model, ep, effR0, freq, r, seed, tsend, tvals)
     if model == "RozMac"
         sol = RozMac_pert(ep, effR0, freq, r, seed, tsend, tvals)
@@ -152,34 +156,30 @@ function cf_returnmap(model, ep, effR0, freq, r, seed, tsend, tvals)
     res_Hopf_point = hopfpoints[1]
     rm_point1 = [hopfpoints[1], hopfpoints[2]-(hopfpoints[2]*0.05)] 
     rm_point2 = [hopfpoints[1], hopfpoints[2]+(hopfpoints[2]*0.05)]
-    resaxisboxcheckpoints = [0.0, hopfpoints[3]*0.75]
+    resaxisboxcheckpoints = [0.0, hopfpoints[3]*0.8]
     rm_pass_points1 = cf_returnmap_check(sol, [[1 , sol.u[1][1], sol.u[1][2]]], rm_point1, rm_point2, "first")
     if rm_pass_points1 == false
-        return false
+        return axial_checker(sol)
     else
         resaxis_pass_points = cf_resaxis_check(sol, rm_pass_points1[2], res_Hopf_point, [0.0, 0.1], [hopfpoints[3], hopfpoints[2]])
     end
     if resaxis_pass_points == false
-        return false
+        return axial_checker(sol)
     else
         resaxisbox_pass_points = cf_box_check(sol, resaxis_pass_points[2], [0.0,0.1], resaxisboxcheckpoints)
     end
     if resaxisbox_pass_points == false
-        return false
+        return axial_checker(sol)
     else
         resiso_pass_points = cf_ressiocline_check(model, sol, resaxisbox_pass_points[2], res_Hopf_point, par)
     end
     if resiso_pass_points == false
-        return false
+        return axial_checker(sol)
     else
         rm_pass_points2 = cf_returnmap_check(sol, resiso_pass_points[2],  rm_point1, rm_point2, "second")
     end
     if rm_pass_points2 == false
-        if sol.u[end][1] == 3.00 && sol.u[end][2] == 0.00
-            return "axial"
-        else
-            return "nothing"
-        end
+        return axial_checker(sol)
     else
         return "canard"
     end

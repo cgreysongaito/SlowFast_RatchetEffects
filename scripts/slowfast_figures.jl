@@ -192,15 +192,15 @@ end
 #SI Figure 1 (illustration of quasi-canard finder algorithm)
 let
     sol_qc = RozMac_pert(0.01, 0.55, 1, 0.7, 45, 1500.0, 0.0:1.0:1500.0)
-    figure2 = figure(figsize=(10,8))
+    figure2 = figure(figsize=(7,5))
     iso_plot(0.0:0.1:3.0, RozMacPar(e = 0.55))  
-    plot(sol_qc[1, :], sol_qc[2, :], color = "#440154FF", )
-    xlabel("Resource")
-    ylabel("Consumer")
-    ylim(0,2.5)
-    xlim(0,3)
-    return figure2
-    # savefig(joinpath(abpath(), "figs/phase_timeseries_examples.pdf"))
+    plot(sol_qc[1, :], sol_qc[2, :], color = "#440154FF", linewidth=5)
+    xlabel("Resource", fontsize=15)
+    ylabel("Consumer", fontsize=15)
+    ylim(0, 2.5)
+    xlim(0, 3)
+    # return figure2
+    savefig(joinpath(abpath(), "figs/quasicanardfinder.pdf"))
 end
 
 let 

@@ -41,6 +41,19 @@ include("slowfast_canardfinder.jl")
 # end
 
 
+# let 
+#         ep = 0.01
+#         eff = 0.6
+#         corr = 0.0
+#         ran = 187
+#         tsend = 6000.0
+#         println(cf_returnmap("RozMac", ep, eff, 1, corr, ran, tsend, 0.0:1.0:tsend))
+#         test = figure()
+#         iso_plot(0.0:0.1:3.0, RozMacPar(e = eff))
+#         pert_phase_plot(ep, eff, 1, corr, ran, tsend, 0.0:1.0:tsend)
+#         return test
+# end
+
 
 
 function prop_canard_whitenoise(model, ep, effR0, reps, tsend)
