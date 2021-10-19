@@ -1,4 +1,6 @@
 # Packages required
+using Hwloc
+using .Threads
 using Parameters
 using LinearAlgebra
 using Calculus

@@ -1,5 +1,6 @@
 include("packages.jl")
 include("slowfast_commoncode.jl")
+include("slowfast_eigen.jl")
 
 # Figure 2 (primer of different trajectories)
 
@@ -44,6 +45,28 @@ let
     tight_layout()
     # return figure2
     savefig(joinpath(abpath(), "figs/phase_timeseries_examples.pdf"))
+end
+
+
+let
+    prop_real = figure()
+    data = findRCdivide_epx_data()
+    plot(data[:,1], data[:,2], color = "black")
+    fill_between(data[:,1], data[:,2], color = "blue", alpha=0.3)
+    fill_between(data[:,1], fill(1.0, length(data[:,2])), data[:,2], color = "orange", alpha=0.3)
+    xlim(-10,1000)
+    #ylim(0.410, 1)
+    ylabel("Proportion Real", fontsize = 15)
+    xlabel("1/ε", fontsize = 15)
+    return prop_real
+    # savefig(joinpath(abpath(), "figs/epsilonxaxis_propReal.png"))
+end
+
+let 
+    sol = RozMac_pert(1.5, findRCdivide(1.0), 1, 0.0, 0.001, 1, 2500.0, 0.0:2.0:2500.0)
+    test = figure()
+    plot(sol.t, sol.u)
+    return test
 end
 
 
@@ -202,103 +225,3 @@ let
     # return figure2
     savefig(joinpath(abpath(), "figs/quasicanardfinder.pdf"))
 end
-
-let 
-    
-end
-
-#Original Figure 1 (proportion real) - replaced with proof
-# include("slowfast_eigen.jl")
-
-# let
-#     prop_real = figure()
-#     data = findRCdivide_epx_data()
-#     plot(data[:,1], data[:,2], color = "black")
-#     fill_between(data[:,1], data[:,2], color = "blue", alpha=0.3)
-#     fill_between(data[:,1], fill(1.0, length(data[:,2])), data[:,2], color = "orange", alpha=0.3)
-#     xlim(-0.05,2.05)
-#     #ylim(0.410, 1)
-#     ylabel("Proportion Real", fontsize = 15)
-#     xlabel("ε", fontsize = 15)
-#     return prop_real
-#     # savefig(joinpath(abpath(), "figs/epsilonxaxis_propReal.png"))
-# end
-
-
-# let
-#     data = eff_maxeigen_data(0.01)
-#     maxeigen_ep001 = figure()
-#     plot(data[:,1], data[:,2], color = "black")
-#     title("ϵ = 0.01")
-#     ylabel("Re(λₘₐₓ)", fontsize = 15)
-#     xlim(0.4, 0.8)
-#     ylim(-0.35, 0.1)
-#     xlabel("Efficiency", fontsize = 15)
-#     hlines(0.0, 0.4,0.8, linestyles = "dashed", linewidth = 0.5)
-#     vlines([0.441, 0.710], ymin = -0.35, ymax = 0.1, linestyles = "dashed")
-#     fill([0.441,0.65415, 0.65415, 0.441], [0.1, 0.1, -0.35, -0.35], "blue", alpha=0.3)
-#     fill([0.65415, 0.710, 0.710, 0.65415], [0.1, 0.1, -0.35, -0.35], "orange", alpha=0.3)
-#     annotate("TC", (90, 298), xycoords = "figure points", fontsize = 12)
-#     annotate("H", (335, 298), xycoords = "figure points", fontsize = 12)
-#     # return maxeigen_ep001
-#     savefig(joinpath(abpath(), "figs/maxeigen_ep001.png"))
-# end
-
-# let
-#     data = eff_maxeigen_data(0.8)
-#     maxeigen_ep08 = figure()
-#     plot(data[:,1], data[:,2], color = "black")
-#     title("ϵ = 0.8")
-#     ylabel("Re(λₘₐₓ)", fontsize = 15)
-#     xlabel("Efficiency", fontsize = 15)
-#     xlim(0.4, 0.8)
-#     ylim(-0.35, 0.1)
-#     hlines(0.0, 0.4,0.8, linestyles = "dashed", linewidth = 0.5)
-#     vlines([0.441, 0.710], ymin = -0.35, ymax = 0.1, linestyles = "dashed")
-#     fill([0.441,0.529, 0.529, 0.441], [0.1, 0.1, -0.35, -0.35], "blue", alpha=0.3)
-#     fill([0.529,0.710, 0.710, 0.529], [0.1, 0.1, -0.35, -0.35], "orange", alpha=0.3)
-#     annotate("TC", (86, 298), xycoords = "figure points", fontsize = 12)
-#     annotate("H", (330, 298), xycoords = "figure points", fontsize = 12)
-#     return maxeigen_ep08
-#     # savefig(joinpath(abpath(), "figs/maxeigen_ep08.png"))
-# end
-
-
-# let
-#     data = eff_maxeigen_data(0.079)
-#     maxeigen_ep0079 = figure()
-#     plot(data[:,1], data[:,2], color = "black")
-#     ylabel("Re(λₘₐₓ)", fontsize = 15)
-#     xlim(0.4, 0.8)
-#     ylim(-0.35, 0.1)
-#     xlabel("Efficiency", fontsize = 15)
-#     hlines(0.0, 0.4,0.8, linestyles = "dashed", linewidth = 0.5)
-#     vlines([0.5,0.6,0.7], ymin = -0.35, ymax = 0.1, color = "green")
-#     vlines([0.441, 0.710], ymin = -0.35, ymax = 0.1, linestyles = "dashed")
-#     fill([0.441,0.60055, 0.60055, 0.441], [0.1, 0.1, -0.35, -0.35], "blue", alpha=0.3)
-#     fill([0.60055,0.71, 0.71, 0.60055], [0.1, 0.1, -0.35, -0.35], "orange", alpha=0.3)
-#     annotate("TC", (90, 298), xycoords = "figure points", fontsize = 12)
-#     annotate("H", (335, 298), xycoords = "figure points", fontsize = 12)
-#     # return maxeigen_ep0079
-#     savefig(joinpath(abpath(), "figs/maxeigen_ep0079.png"))
-# end
-
-
-# let
-#     data = eff_maxeigen_data(0.004)
-#     maxeigen_ep0079 = figure()
-#     plot(data[:,1], data[:,2], color = "black")
-#     ylabel("Re(λₘₐₓ)", fontsize = 15)
-#     xlim(0.4, 0.8)
-#     ylim(-0.35, 0.1)
-#     xlabel("Efficiency", fontsize = 15)
-#     hlines(0.0, 0.4,0.8, linestyles = "dashed", linewidth = 0.5)
-#     vlines([0.5,0.6,0.7], ymin = -0.35, ymax = 0.1, color = "green")
-#     vlines([0.441, 0.710], ymin = -0.35, ymax = 0.1, linestyles = "dashed")
-#     fill([0.441,0.60055, 0.60055, 0.441], [0.1, 0.1, -0.35, -0.35], "blue", alpha=0.3)
-#     fill([0.60055,0.71, 0.71, 0.60055], [0.1, 0.1, -0.35, -0.35], "orange", alpha=0.3)
-#     annotate("TC", (90, 298), xycoords = "figure points", fontsize = 12)
-#     annotate("H", (335, 298), xycoords = "figure points", fontsize = 12)
-#     return maxeigen_ep0079
-#     #savefig(joinpath(abpath(), "figs/maxeigen_ep0079.png"))
-# end

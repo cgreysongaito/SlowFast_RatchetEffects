@@ -81,9 +81,9 @@ function roz_mac_plot(ep, eff, width, dens)
     return iso_plot(resconrange, RozMacPar(e = eff))
 end
 
-function noise_creation(r, len)
+function noise_creation(r, len, sd)
     #scaling variance using method in Wichmann et al. 2005
-    white = rand(Normal(0.0, 0.01), Int64(len))
+    white = rand(Normal(0.0, sd), Int64(len))
     intnoise = [white[1]]
     for i in 2:Int64(len)
         intnoise = append!(intnoise, r * intnoise[i-1] + white[i] )
@@ -97,12 +97,12 @@ function noise_creation(r, len)
     return scalednoise
 end
 
-function RozMac_pert(ep, eff, freq, r, seed, tsend, tvals)
+function RozMac_pert(ep, eff, freq, r, sd, seed, tsend, tvals)
     Random.seed!(seed)
     par = RozMacPar()
     par.ε = ep
     par.e = eff
-    noise = noise_creation(r, tsend / freq)
+    noise = noise_creation(r, tsend / freq, sd)
     count = 1
     u0 = [eq_II(par)[1], eq_II(par)[2] + noise[1]]
     tspan = (0.0, tsend)
@@ -123,8 +123,8 @@ function RozMac_pert(ep, eff, freq, r, seed, tsend, tvals)
 end
 
 
-function pert_timeseries_plot(ep, eff, freq, r, seed, tsend, tvals)
-    sol = RozMac_pert(ep, eff, freq, r, seed, tsend, tvals)
+function pert_timeseries_plot(ep, eff, freq, r, sd, seed, tsend, tvals)
+    sol = RozMac_pert(ep, eff, freq, r, sd, seed, tsend, tvals)
     return plot(sol.t, sol.u)
 end
 
@@ -150,4 +150,15 @@ function prep_data(data, range)
         canard_plus_axial_prop[i] = data[i][1] + data[i][2]
     end
     return DataFrame(xrange = range, canard = canard_prop, canard_plus_axial = canard_plus_axial_prop)
+end
+
+function transcrit_rozmac(p)
+    @unpack a, k, h, m = p
+    return h * m + m / (a * k)
+end
+
+function hopf_rozmac(p)
+    @unpack k, a, h, r, m= p
+    R = k / 2 - 1 / (2 * a * h)
+    return m / (R * a) + ( h * m)
 end

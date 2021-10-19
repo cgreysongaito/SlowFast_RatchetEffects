@@ -1,7 +1,3 @@
-using Hwloc
-Hwloc.num_physical_cores()
-using .Threads
-nthreads()
 #Increase the number of threads by going to Julia Extension settings in VS Code or setting the environment variable in bash
 
 using CSV

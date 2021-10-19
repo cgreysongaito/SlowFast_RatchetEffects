@@ -19,10 +19,10 @@ end
 
 
 # # create graph of epsilon on x and efficiency value where RC divide by transposing graph of efficiency on x and epsilon value that creates RC divide
-function findRCdivide_epx(ep)
+function findRCdivide_epx(ep, hopf, transcrit)
     par = RozMacPar()
     par.ε = ep
-    evals = 0.441:0.00005:0.71
+    evals = transcrit:0.00005:hopf
 
     for (ei, eval) in enumerate(evals)
         par.e = eval
@@ -36,15 +36,18 @@ function findRCdivide_epx(ep)
 end
 
 function findRCdivide_epx_data()
-    epvals = 0.01:0.005:2.0
-    effRC = fill(0.0, length(epvals))
-    for (epi, epval) in enumerate(epvals)
-        effRC[epi] = findRCdivide_epx(epval)
+    hopf = hopf_rozmac(RozMacPar())
+    transcrit = transcrit_rozmac(RozMacPar())
+    epvals = 0.001:0.001:100.0
+    effRC = zeros(length(epvals))
+    @threads for i in eachindex(epvals)
+        @inbounds effRC[i] =  findRCdivide_epx(epvals[i], hopf, transcrit)
     end
-    effRC_minus_hopf = 0.71 .- effRC
-    effRC_propC = effRC_minus_hopf ./ (0.71-0.441)
+    effRC
+    effRC_minus_hopf = hopf .- effRC
+    effRC_propC = effRC_minus_hopf ./ (hopf-transcrit)
     effRC_propR = 1 .- effRC_propC
-    return hcat(collect(epvals), effRC_propR)
+    return hcat(collect(1 ./epvals), effRC_propR)
 end
 
 function eff_maxeigen_data(ep)
