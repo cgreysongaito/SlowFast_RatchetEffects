@@ -4,35 +4,44 @@ include("slowfast_eigen.jl")
 
 # Figure 2 (primer of different trajectories)
 
+let 
+    sol = RozMac_pert(0.01, 0.44, 1, 0.8, 128, 1500.0, 0.0:2.0:1500.0)
+    test = figure()
+    iso_plot(0.0:0.1:1.7, RozMacPar(e = 0.43))
+    plot(sol[1, :], sol[2, :], color = "#73D055FF")
+    return test
+end
+
+
 let
-    sol_axial = RozMac_pert(0.01, 0.48, 1, 0.8, 9, 1500.0, 0.0:2.0:1500.0)
-    sol_qc = RozMac_pert(0.01, 0.48, 1, 0.8, 123, 2500.0, 1750.0:2.0:2500.0)
-    sol_equil = RozMac_pert(0.01, 0.48, 1, 0.0, 1234, 5000.0, 0.0:2.0:5000.0)
+    sol_axial = RozMac_pert(0.01, 0.43, 1, 0.8, 9, 1500.0, 0.0:2.0:1500.0)
+    sol_qc = RozMac_pert(0.01, 0.43, 1, 0.8, 123, 2500.0, 1750.0:2.0:2500.0)
+    sol_equil = RozMac_pert(0.01, 0.43, 1, 0.0, 1234, 5000.0, 0.0:2.0:5000.0)
     figure2 = figure(figsize=(3,10))
     subplot(5,1,1)
-    iso_plot(0.0:0.1:3.0, RozMacPar(e = 0.48))  
-    plot(sol_qc[1, :], sol_qc[2, :], color = "#440154FF")
+    iso_plot(0.0:0.1:1.7, RozMacPar(e = 0.43))  
+    # plot(sol_qc[1, :], sol_qc[2, :], color = "#440154FF")
     plot(sol_axial[1, :], sol_axial[2, :], color = "#73D055FF")
     xlabel("Resource")
     ylabel("Consumer")
-    ylim(0,2.5)
-    xlim(0,3)
+    ylim(0,0.75)
+    xlim(0,1.7)
     subplot(5,1,2)
-    iso_plot(0.0:0.1:3.0, RozMacPar(e = 0.48))
+    iso_plot(0.0:0.1:1.7, RozMacPar(e = 0.43))
     plot(sol_equil[1, :], sol_equil[2, :], color = "#FDE725FF")
     xlabel("Resource")
     ylabel("Consumer")
-    ylim(0,2.5)
-    xlim(0,3)
+    ylim(0,0.75)
+    xlim(0,1.7)
     subplot(5,1,3)
     plot(sol_qc.t, sol_qc.u)
-    ylim(0,3.0)
+    ylim(0,2)
     xlabel("Time")
     ylabel("Biomass")
     tick_params(axis="x", which="both", bottom=False, labelbottom=False)
     subplot(5,1,4)
     plot(sol_axial.t, sol_axial.u)
-    ylim(0,3.0)
+    ylim(0,2)
     tick_params(axis="x", which="both", bottom=False, labelbottom=False)
     xlabel("Time")
     ylabel("Biomass")
@@ -41,10 +50,16 @@ let
     tick_params(axis="x", which="both", bottom=False, labelbottom=False)
     xlabel("Time")
     ylabel("Biomass")
-    ylim(0,3.0)
+    ylim(0,2)
     tight_layout()
-    # return figure2
-    savefig(joinpath(abpath(), "figs/phase_timeseries_examples.pdf"))
+    return figure2
+    # savefig(joinpath(abpath(), "figs/phase_timeseries_examples.pdf"))
+end
+
+let 
+    test = figure()
+    iso_plot(0.0:0.1:1.7, RozMacPar(e = 0.6))
+    return test
 end
 
 
@@ -58,15 +73,52 @@ let
     #ylim(0.410, 1)
     ylabel("Proportion Real", fontsize = 15)
     xlabel("1/ε", fontsize = 15)
-    return prop_real
-    # savefig(joinpath(abpath(), "figs/epsilonxaxis_propReal.png"))
+    # return prop_real
+    savefig(joinpath(abpath(), "figs/epsilonxaxis_propReal.png"))
 end
 
+
+
 let 
-    sol = RozMac_pert(0.4, 0.55, 0.1, 0.0, 0.01, 1, 2500.0, 0.0:2.0:2500.0)
-    test = figure()
-    plot(sol.t, sol.u)
-    return test
+    solfast = RozMac_pert(1.0, 0.5, 1.0, 0.0, 1, 10000.0, 9000.0:1.0:10000.0)
+    solslow = RozMac_pert(0.7, 0.5, 1.0, 0.0, 1, 10000.0, 9000.0:1.0:10000.0)
+    lrange = 0:1:40
+    acffast = autocor(solfast[2, 1:end], collect(lrange))
+    acfslow = autocor(solslow[2, 1:end], collect(lrange))
+    acffigure = figure()
+    subplot(2,1,1)
+    plot(collect(lrange), acffast)
+    hlines(0.0,0.0,40.0, linestyles=`dashed`, linewidths=0.5)
+    ylim(-1,1)
+    xlim(0,40)
+    xlabel("Lag")
+    ylabel("ACF")
+    subplot(2,1,2)
+    plot(collect(lrange), acfslow)
+    hlines(0.0,0.0,40.0, linestyles=`dashed`, linewidths=0.5)
+    ylim(-1,1)
+    xlim(0,40)
+    xlabel("Lag")
+    ylabel("ACF")
+    tight_layout()
+    return acffigure
+end
+
+
+
+# conf = 1.96/sqrt(length(solend))
+let
+    figure()
+    subplot(1,2,1)
+    bar(collect(lrange), acf)
+    # hlines(0 + conf, 0, maximum(lrange))
+    # hlines(0 - conf, 0, maximum(lrange))
+    ylim(-1,1)
+    xlabel("Lag")
+    ylabel("ACF")
+    subplot(1,2,2)
+    plot(soldis.t, soldis.u)
+    gcf()
 end
 
 let 

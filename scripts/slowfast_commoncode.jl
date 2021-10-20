@@ -5,15 +5,24 @@ function abpath()
 end
 
 @with_kw mutable struct RozMacPar
-    r = 2.0
-    k = 3.0
-    a = 1.1
-    h = 0.8
-    e = 0.7
-    m = 0.4
-    σ = 0.1
+    r = 1.0
+    k = 1.7
+    h = 0.6
+    a = 3.0
+    e = 0.5
+    m = 0.5
     ε = 0.1
 end
+
+# @with_kw mutable struct RozMacPar
+#     r = 2.0
+#     k = 3.0
+#     a = 1.1
+#     h = 0.8
+#     e = 0.7
+#     m = 0.4
+#     ε = 0.1
+# end
 
 par_rozmac = RozMacPar()
 
@@ -67,12 +76,13 @@ function res_iso_roz_mac(R, p)
 end
 
 function iso_plot(resrange, par)
-    plot(collect(resrange), [res_iso_roz_mac(R, par) for R in resrange])
-    return plot(repeat([con_iso_roz_mac(par)], length(resrange)),collect(resrange))
+    data = [res_iso_roz_mac(R, par) for R in resrange]
+    plot(collect(resrange), data)
+    return vlines(con_iso_roz_mac(par), 0, maximum(data)+(0.1* maximum(data)), colors="orange")
 end
 
 function roz_mac_plot(ep, eff, width, dens)
-    resconrange = range(0, stop = 3, length=100)
+    resconrange = range(0, stop = 1.7, length=100)
     U = [roz_mac_res(R, C, par_rozmac) for C in resconrange, R in resconrange]
     V = [roz_mac_con(R, C, eff, ep, par_rozmac) for C in resconrange, R in resconrange]
     speed = sqrt.(U.^2 .+ V.^2)
@@ -81,9 +91,9 @@ function roz_mac_plot(ep, eff, width, dens)
     return iso_plot(resconrange, RozMacPar(e = eff))
 end
 
-function noise_creation(r, len, sd)
+function noise_creation(r, len)
     #scaling variance using method in Wichmann et al. 2005
-    white = rand(Normal(0.0, sd), Int64(len))
+    white = rand(Normal(0.0, 0.01), Int64(len))
     intnoise = [white[1]]
     for i in 2:Int64(len)
         intnoise = append!(intnoise, r * intnoise[i-1] + white[i] )
@@ -97,12 +107,12 @@ function noise_creation(r, len, sd)
     return scalednoise
 end
 
-function RozMac_pert(ep, eff, freq, r, sd, seed, tsend, tvals)
+function RozMac_pert(ep, eff, freq, r, seed, tsend, tvals)
     Random.seed!(seed)
     par = RozMacPar()
     par.ε = ep
     par.e = eff
-    noise = noise_creation(r, tsend / freq, sd)
+    noise = noise_creation(r, tsend / freq)
     count = 1
     u0 = [eq_II(par)[1], eq_II(par)[2] + noise[1]]
     tspan = (0.0, tsend)
@@ -123,8 +133,8 @@ function RozMac_pert(ep, eff, freq, r, sd, seed, tsend, tvals)
 end
 
 
-function pert_timeseries_plot(ep, eff, freq, r, sd, seed, tsend, tvals)
-    sol = RozMac_pert(ep, eff, freq, r, sd, seed, tsend, tvals)
+function pert_timeseries_plot(ep, eff, freq, r, seed, tsend, tvals)
+    sol = RozMac_pert(ep, eff, freq, r, seed, tsend, tvals)
     return plot(sol.t, sol.u)
 end
 
