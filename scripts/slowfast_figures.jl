@@ -49,8 +49,8 @@ end
 
 
 let
-    prop_real = figure()
     data = findRCdivide_epx_data()
+    prop_real = figure()
     plot(data[:,1], data[:,2], color = "black")
     fill_between(data[:,1], data[:,2], color = "blue", alpha=0.3)
     fill_between(data[:,1], fill(1.0, length(data[:,2])), data[:,2], color = "orange", alpha=0.3)
@@ -63,12 +63,29 @@ let
 end
 
 let 
-    sol = RozMac_pert(1.5, findRCdivide(1.0), 1, 0.0, 0.001, 1, 2500.0, 0.0:2.0:2500.0)
+    sol = RozMac_pert(0.4, 0.55, 0.1, 0.0, 0.01, 1, 2500.0, 0.0:2.0:2500.0)
     test = figure()
     plot(sol.t, sol.u)
     return test
 end
 
+let 
+    imagdata = imag_epx_data(0.6)
+    imagfig = figure()
+    plot(imagdata[:,1], imagdata[:,2])
+    xlabel("1/ε", fontsize = 15)
+    ylabel("Imag", fontsize = 15)
+    return imagfig
+end
+
+let 
+    realdata = real_epx_data(0.6)
+    realfig = figure()
+    plot(realdata[:,1], realdata[:,2])
+    xlabel("1/ε", fontsize = 15)
+    ylabel("Real", fontsize = 15)
+    return realfig
+end
 
 # Figure 3 (white noise and isoclines)
 using DataFrames

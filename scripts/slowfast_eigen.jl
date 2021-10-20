@@ -1,18 +1,18 @@
 #Script for slow fast examination of time delays
 
-# When epp is 1, find the excitable and non excitable phases for e - deterministic
-function findRCdivide(ep)
+# Find the real complex divide for different values of efficiency
+function findRCdivide_eff(eff)
     par = RozMacPar()
-    par.ε = ep
-    evals = 0.441:0.00005:0.9
+    par.e = eff
+    epvals = 0.001:0.0005:1.0
 
-    for (ei, eval) in enumerate(evals)
-        par.e = eval
+    for (epi, epval) in enumerate(epvals)
+        par.ε = epval
         equ = eq_II(par)
         eig1 = imag.(eigvals(jacmat(roz_mac_II, equ, par))[1])
         if eig1 < 0 || eig1 > 0
-            return eval
-            break
+            return epval
+            # break
         end
     end
 end
@@ -62,4 +62,30 @@ function eff_maxeigen_data(ep)
         max_eig[ei] = λ_stability(jacmat(roz_mac_II, equ, par))
     end
     return hcat(evals, max_eig)
+end
+
+function imag_epx_data(eff)
+    par = RozMacPar()
+    par.e = eff
+    epvals = 0.01:0.0005:1.0
+    imagdata = zeros(length(epvals))
+    for (epi, epval) in enumerate(epvals)
+        par.ε = epval
+        equ = eq_II(par)
+        imagdata[epi] = abs(imag.(eigvals(jacmat(roz_mac_II, equ, par))[1]))
+    end
+    return hcat(collect(1 ./epvals), imagdata)
+end
+
+function real_epx_data(eff)
+    par = RozMacPar()
+    par.e = eff
+    epvals = 0.01:0.0005:1.0
+    realdata = zeros(length(epvals))
+    for (epi, epval) in enumerate(epvals)
+        par.ε = epval
+        equ = eq_II(par)
+        realdata[epi] = λ_stability(jacmat(roz_mac_II, equ, par))
+    end
+    return hcat(collect(1 ./epvals), realdata)
 end
