@@ -5,24 +5,14 @@ function abpath()
 end
 
 @with_kw mutable struct RozMacPar
-    r = 1.0
-    k = 1.7
-    h = 0.6
-    a = 3.0
-    e = 0.5
-    m = 0.5
+    r = 2.0
+    k = 3.0
+    a = 1.1
+    h = 0.8
+    e = 0.7
+    m = 0.4
     ε = 0.1
 end
-
-# @with_kw mutable struct RozMacPar
-#     r = 2.0
-#     k = 3.0
-#     a = 1.1
-#     h = 0.8
-#     e = 0.7
-#     m = 0.4
-#     ε = 0.1
-# end
 
 par_rozmac = RozMacPar()
 
