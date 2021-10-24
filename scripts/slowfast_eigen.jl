@@ -17,6 +17,15 @@ function findRCdivide_eff(eff)
     end
 end
 
+# Convert efficiency value to effective proportion real value
+function converteff_prop_RCdivide(eff)
+    hopf = hopf_rozmac(RozMacPar(e = eff))
+    transcrit = transcrit_rozmac(RozMacPar(e = eff))
+    hopf_minus_eff = hopf - eff
+    propeff = hopf_minus_eff / (hopf-transcrit)
+    finalprop = 1 .- propeff
+    return finalprop
+end
 
 # # create graph of epsilon on x and efficiency value where RC divide by transposing graph of efficiency on x and epsilon value that creates RC divide
 function findRCdivide_epx(ep, hopf, transcrit)
@@ -43,7 +52,6 @@ function findRCdivide_epx_data()
     @threads for i in eachindex(epvals)
         @inbounds effRC[i] =  findRCdivide_epx(epvals[i], hopf, transcrit)
     end
-    effRC
     effRC_minus_hopf = hopf .- effRC
     effRC_propC = effRC_minus_hopf ./ (hopf-transcrit)
     effRC_propR = 1 .- effRC_propC

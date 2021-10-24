@@ -11,7 +11,7 @@ end
     h = 0.8
     e = 0.7
     m = 0.4
-    ε = 0.1
+    ε = 1.0
 end
 
 par_rozmac = RozMacPar()

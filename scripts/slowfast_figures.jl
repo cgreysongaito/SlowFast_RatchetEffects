@@ -2,12 +2,72 @@ include("packages.jl")
 include("slowfast_commoncode.jl")
 include("slowfast_eigen.jl")
 
-# Figure 2 (primer of different trajectories)
+
+#Figure 2 Proportion Real & ACF plots of quasi-cycles.
+RCdividedata = findRCdivide_epx_data()
 let
-    sol_axial = RozMac_pert(0.01, 0.48, 1, 0.8, 9, 1500.0, 0.0:2.0:1500.0)
-    sol_qc = RozMac_pert(0.01, 0.48, 1, 0.8, 123, 2500.0, 1750.0:2.0:2500.0)
+    prop_real_smalldelep = figure(figsize=(4,3))
+    plot(RCdividedata[:,1], RCdividedata[:,2], color = "black")
+    # fill_between(data[:,1], data[:,2], color = "blue", alpha=0.3)
+    # fill_between(data[:,1], fill(1.0, length(data[:,2])), data[:,2], color = "orange", alpha=0.3)
+    xlim(0,10)
+    ylim(0.0,1.0)
+    xticks(fontsize=12)
+    yticks(fontsize=12)
+    ylabel("Proportion Real", fontsize = 12)
+    xlabel("1/ε", fontsize = 12)
+    # return prop_real_smalldelep
+    savefig(joinpath(abpath(), "figs/epsilonxaxis_propReal_smalldelep.pdf"))
+end
+
+let
+    prop_real_largedelep = figure(figsize=(4,3))
+    plot(RCdividedata[:,1], RCdividedata[:,2], color = "black")
+    hlines(converteff_prop_RCdivide(0.5), 0.0, 1000.0, linestyles=`dashed`, linewidths=0.5)
+    hlines(converteff_prop_RCdivide(0.65), 0.0, 1000.0, linestyles=`dashed`, linewidths=0.5)
+    hlines(converteff_prop_RCdivide(0.7), 0.0, 1000.0, linestyles=`dashed`, linewidths=0.5)
+    xlim(-10,1000)
+    ylim(0.0,1.0)
+    xticks(fontsize=12)
+    yticks(fontsize=12)
+    ylabel("Proportion Real", fontsize = 12)
+    xlabel("1/ε", fontsize = 12)
+    return prop_real_largedelep
+    # savefig(joinpath(abpath(), "figs/epsilonxaxis_propReal_largedelep.pdf"))
+end
+
+let 
+    solfast = RozMac_pert(1.0, 0.6, 1.0, 0.0, 1, 10000.0, 9000.0:1.0:10000.0)
+    solslow = RozMac_pert(0.6, 0.6, 1.0, 0.0, 1, 10000.0, 9000.0:1.0:10000.0)
+    lrange = 0:1:40
+    acffast = autocor(solfast[2, 1:end], collect(lrange))
+    acfslow = autocor(solslow[2, 1:end], collect(lrange))
+    acffigure = figure(figsize = (6,2.5))
+    subplot(1,2,1)
+    plot(collect(lrange), acffast, color = "black")
+    hlines(0.0,0.0,40.0, linestyles=`dashed`, linewidths=0.5)
+    ylim(-1,1)
+    xlim(0,40)
+    xlabel("Lag")
+    ylabel("ACF")
+    subplot(1,2,2)
+    plot(collect(lrange), acfslow, color = "black")
+    hlines(0.0,0.0,40.0, linestyles=`dashed`, linewidths=0.5)
+    ylim(-1,1)
+    xlim(0,40)
+    xlabel("Lag")
+    ylabel("ACF")
+    tight_layout()
+    # return acffigure
+    savefig(joinpath(abpath(), "figs/quasicycles_ACF.pdf"))
+end
+
+# Figure 3 (primer of different trajectories)
+let
+    sol_axial = RozMac_pert(0.01, 0.48, 1, 0.8, 9, 2500.0, 0.0:2.0:2500.0)
+    sol_qc = RozMac_pert(0.01, 0.48, 1, 0.8, 6, 3600.0, 2500.0:1.0:3100.0)
     sol_equil = RozMac_pert(0.01, 0.48, 1, 0.0, 1234, 5000.0, 0.0:2.0:5000.0)
-    figure2 = figure(figsize=(3,10))
+    figure3 = figure(figsize=(3,10))
     subplot(5,1,1)
     iso_plot(0.0:0.1:3.0, RozMacPar(e = 0.48))  
     plot(sol_qc[1, :], sol_qc[2, :], color = "#440154FF")
@@ -42,100 +102,133 @@ let
     ylabel("Biomass")
     ylim(0,3.0)
     tight_layout()
-    return figure2
+    return figure3
     # savefig(joinpath(abpath(), "figs/phase_timeseries_examples.pdf"))
 end
 
-#Proportion Real
-let
-    data = findRCdivide_epx_data()
-    prop_real = figure()
-    plot(data[:,1], data[:,2], color = "black")
-    fill_between(data[:,1], data[:,2], color = "blue", alpha=0.3)
-    fill_between(data[:,1], fill(1.0, length(data[:,2])), data[:,2], color = "orange", alpha=0.3)
-    xlim(-10,1000)
-    #ylim(0.410, 1)
-    ylabel("Proportion Real", fontsize = 15)
-    xlabel("1/ε", fontsize = 15)
-    # return prop_real
-    savefig(joinpath(abpath(), "figs/epsilonxaxis_propReal.png"))
-end
+# Figure 4 (white noise and prop real large delta ep)
+wn_data05_short_RozMac = CSV.read(joinpath(abpath(),"data/wn_eff05_short_RozMac.csv"), DataFrame)
+wn_data06_short_RozMac = CSV.read(joinpath(abpath(),"data/wn_eff06_short_RozMac.csv"), DataFrame)
+wn_data07_short_RozMac = CSV.read(joinpath(abpath(),"data/wn_eff07_short_RozMac.csv"), DataFrame)
+wn_data05_long_RozMac = CSV.read(joinpath(abpath(),"data/wn_eff05_long_RozMac.csv"), DataFrame)
+wn_data06_long_RozMac = CSV.read(joinpath(abpath(),"data/wn_eff06_long_RozMac.csv"), DataFrame)
+wn_data07_long_RozMac = CSV.read(joinpath(abpath(),"data/wn_eff07_long_RozMac.csv"), DataFrame)
 
-let 
-    solfast = RozMac_pert(1.0, 0.6, 1.0, 0.0, 1, 10000.0, 9000.0:1.0:10000.0)
-    solslow = RozMac_pert(0.6, 0.6, 1.0, 0.0, 1, 10000.0, 9000.0:1.0:10000.0)
-    lrange = 0:1:40
-    acffast = autocor(solfast[2, 1:end], collect(lrange))
-    acfslow = autocor(solslow[2, 1:end], collect(lrange))
-    acffigure = figure()
-    subplot(2,1,1)
-    plot(collect(lrange), acffast)
-    hlines(0.0,0.0,40.0, linestyles=`dashed`, linewidths=0.5)
-    ylim(-1,1)
-    xlim(0,40)
-    xlabel("Lag")
-    ylabel("ACF")
-    subplot(2,1,2)
-    plot(collect(lrange), acfslow)
-    hlines(0.0,0.0,40.0, linestyles=`dashed`, linewidths=0.5)
-    ylim(-1,1)
-    xlim(0,40)
-    xlabel("Lag")
-    ylabel("ACF")
+let
+    figure4 = figure(figsize = (7,2.5))
+    subplot(1,3,1)
+    plot(1 ./ wn_data05_short_RozMac.xrange, wn_data05_short_RozMac.canard, color = "black", linestyle = "dashed")
+    plot(1 ./ wn_data05_long_RozMac.xrange, wn_data05_long_RozMac.canard, color = "black", linestyle = "dotted")
+    ylabel("Proportion with\nquasi-canard")
+    xlabel("1/ϵ")
+    ylim(0,1)
+    subplot(1,3,2)
+    plot(1 ./ wn_data06_short_RozMac.xrange, wn_data06_short_RozMac.canard, color = "black", linestyle = "dashed")
+    plot(1 ./ wn_data06_long_RozMac.xrange, wn_data06_long_RozMac.canard, color = "black", linestyle = "dotted")
+    ylim(0,1)
+    xlabel("1/ϵ")
+    subplot(1,3,3)
+    plot(1 ./ wn_data07_short_RozMac.xrange, wn_data07_short_RozMac.canard, color = "black", linestyle = "dashed")
+    plot(1 ./ wn_data07_long_RozMac.xrange, wn_data07_long_RozMac.canard, color = "black", linestyle = "dotted")
+    xlabel("1/ϵ")
+    ylim(0,1)
     tight_layout()
-    return acffigure
+    return figure4
+    # savefig(joinpath(abpath(), "figs/canard_whitenoise_prop.pdf"))
 end
 
 
+# Figure 5 Red Noise
 
-# conf = 1.96/sqrt(length(solend))
-let
-    figure()
-    subplot(1,2,1)
-    bar(collect(lrange), acf)
-    # hlines(0 + conf, 0, maximum(lrange))
-    # hlines(0 - conf, 0, maximum(lrange))
-    ylim(-1,1)
-    xlabel("Lag")
-    ylabel("ACF")
-    subplot(1,2,2)
-    plot(soldis.t, soldis.u)
-    gcf()
-end
+rn_data_ep0004eff05_RozMac = CSV.read(joinpath(abpath(),"data/rn_ep0004eff05_RozMac.csv"), DataFrame)
+rn_data_ep0004eff06_RozMac = CSV.read(joinpath(abpath(),"data/rn_ep0004eff06_RozMac.csv"), DataFrame)
+rn_data_ep0004eff07_RozMac = CSV.read(joinpath(abpath(),"data/rn_ep0004eff07_RozMac.csv"), DataFrame)
+rn_data_ep0079eff05_RozMac = CSV.read(joinpath(abpath(),"data/rn_ep0079eff05_RozMac.csv"), DataFrame)
+rn_data_ep0079eff06_RozMac = CSV.read(joinpath(abpath(),"data/rn_ep0079eff06_RozMac.csv"), DataFrame)
+rn_data_ep0079eff07_RozMac = CSV.read(joinpath(abpath(),"data/rn_ep0079eff07_RozMac.csv"), DataFrame)
 
-let 
-    imagdata = imag_epx_data(0.6)
-    imagfig = figure()
-    plot(imagdata[:,1], imagdata[:,2])
-    xlabel("1/ε", fontsize = 15)
-    ylabel("Imag", fontsize = 15)
-    return imagfig
-end
-
-let 
-    realdata = real_epx_data(0.6)
-    realfig = figure()
-    plot(realdata[:,1], realdata[:,2])
-    xlabel("1/ε", fontsize = 15)
-    ylabel("Real", fontsize = 15)
-    return realfig
-end
-
-# Figure 3 (white noise and isoclines)
-using DataFrames
-using CSV
-
-wn_data05_short = CSV.read("/home/chrisgg/julia/TimeDelays/data/wn_eff05_short.csv", DataFrame)
-wn_data07_short = CSV.read("/home/chrisgg/julia/TimeDelays/data/wn_eff07_short.csv", DataFrame)
-wn_data06_short = CSV.read("/home/chrisgg/julia/TimeDelays/data/wn_eff06_short.csv", DataFrame)
-wn_data08_short = CSV.read("/home/chrisgg/julia/TimeDelays/data/wn_eff08_short.csv", DataFrame)
-wn_data05_long = CSV.read("/home/chrisgg/julia/TimeDelays/data/wn_eff05_long.csv", DataFrame)
-wn_data06_long = CSV.read("/home/chrisgg/julia/TimeDelays/data/wn_eff06_long.csv", DataFrame)
-wn_data07_long = CSV.read("/home/chrisgg/julia/TimeDelays/data/wn_eff07_long.csv", DataFrame)
-wn_data08_long = CSV.read("/home/chrisgg/julia/TimeDelays/data/wn_eff08_long.csv", DataFrame)
 
 let
-    figure3 = figure(figsize = (8,5))
+    figure5 = figure(figsize = (8,4))
+    subplot(2,3,1)
+    fill_between(rn_data_ep0079eff05_RozMac.xrange, rn_data_ep0079eff05_RozMac.canard, color="#440154FF")
+    fill_between(rn_data_ep0079eff05_RozMac.xrange, rn_data_ep0079eff05_RozMac.canard, rn_data_ep0079eff05_RozMac.canard_plus_axial, color="#73D055FF")
+    fill_between(rn_data_ep0079eff05_RozMac.xrange, fill(1.0,91), rn_data_ep0079eff05_RozMac.canard_plus_axial, color="#FDE725FF")
+    ylabel("Proportion")
+    ylim(0,1)
+    subplot(2,3,2)
+    fill_between(rn_data_ep0079eff06_RozMac.xrange, rn_data_ep0079eff06_RozMac.canard, color="#440154FF")
+    fill_between(rn_data_ep0079eff06_RozMac.xrange, rn_data_ep0079eff06_RozMac.canard, rn_data_ep0079eff06_RozMac.canard_plus_axial, color="#73D055FF")
+    fill_between(rn_data_ep0079eff06_RozMac.xrange, fill(1.0,91), rn_data_ep0079eff06_RozMac.canard_plus_axial, color="#FDE725FF")
+    xlabel("Noise correlation (t = -1)")
+    ylim(0,1)
+    subplot(2,3,3)
+    fill_between(rn_data_ep0079eff07_RozMac.xrange, rn_data_ep0079eff07_RozMac.canard, color="#440154FF")
+    fill_between(rn_data_ep0079eff07_RozMac.xrange, rn_data_ep0079eff07_RozMac.canard, rn_data_ep0079eff07_RozMac.canard_plus_axial, color="#73D055FF")
+    fill_between(rn_data_ep0079eff07_RozMac.xrange, fill(1.0,91), rn_data_ep0079eff07_RozMac.canard_plus_axial, color="#FDE725FF")
+    ylim(0,1)
+
+    subplot(2,3,4)
+    fill_between(rn_data_ep0004eff05_RozMac.xrange, rn_data_ep0004eff05_RozMac.canard, color="#440154FF")
+    fill_between(rn_data_ep0004eff05_RozMac.xrange, rn_data_ep0004eff05_RozMac.canard, rn_data_ep0004eff05_RozMac.canard_plus_axial, color="#73D055FF")
+    fill_between(rn_data_ep0004eff05_RozMac.xrange, fill(1.0,91), rn_data_ep0004eff05_RozMac.canard_plus_axial, color="#FDE725FF")
+    ylabel("Proportion")
+    ylim(0,1)
+    subplot(2,3,5)
+    fill_between(rn_data_ep0004eff06_RozMac.xrange, rn_data_ep0004eff06_RozMac.canard, color="#440154FF")
+    fill_between(rn_data_ep0004eff06_RozMac.xrange, rn_data_ep0004eff06_RozMac.canard, rn_data_ep0004eff06_RozMac.canard_plus_axial, color="#73D055FF")
+    fill_between(rn_data_ep0004eff06_RozMac.xrange, fill(1.0,91), rn_data_ep0004eff06_RozMac.canard_plus_axial, color="#FDE725FF")
+    xlabel("Noise correlation (t = -1)")
+    ylim(0,1)
+    subplot(2,3,6)
+    fill_between(rn_data_ep0004eff07_RozMac.xrange, rn_data_ep0004eff07_RozMac.canard, color="#440154FF")
+    fill_between(rn_data_ep0004eff07_RozMac.xrange, rn_data_ep0004eff07_RozMac.canard, rn_data_ep0004eff07_RozMac.canard_plus_axial, color="#73D055FF")
+    fill_between(rn_data_ep0004eff07_RozMac.xrange, fill(1.0,91), rn_data_ep0004eff07_RozMac.canard_plus_axial, color="#FDE725FF")
+    ylim(0,1)
+    tight_layout()
+    annotate("a)", (20, 280), xycoords = "figure points", fontsize = 15)
+    annotate("b)", (205, 280), xycoords = "figure points", fontsize = 15)
+    annotate("c)", (385, 280), xycoords = "figure points", fontsize = 15)
+    annotate("d)", (20, 140), xycoords = "figure points", fontsize = 15)
+    annotate("e)", (205, 140), xycoords = "figure points", fontsize = 15)
+    annotate("f)", (385, 140), xycoords = "figure points", fontsize = 15)
+    return figure5
+    # savefig(joinpath(abpath(), "figs/canard_rednoise_prop.pdf"))
+end
+
+
+
+# Figure 6 (schematic B)
+let 
+    figure6 = figure(figsize = (3,4))
+    subplot(2,1,1)
+    roz_mac_plot(0.01, 0.48, 2, 0.3)
+    subplot(2,1,2)
+    roz_mac_plot(0.01, 0.48, 2, 0.3)
+    tight_layout()
+    # return figure6
+    savefig(joinpath(abpath(), "figs/ratchet_schematic.pdf"))
+end
+
+
+## Supporting Information
+
+#SI Figure 1 (illustration of quasi-canard finder algorithm)
+let
+    sol_qc = RozMac_pert(0.01, 0.55, 1, 0.7, 45, 1500.0, 0.0:1.0:1500.0)
+    figure2 = figure(figsize=(7,5))
+    iso_plot(0.0:0.1:3.0, RozMacPar(e = 0.55))  
+    plot(sol_qc[1, :], sol_qc[2, :], color = "#440154FF", linewidth=5)
+    xlabel("Resource", fontsize=15)
+    ylabel("Consumer", fontsize=15)
+    ylim(0, 2.5)
+    xlim(0, 3)
+    # return figure2
+    savefig(joinpath(abpath(), "figs/quasicanardfinder.pdf"))
+end
+
+#Figure S  Isoclines
+let
     subplot(2,3,1)
     iso_plot(0.0:0.1:3.0, RozMacPar(e = 0.5))
     title("Non-excitable\n(Real λ)")
@@ -155,83 +248,87 @@ let
     xlabel("Resource")
     ylim(0,2.5)
     xlim(0.0,3.0)
-    subplot(2,3,4)
-    plot(1 ./ wn_data05_short.xrange, wn_data05_short.canard, color = "black", linestyle = "dashed")
-    plot(1 ./ wn_data05_long.xrange, wn_data05_long.canard, color = "black", linestyle = "dotted")
+end
+
+
+# Figure  (white noise Yodiz & Innes model)
+wn_R12_short_YodInn = CSV.read(joinpath(abpath(),"data/wn_R12_short_YodInn.csv"), DataFrame)
+wn_R10_short_YodInn = CSV.read(joinpath(abpath(),"data/wn_R10_short_YodInn.csv"), DataFrame)
+wn_R08_short_YodInn = CSV.read(joinpath(abpath(),"data/wn_R08_short_YodInn.csv"), DataFrame)
+wn_R12_long_YodInn = CSV.read(joinpath(abpath(),"data/wn_R12_long_YodInn.csv"), DataFrame)
+wn_R10_long_YodInn = CSV.read(joinpath(abpath(),"data/wn_R10_long_YodInn.csv"), DataFrame)
+wn_R08_long_YodInn = CSV.read(joinpath(abpath(),"data/wn_R08_long_YodInn.csv"), DataFrame)
+
+let
+    figure4 = figure(figsize = (7,2.5))
+    subplot(1,3,1)
+    plot(1 ./ wn_R12_short_YodInn.xrange, wn_R12_short_YodInn.canard, color = "black", linestyle = "dashed")
+    plot(1 ./ wn_R12_long_YodInn.xrange, wn_R12_long_YodInn.canard, color = "black", linestyle = "dotted")
     ylabel("Proportion with\nquasi-canard")
     xlabel("1/ϵ")
     ylim(0,1)
-    subplot(2,3,5)
-    plot(1 ./ wn_data06_short.xrange, wn_data06_short.canard, color = "black", linestyle = "dashed")
-    plot(1 ./ wn_data06_long.xrange, wn_data06_long.canard, color = "black", linestyle = "dotted")
+    subplot(1,3,2)
+    plot(1 ./ wn_R10_short_YodInn.xrange, wn_R10_short_YodInn.canard, color = "black", linestyle = "dashed")
+    plot(1 ./ wn_R10_long_YodInn.xrange, wn_R10_long_YodInn.canard, color = "black", linestyle = "dotted")
     ylim(0,1)
     xlabel("1/ϵ")
-    subplot(2,3,6)
-    plot(1 ./ wn_data07_short.xrange, wn_data07_short.canard, color = "black", linestyle = "dashed")
-    plot(1 ./ wn_data07_long.xrange, wn_data07_long.canard, color = "black", linestyle = "dotted")
+    subplot(1,3,3)
+    plot(1 ./ wn_R08_short_YodInn.xrange, wn_R08_short_YodInn.canard, color = "black", linestyle = "dashed")
+    plot(1 ./ wn_R08_long_YodInn.xrange, wn_R08_long_YodInn.canard, color = "black", linestyle = "dotted")
     xlabel("1/ϵ")
     ylim(0,1)
     tight_layout()
-    annotate("a)", (32, 330), xycoords = "figure points", fontsize = 15)
-    annotate("b)", (200, 330), xycoords = "figure points", fontsize = 15)
-    annotate("c)", (370, 330), xycoords = "figure points", fontsize = 15)
-    annotate("d)", (32, 165), xycoords = "figure points", fontsize = 15)
-    annotate("e)", (200, 165), xycoords = "figure points", fontsize = 15)
-    annotate("f)", (370, 165), xycoords = "figure points", fontsize = 15)
-
-    return figure3
+    return figure4
     # savefig(joinpath(abpath(), "figs/canard_whitenoise_prop.pdf"))
 end
 
 
-# Figure 4
+# Figure 5 Red Noise
 
-rn_data_ep0004eff05 = CSV.read("/home/chrisgg/julia/TimeDelays/data/rn_ep0004eff05.csv", DataFrame)
-rn_data_ep0004eff06 = CSV.read("/home/chrisgg/julia/TimeDelays/data/rn_ep0004eff06.csv", DataFrame)
-rn_data_ep0004eff07 = CSV.read("/home/chrisgg/julia/TimeDelays/data/rn_ep0004eff07.csv", DataFrame)
-rn_data_ep0079eff05 = CSV.read("/home/chrisgg/julia/TimeDelays/data/rn_ep0079eff05.csv", DataFrame)
-rn_data_ep0079eff06 = CSV.read("/home/chrisgg/julia/TimeDelays/data/rn_ep0079eff06.csv", DataFrame)
-rn_data_ep0079eff07 = CSV.read("/home/chrisgg/julia/TimeDelays/data/rn_ep0079eff07.csv", DataFrame)
+rn_ep00079R12_YodInn = CSV.read(joinpath(abpath(),"data/rn_ep00079R12_YodInn.csv"), DataFrame)
+rn_ep00079R10_YodInn = CSV.read(joinpath(abpath(),"data/rn_ep00079R10_YodInn.csv"), DataFrame)
+rn_ep00079R08_YodInn = CSV.read(joinpath(abpath(),"data/rn_ep00079R08_YodInn.csv"), DataFrame)
+rn_ep0004R12_YodInn = CSV.read(joinpath(abpath(),"data/rn_ep0004R12_YodInn.csv"), DataFrame)
+rn_ep0004R10_YodInn = CSV.read(joinpath(abpath(),"data/rn_ep0004R10_YodInn.csv"), DataFrame)
+rn_ep0004R08_YodInn = CSV.read(joinpath(abpath(),"data/rn_ep0004R08_YodInn.csv"), DataFrame)
 
 
 let
-    figure4 = figure(figsize = (8,4))
-   
-
+    figure5 = figure(figsize = (8,4))
     subplot(2,3,1)
-    fill_between(rn_data_ep0079eff05.xrange, rn_data_ep0079eff05.canard, color="#440154FF")
-    fill_between(rn_data_ep0079eff05.xrange, rn_data_ep0079eff05.canard, rn_data_ep0079eff05.canard_plus_axial, color="#73D055FF")
-    fill_between(rn_data_ep0079eff05.xrange, fill(1.0,91), rn_data_ep0079eff05.canard_plus_axial, color="#FDE725FF")
+    fill_between(rn_ep00079R12_YodInn.xrange, rn_ep00079R12_YodInn.canard, color="#440154FF")
+    fill_between(rn_ep00079R12_YodInn.xrange, rn_ep00079R12_YodInn.canard, rn_ep00079R12_YodInn.canard_plus_axial, color="#73D055FF")
+    fill_between(rn_ep00079R12_YodInn.xrange, fill(1.0,91), rn_ep00079R12_YodInn.canard_plus_axial, color="#FDE725FF")
     ylabel("Proportion")
     ylim(0,1)
     subplot(2,3,2)
-    fill_between(rn_data_ep0079eff06.xrange, rn_data_ep0079eff06.canard, color="#440154FF")
-    fill_between(rn_data_ep0079eff06.xrange, rn_data_ep0079eff06.canard, rn_data_ep0079eff06.canard_plus_axial, color="#73D055FF")
-    fill_between(rn_data_ep0079eff06.xrange, fill(1.0,91), rn_data_ep0079eff06.canard_plus_axial, color="#FDE725FF")
+    fill_between(rn_ep00079R10_YodInn.xrange, rn_ep00079R10_YodInn.canard, color="#440154FF")
+    fill_between(rn_ep00079R10_YodInn.xrange, rn_ep00079R10_YodInn.canard, rn_ep00079R10_YodInn.canard_plus_axial, color="#73D055FF")
+    fill_between(rn_ep00079R10_YodInn.xrange, fill(1.0,91), rn_ep00079R10_YodInn.canard_plus_axial, color="#FDE725FF")
     xlabel("Noise correlation (t = -1)")
     ylim(0,1)
     subplot(2,3,3)
-    fill_between(rn_data_ep0079eff07.xrange, rn_data_ep0079eff07.canard, color="#440154FF")
-    fill_between(rn_data_ep0079eff07.xrange, rn_data_ep0079eff07.canard, rn_data_ep0079eff07.canard_plus_axial, color="#73D055FF")
-    fill_between(rn_data_ep0079eff07.xrange, fill(1.0,91), rn_data_ep0079eff07.canard_plus_axial, color="#FDE725FF")
+    fill_between(rn_ep00079R08_YodInn.xrange, rn_ep00079R08_YodInn.canard, color="#440154FF")
+    fill_between(rn_ep00079R08_YodInn.xrange, rn_ep00079R08_YodInn.canard, rn_ep00079R08_YodInn.canard_plus_axial, color="#73D055FF")
+    fill_between(rn_ep00079R08_YodInn.xrange, fill(1.0,91), rn_ep00079R08_YodInn.canard_plus_axial, color="#FDE725FF")
     ylim(0,1)
 
     subplot(2,3,4)
-    fill_between(rn_data_ep0004eff05.xrange, rn_data_ep0004eff05.canard, color="#440154FF")
-    fill_between(rn_data_ep0004eff05.xrange, rn_data_ep0004eff05.canard, rn_data_ep0004eff05.canard_plus_axial, color="#73D055FF")
-    fill_between(rn_data_ep0004eff05.xrange, fill(1.0,91), rn_data_ep0004eff05.canard_plus_axial, color="#FDE725FF")
+    fill_between(rn_ep0004R12_YodInn.xrange, rn_ep0004R12_YodInn.canard, color="#440154FF")
+    fill_between(rn_ep0004R12_YodInn.xrange, rn_ep0004R12_YodInn.canard, rn_ep0004R12_YodInn.canard_plus_axial, color="#73D055FF")
+    fill_between(rn_ep0004R12_YodInn.xrange, fill(1.0,91), rn_ep0004R12_YodInn.canard_plus_axial, color="#FDE725FF")
     ylabel("Proportion")
     ylim(0,1)
     subplot(2,3,5)
-    fill_between(rn_data_ep0004eff06.xrange, rn_data_ep0004eff06.canard, color="#440154FF")
-    fill_between(rn_data_ep0004eff06.xrange, rn_data_ep0004eff06.canard, rn_data_ep0004eff06.canard_plus_axial, color="#73D055FF")
-    fill_between(rn_data_ep0004eff06.xrange, fill(1.0,91), rn_data_ep0004eff06.canard_plus_axial, color="#FDE725FF")
+    fill_between(rn_ep0004R10_YodInn.xrange, rn_ep0004R10_YodInn.canard, color="#440154FF")
+    fill_between(rn_ep0004R10_YodInn.xrange, rn_ep0004R10_YodInn.canard, rn_ep0004R10_YodInn.canard_plus_axial, color="#73D055FF")
+    fill_between(rn_ep0004R10_YodInn.xrange, fill(1.0,91), rn_ep0004R10_YodInn.canard_plus_axial, color="#FDE725FF")
     xlabel("Noise correlation (t = -1)")
     ylim(0,1)
     subplot(2,3,6)
-    fill_between(rn_data_ep0004eff07.xrange, rn_data_ep0004eff07.canard, color="#440154FF")
-    fill_between(rn_data_ep0004eff07.xrange, rn_data_ep0004eff07.canard, rn_data_ep0004eff07.canard_plus_axial, color="#73D055FF")
-    fill_between(rn_data_ep0004eff07.xrange, fill(1.0,91), rn_data_ep0004eff07.canard_plus_axial, color="#FDE725FF")
+    fill_between(rn_ep0004R08_YodInn.xrange, rn_ep0004R08_YodInn.canard, color="#440154FF")
+    fill_between(rn_ep0004R08_YodInn.xrange, rn_ep0004R08_YodInn.canard, rn_ep0004R08_YodInn.canard_plus_axial, color="#73D055FF")
+    fill_between(rn_ep0004R08_YodInn.xrange, fill(1.0,91), rn_ep0004R08_YodInn.canard_plus_axial, color="#FDE725FF")
     ylim(0,1)
     tight_layout()
     annotate("a)", (20, 280), xycoords = "figure points", fontsize = 15)
@@ -240,39 +337,6 @@ let
     annotate("d)", (20, 140), xycoords = "figure points", fontsize = 15)
     annotate("e)", (205, 140), xycoords = "figure points", fontsize = 15)
     annotate("f)", (385, 140), xycoords = "figure points", fontsize = 15)
-    
-    return figure4
+    return figure5
     # savefig(joinpath(abpath(), "figs/canard_rednoise_prop.pdf"))
-end
-
-
-
-# Figure 5 (schematic B)
-
-let 
-    figure5 = figure(figsize = (3,4))
-    subplot(2,1,1)
-    roz_mac_plot(0.01, 0.48, 2, 0.3)
-    subplot(2,1,2)
-    roz_mac_plot(0.01, 0.48, 2, 0.3)
-    tight_layout()
-    # return figure5
-    savefig(joinpath(abpath(), "figs/figure5.pdf"))
-end
-
-
-## Supporting Information
-
-#SI Figure 1 (illustration of quasi-canard finder algorithm)
-let
-    sol_qc = RozMac_pert(0.01, 0.55, 1, 0.7, 45, 1500.0, 0.0:1.0:1500.0)
-    figure2 = figure(figsize=(7,5))
-    iso_plot(0.0:0.1:3.0, RozMacPar(e = 0.55))  
-    plot(sol_qc[1, :], sol_qc[2, :], color = "#440154FF", linewidth=5)
-    xlabel("Resource", fontsize=15)
-    ylabel("Consumer", fontsize=15)
-    ylim(0, 2.5)
-    xlim(0, 3)
-    # return figure2
-    savefig(joinpath(abpath(), "figs/quasicanardfinder.pdf"))
 end

@@ -1,40 +1,35 @@
 #Increase the number of threads by going to Julia Extension settings in VS Code or setting the environment variable in bash
-
-using CSV
-using DataFrames
-
-
 include("packages.jl")
 include("slowfast_commoncode.jl")
 include("slowfast_metabolicmodel.jl")
 include("slowfast_canardfinder.jl")
 
-# function iso_plot_yodinn(resrange, par)
-#     data = [res_iso_yodinn(R, par) for R in resrange]
-#     plot(collect(resrange), data)
-#     return vlines(con_iso_yodinn(par), 0.0, maximum(data), colors="orange")
-# end
+function iso_plot_yodinn(resrange, par)
+    data = [res_iso_yodinn(R, par) for R in resrange]
+    plot(collect(resrange), data)
+    return vlines(con_iso_yodinn(par), 0.0, maximum(data), colors="orange")
+end
 
 
-# function pert_YodInn_phase_plot(ep, R0, freq, r, seed, tsend, tvals)
-#     sol = YodInn_pert(ep, R0, freq, r, seed, tsend, tvals)
-#     plot(sol[1, :], sol[2, :], color = "green")
-#     xlabel("Resource")
-#     return ylabel("Consumer")
-# end
+function pert_YodInn_phase_plot(ep, R0, freq, r, seed, tsend, tvals)
+    sol = YodInn_pert(ep, R0, freq, r, seed, tsend, tvals)
+    plot(sol[1, :], sol[2, :], color = "green")
+    xlabel("Resource")
+    return ylabel("Consumer")
+end
 
-# let 
-#     ep = 0.01
-#     R0 = 0.8
-#     corr = 0.0
-#     ran = 18
-#     tsend = 24000.0
-#     println(cf_returnmap("YodInn", ep, R0, 1, corr, ran, tsend, 0.0:1.0:tsend))
-#     test = figure()
-#     iso_plot_yodinn(0.0:0.1:3.0, YodInnScalePar(R₀ = R0))
-#     pert_YodInn_phase_plot(ep, R0, 1, corr, ran, tsend, 0.0:1.0:tsend)
-#     return test
-# end
+let 
+    ep = 0.0000001 #max ep for YodInn 0.0000001
+    R0 = 0.8
+    corr = 0.0
+    ran = 18
+    tsend = 12000.0
+    println(cf_returnmap("YodInn", ep, R0, 1, corr, ran, tsend, 0.0:1.0:tsend))
+    test = figure()
+    iso_plot_yodinn(0.0:0.1:3.0, YodInnScalePar(R₀ = R0))
+    pert_YodInn_phase_plot(ep, R0, 1, corr, ran, tsend, 0.0:1.0:tsend)
+    return test
+end
 
 
 # let 
@@ -73,7 +68,7 @@ function prop_canard_whitenoise_data(model, effR0, iter, tsend)
     if model == "RozMac"
         epsilon_range = 0.001:0.001:0.15
     elseif model =="YodInn"
-        epsilon_range = 0.0001:0.0001:0.01
+        epsilon_range = 0.0000001:0.00001:0.001
     else
         error("model must be either RozMac or YodInn")
     end
@@ -85,6 +80,7 @@ function prop_canard_whitenoise_data(model, effR0, iter, tsend)
 end
 
 ### RozMac model
+##NOTE maybe change 0.6 to 0.65 (easier to see in prop real graph)
 begin
     wn_eff05_short_RozMac = prop_canard_whitenoise_data("RozMac",0.5, 1000, 6000.0)
     CSV.write(joinpath(abpath(), "data/wn_eff05_short_RozMac.csv"), wn_eff05_short_RozMac)

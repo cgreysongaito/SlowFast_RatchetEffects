@@ -11,3 +11,5 @@ using StatsBase
 using Random
 using SymPy
 using PyPlot
+using DataFrames
+using CSV
