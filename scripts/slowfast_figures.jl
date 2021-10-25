@@ -2,67 +2,7 @@ include("packages.jl")
 include("slowfast_commoncode.jl")
 include("slowfast_eigen.jl")
 
-
-#Figure 2 Proportion Real & ACF plots of quasi-cycles.
-RCdividedata = findRCdivide_epx_data()
-let
-    prop_real_smalldelep = figure(figsize=(4,3))
-    plot(RCdividedata[:,1], RCdividedata[:,2], color = "black")
-    # fill_between(data[:,1], data[:,2], color = "blue", alpha=0.3)
-    # fill_between(data[:,1], fill(1.0, length(data[:,2])), data[:,2], color = "orange", alpha=0.3)
-    xlim(0,10)
-    ylim(0.0,1.0)
-    xticks(fontsize=12)
-    yticks(fontsize=12)
-    ylabel("Proportion Real", fontsize = 12)
-    xlabel("1/ε", fontsize = 12)
-    # return prop_real_smalldelep
-    savefig(joinpath(abpath(), "figs/epsilonxaxis_propReal_smalldelep.pdf"))
-end
-
-let
-    prop_real_largedelep = figure(figsize=(4,3))
-    plot(RCdividedata[:,1], RCdividedata[:,2], color = "black")
-    hlines(converteff_prop_RCdivide(0.5), 0.0, 1000.0, linestyles=`dashed`, linewidths=0.5)
-    hlines(converteff_prop_RCdivide(0.65), 0.0, 1000.0, linestyles=`dashed`, linewidths=0.5)
-    hlines(converteff_prop_RCdivide(0.7), 0.0, 1000.0, linestyles=`dashed`, linewidths=0.5)
-    xlim(-10,1000)
-    ylim(0.0,1.0)
-    xticks(fontsize=12)
-    yticks(fontsize=12)
-    ylabel("Proportion Real", fontsize = 12)
-    xlabel("1/ε", fontsize = 12)
-    return prop_real_largedelep
-    # savefig(joinpath(abpath(), "figs/epsilonxaxis_propReal_largedelep.pdf"))
-end
-
-let 
-    solfast = RozMac_pert(1.0, 0.6, 1.0, 0.0, 1, 10000.0, 9000.0:1.0:10000.0)
-    solslow = RozMac_pert(0.6, 0.6, 1.0, 0.0, 1, 10000.0, 9000.0:1.0:10000.0)
-    lrange = 0:1:40
-    acffast = autocor(solfast[2, 1:end], collect(lrange))
-    acfslow = autocor(solslow[2, 1:end], collect(lrange))
-    acffigure = figure(figsize = (6,2.5))
-    subplot(1,2,1)
-    plot(collect(lrange), acffast, color = "black")
-    hlines(0.0,0.0,40.0, linestyles=`dashed`, linewidths=0.5)
-    ylim(-1,1)
-    xlim(0,40)
-    xlabel("Lag")
-    ylabel("ACF")
-    subplot(1,2,2)
-    plot(collect(lrange), acfslow, color = "black")
-    hlines(0.0,0.0,40.0, linestyles=`dashed`, linewidths=0.5)
-    ylim(-1,1)
-    xlim(0,40)
-    xlabel("Lag")
-    ylabel("ACF")
-    tight_layout()
-    # return acffigure
-    savefig(joinpath(abpath(), "figs/quasicycles_ACF.pdf"))
-end
-
-# Figure 3 (primer of different trajectories)
+# Figure 2 (primer of different trajectories)
 let
     sol_axial = RozMac_pert(0.01, 0.48, 1, 0.8, 9, 2500.0, 0.0:2.0:2500.0)
     sol_qc = RozMac_pert(0.01, 0.48, 1, 0.8, 6, 3600.0, 2500.0:1.0:3100.0)
@@ -106,6 +46,67 @@ let
     # savefig(joinpath(abpath(), "figs/phase_timeseries_examples.pdf"))
 end
 
+#Figure 3 Proportion Real & ACF plots of quasi-cycles.
+RCdividedata = findRCdivide_epx_data()
+let
+    prop_real_smalldelep = figure(figsize=(4,3))
+    plot(RCdividedata[:,1], RCdividedata[:,2], color = "black")
+    # fill_between(data[:,1], data[:,2], color = "blue", alpha=0.3)
+    # fill_between(data[:,1], fill(1.0, length(data[:,2])), data[:,2], color = "orange", alpha=0.3)
+    xlim(0,10)
+    ylim(0.0,1.0)
+    xticks(fontsize=12)
+    yticks(fontsize=12)
+    ylabel("Proportion Real", fontsize = 12)
+    xlabel("1/ε", fontsize = 12)
+    # return prop_real_smalldelep
+    savefig(joinpath(abpath(), "figs/epsilonxaxis_propReal_smalldelep.pdf"))
+end
+
+function quasicycle_data(ep, reps)
+    lrange = 0:1:40
+    ACFdata = Vector{Vector{Float64}}(undef,reps)
+    avprep = zeros(reps)
+    avfinal = zeros(length(lrange))
+    @threads for i in 1:reps
+        sol = RozMac_pert(ep, 0.6, 1.0, 0.0, i, 10000.0, 9000.0:1.0:10000.0)
+        @inbounds ACFdata[i] = autocor(sol[2, 1:end], collect(lrange))
+    end
+    for j in 1:length(lrange)
+        for l in 1:reps
+        avprep[l] = ACFdata[l][j]
+        end
+        avfinal[j] = mean(avprep)
+    end
+    return avfinal
+end
+
+let 
+    lrange = 0:1:40
+    acffast = quasicycle_data(1.0, 1000)
+    acfslow = quasicycle_data(0.6, 1000)
+    acffigure = figure(figsize = (6,2.5))
+    subplot(1,2,1)
+    plot(collect(lrange), acffast, color = "black")
+    hlines(0.0,0.0,40.0, linestyles=`dashed`, linewidths=0.5)
+    ylim(-1,1)
+    xlim(0,40)
+    xlabel("Lag")
+    ylabel("Average ACF")
+    subplot(1,2,2)
+    plot(collect(lrange), acfslow, color = "black")
+    hlines(0.0,0.0,40.0, linestyles=`dashed`, linewidths=0.5)
+    ylim(-1,1)
+    xlim(0,40)
+    xlabel("Lag")
+    ylabel("Average ACF")
+    tight_layout()
+    # return acffigure
+    savefig(joinpath(abpath(), "figs/quasicycles_ACF.pdf"))
+end
+
+
+
 # Figure 4 (white noise and prop real large delta ep)
 wn_data05_short_RozMac = CSV.read(joinpath(abpath(),"data/wn_eff05_short_RozMac.csv"), DataFrame)
 wn_data06_short_RozMac = CSV.read(joinpath(abpath(),"data/wn_eff06_short_RozMac.csv"), DataFrame)
@@ -113,6 +114,23 @@ wn_data07_short_RozMac = CSV.read(joinpath(abpath(),"data/wn_eff07_short_RozMac.
 wn_data05_long_RozMac = CSV.read(joinpath(abpath(),"data/wn_eff05_long_RozMac.csv"), DataFrame)
 wn_data06_long_RozMac = CSV.read(joinpath(abpath(),"data/wn_eff06_long_RozMac.csv"), DataFrame)
 wn_data07_long_RozMac = CSV.read(joinpath(abpath(),"data/wn_eff07_long_RozMac.csv"), DataFrame)
+
+
+let
+    prop_real_largedelep = figure(figsize=(4,3))
+    plot(RCdividedata[:,1], RCdividedata[:,2], color = "black")
+    hlines(converteff_prop_RCdivide(0.5), 0.0, 1000.0, linestyles=`dashed`, linewidths=0.5)
+    hlines(converteff_prop_RCdivide(0.65), 0.0, 1000.0, linestyles=`dashed`, linewidths=0.5)
+    hlines(converteff_prop_RCdivide(0.7), 0.0, 1000.0, linestyles=`dashed`, linewidths=0.5)
+    xlim(-10,1000)
+    ylim(0.0,1.0)
+    xticks(fontsize=12)
+    yticks(fontsize=12)
+    ylabel("Proportion Real", fontsize = 12)
+    xlabel("1/ε", fontsize = 12)
+    # return prop_real_largedelep
+    savefig(joinpath(abpath(), "figs/epsilonxaxis_propReal_largedelep.pdf"))
+end
 
 let
     figure4 = figure(figsize = (7,2.5))
@@ -229,25 +247,29 @@ end
 
 #Figure S  Isoclines
 let
-    subplot(2,3,1)
+    isoclines = figure(figsize = (6,2.5))
+    subplot(1,3,1)
     iso_plot(0.0:0.1:3.0, RozMacPar(e = 0.5))
     title("Non-excitable\n(Real λ)")
     ylim(0,2.5)
     xlim(0.0,3.0)
     ylabel("Consumer")
     xlabel("Resource")
-    subplot(2,3,2)
-    iso_plot(0.0:0.1:3.0, RozMacPar(e = 0.6))
+    subplot(1,3,2)
+    iso_plot(0.0:0.1:3.0, RozMacPar(e = 0.65))
     title("Excitable\n(Complex λ)")
     xlabel("Resource")
     ylim(0,2.5)
     xlim(0.0,3.0)
-    subplot(2,3,3)
+    subplot(1,3,3)
     iso_plot(0.0:0.1:3.0, RozMacPar(e = 0.7))
     title("Excitable\n(Near Hopf)")
     xlabel("Resource")
     ylim(0,2.5)
     xlim(0.0,3.0)
+    tight_layout()
+    # return isoclines
+    savefig(joinpath(abpath(), "figs/isoclinesSI.pdf"))
 end
 
 

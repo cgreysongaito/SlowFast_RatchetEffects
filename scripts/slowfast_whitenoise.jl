@@ -84,8 +84,8 @@ end
 begin
     wn_eff05_short_RozMac = prop_canard_whitenoise_data("RozMac",0.5, 1000, 6000.0)
     CSV.write(joinpath(abpath(), "data/wn_eff05_short_RozMac.csv"), wn_eff05_short_RozMac)
-    wn_eff06_short_RozMac = prop_canard_whitenoise_data("RozMac", 0.6, 1000, 6000.0)
-    CSV.write(joinpath(abpath(), "data/wn_eff06_short_RozMac.csv"), wn_eff06_short_RozMac)
+    wn_eff065_short_RozMac = prop_canard_whitenoise_data("RozMac", 0.65, 1000, 6000.0)
+    CSV.write(joinpath(abpath(), "data/wn_eff065_short_RozMac.csv"), wn_eff065_short_RozMac)
     wn_eff07_short_RozMac = prop_canard_whitenoise_data("RozMac", 0.7, 1000, 6000.0)
     CSV.write(joinpath(abpath(), "data/wn_eff07_short_RozMac.csv"), wn_eff07_short_RozMac)
 end

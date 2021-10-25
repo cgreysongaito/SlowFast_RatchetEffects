@@ -35,8 +35,8 @@ end
 begin
     rn_ep0079eff05_RozMac = prop_canard_rednoise_data("RozMac", 0.079, 0.5, 1000)
     CSV.write(joinpath(abpath(), "data/rn_ep0079eff05_RozMac.csv"), rn_ep0079eff05_RozMac)
-    rn_ep0079eff06_RozMac = prop_canard_rednoise_data("RozMac",0.079, 0.6, 1000)
-    CSV.write(joinpath(abpath(),"data/rn_ep0079eff06_RozMac.csv"), rn_ep0079eff06_RozMac)
+    rn_ep0079eff065_RozMac = prop_canard_rednoise_data("RozMac",0.079, 0.65, 1000)
+    CSV.write(joinpath(abpath(),"data/rn_ep0079eff065_RozMac.csv"), rn_ep0079eff065_RozMac)
     rn_ep0079eff07_RozMac = prop_canard_rednoise_data("RozMac",0.079, 0.7, 1000)
     CSV.write(joinpath(abpath(), "data/rn_ep0079eff07_RozMac.csv"), rn_ep0079eff07_RozMac)
 end
@@ -44,8 +44,8 @@ end
 begin
     rn_ep0004eff05_RozMac = prop_canard_rednoise_data("RozMac",0.004, 0.5, 1000)
     CSV.write(joinpath(abpath(), "data/rn_ep0004eff05_RozMac.csv"), rn_ep0004eff05_RozMac)
-    rn_ep0004eff06_RozMac = prop_canard_rednoise_data("RozMac",0.004, 0.6, 1000)
-    CSV.write(joinpath(abpath(), "data/rn_ep0004eff06_RozMac.csv"), rn_ep0004eff06_RozMac)
+    rn_ep0004eff065_RozMac = prop_canard_rednoise_data("RozMac",0.004, 0.65, 1000)
+    CSV.write(joinpath(abpath(), "data/rn_ep0004eff065_RozMac.csv"), rn_ep0004eff065_RozMac)
     rn_ep0004eff07_RozMac = prop_canard_rednoise_data("RozMac",0.004, 0.7, 1000)
     CSV.write(joinpath(abpath(), "data/rn_ep0004eff07_RozMac.csv"), rn_ep0004eff07_RozMac)
 end

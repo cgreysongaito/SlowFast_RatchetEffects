@@ -27,7 +27,7 @@ function converteff_prop_RCdivide(eff)
     return finalprop
 end
 
-# # create graph of epsilon on x and efficiency value where RC divide by transposing graph of efficiency on x and epsilon value that creates RC divide
+# # 
 function findRCdivide_epx(ep, hopf, transcrit)
     par = RozMacPar()
     par.ε = ep
