@@ -52,19 +52,19 @@ end
 
 ### YodInn model
 begin
-    rn_ep00079R12_YodInn = prop_canard_rednoise_data("YodInn", 0.0079, 1.2, 1000)
+    rn_ep00079R12_YodInn = prop_canard_rednoise_data("YodInn", 0.0000004, 1.2, 1000)
     CSV.write(joinpath(abpath(), "data/rn_ep00079eR12_YodInn.csv"), rn_ep00079R12_YodInn)
-    rn_ep00079R10_YodInn = prop_canard_rednoise_data("YodInn", 0.0079, 1.0, 1000)
+    rn_ep00079R10_YodInn = prop_canard_rednoise_data("YodInn", 0.0000004, 1.0, 1000)
     CSV.write(joinpath(abpath(), "data/rn_ep00079eR10_YodInn.csv"), rn_ep00079R10_YodInn)
-    rn_ep00079R08_YodInn = prop_canard_rednoise_data("YodInn", 0.079, 0.8, 1000)
+    rn_ep00079R08_YodInn = prop_canard_rednoise_data("YodInn", 0.0000004, 0.8, 1000)
     CSV.write(joinpath(abpath(), "data/rn_ep00079R08_YodInn.csv"), rn_ep00079R08_YodInn)
 end
 
 begin
-    rn_ep0004R12_YodInn = prop_canard_rednoise_data("YodInn", 0.004, 1.2, 1000)
+    rn_ep0004R12_YodInn = prop_canard_rednoise_data("YodInn", 0.0000002, 1.2, 1000)
     CSV.write(joinpath(abpath(), "data/rn_ep0004R12_YodInn.csv"), rn_ep0004R12_YodInn)
-    rn_ep0004R10_YodInn = prop_canard_rednoise_data("YodInn", 0.004, 1.0, 1000)
+    rn_ep0004R10_YodInn = prop_canard_rednoise_data("YodInn", 0.0000002, 1.0, 1000)
     CSV.write(joinpath(abpath(), "data/rn_ep0004R10_YodInn.csv"), rn_ep0004R10_YodInn)
-    rn_ep0004R08_YodInn = prop_canard_rednoise_data("YodInn", 0.004, 0.8, 1000)
+    rn_ep0004R08_YodInn = prop_canard_rednoise_data("YodInn", 0.0000002, 0.8, 1000)
     CSV.write(joinpath(abpath(), "data/rn_ep0004R08_YodInn.csv"), rn_ep0004R08_YodInn)
 end

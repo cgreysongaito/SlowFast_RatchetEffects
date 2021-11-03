@@ -25,6 +25,12 @@ function yod_inn_scale_II!(du, u, p, t)
     return
 end
 
+function yod_inn_scale_II(u, par)
+    du = similar(u)
+    yod_inn_scale_II!(du, u, par, 0.0)
+    return du
+end
+
 function eq_yodinn_II(p)
     @unpack x, y, δ, k, R₀ = p
     eq_II_R = R₀ / (y - 1)
@@ -40,6 +46,12 @@ end
 function res_iso_yodinn(R, p)
     @unpack x, y, δ, R₀, k  = p
     (R*(R*δ - R + R₀*δ - R₀) + k*(-R*δ + R - R₀*δ + R₀))/(k*x*y)
+end
+
+function iso_plot_YodInn(resrange, par)
+    data = [res_iso_yodinn(R, par) for R in resrange]
+    plot(collect(resrange), data)
+    return vlines(con_iso_yodinn(par), 0, 0.5, colors="orange")
 end
 
 function YodInn_pert(ep, R0, freq, r, seed, tsend, tvals)
