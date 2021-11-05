@@ -1,6 +1,7 @@
 include("packages.jl")
 include("slowfast_commoncode.jl")
 include("slowfast_eigen.jl")
+include("slowfast_quasicycle.jl")
 
 # Figure 2 (primer of different trajectories)
 let
@@ -46,6 +47,48 @@ let
     # savefig(joinpath(abpath(), "figs/phase_timeseries_examples.pdf"))
 end
 
+#Box 1 figure
+let 
+    detqcyep = 1
+    qcaep = 0.01
+    eff = 0.7
+    u0 = [1.75,1.75]
+    detqcy_tend = 120.0
+    tspan = (0.0, detqcy_tend)
+    qca_tend = 1200.0
+
+    detprob = ODEProblem(roz_mac_II!, u0, tspan, RozMacPar(ε = detqcyep, e = eff))
+    detsol = DifferentialEquations.solve(detprob, reltol = 1e-8)
+    qcysol = RozMac_pert(detqcyep, eff, 1.0, 0.0, 1, detqcy_tend, 0.0:1.0:detqcy_tend)
+    qcasol = RozMac_pert(qcaep, eff, 1.0, 0.0, 123, qca_tend, 0.0:1.0:qca_tend)
+
+    box1figure = figure(figsize = (11, 3))
+    subplot(1,3,1)
+    plot(detsol.t, detsol.u)
+    xlabel("Time", fontsize = 15)
+    ylabel("Density", fontsize = 15)
+    ylim(0.5, 2.75)
+    xticks([0,20,40,60,80,100,120],fontsize=12)
+    yticks([0.5,1.0, 1.5, 2.0, 2.5], fontsize=12)
+    subplot(1,3,2)
+    plot(qcysol.t, qcysol.u)
+    xlabel("Time", fontsize = 15)
+    ylabel("Density", fontsize = 15)
+    ylim(0.5, 2.75)
+    yticks([0.5,1.0, 1.5, 2.0, 2.5], fontsize=12)
+    xticks([0,20,40,60,80,100,120], fontsize=12)
+    subplot(1,3,3)
+    plot(qcasol.t, qcasol.u)
+    xlabel("Time", fontsize = 15)
+    ylabel("Density", fontsize = 15)
+    ylim(0, 2.75)
+    xticks([0,200,400,600,800,1000,1200], fontsize=12)
+    yticks(fontsize=12)
+    tight_layout()
+    # return box1figure
+    savefig(joinpath(abpath(), "figs/box1figure.pdf"))
+end
+
 #Figure 3 Proportion Real & ACF plots of quasi-cycles.
 RCdividedata = findRCdivide_epx_data()
 let
@@ -61,24 +104,6 @@ let
     xlabel("1/ε", fontsize = 12)
     # return prop_real_smalldelep
     savefig(joinpath(abpath(), "figs/epsilonxaxis_propReal_smalldelep.pdf"))
-end
-
-function quasicycle_data(ep, reps)
-    lrange = 0:1:40
-    ACFdata = Vector{Vector{Float64}}(undef,reps)
-    avprep = zeros(reps)
-    avfinal = zeros(length(lrange))
-    @threads for i in 1:reps
-        sol = RozMac_pert(ep, 0.6, 1.0, 0.0, i, 10000.0, 9000.0:1.0:10000.0)
-        @inbounds ACFdata[i] = autocor(sol[2, 1:end], collect(lrange))
-    end
-    for j in 1:length(lrange)
-        for l in 1:reps
-        avprep[l] = ACFdata[l][j]
-        end
-        avfinal[j] = mean(avprep)
-    end
-    return avfinal
 end
 
 let 
