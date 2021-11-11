@@ -1,5 +1,5 @@
-# include("packages.jl")
-# include("slowfast_commoncode.jl")
+#### Code and functions specific to the Yodzis-Innes metabolic model
+#### "Slow organisms exhibit sudden population disappearances in a reddened world" by Greyson-Gaito, Gellner, & McCann.
 
 @with_kw mutable struct YodInnScalePar
     aₜ = 54.9
@@ -23,36 +23,36 @@ function yod_inn_scale_II!(du, u, p, t)
     du[1] = R * (1 - R / k) -  ( xₛ * y / ( (1 - δ) * fₑ ) )  * R * C  / (R₀ + R)
     du[2] = ( xₛ * y * R * C  / (R₀ + R) ) - xₛ * C
     return
-end
+end #setting up the Yodzis-Innes model
 
 function yod_inn_scale_II(u, par)
     du = similar(u)
     yod_inn_scale_II!(du, u, par, 0.0)
     return du
-end
+end #setting up the Yodzis-Innes model
 
 function eq_yodinn_II(p)
     @unpack x, y, δ, k, R₀ = p
     eq_II_R = R₀ / (y - 1)
     eq_II_C = ( ( 1 - δ ) / x ) * eq_II_R * (1 - eq_II_R / k)
     return vcat(eq_II_R, eq_II_C)
-end
+end #calculating the interior equilibrium of the Yodzis-Innes model
 
 function con_iso_yodinn(p)
     @unpack R₀, y = p
     R₀/(y - 1)
-end
+end #calculating the consumer isocline of the Yodzis-Innes model
 
 function res_iso_yodinn(R, p)
     @unpack x, y, δ, R₀, k  = p
     (R*(R*δ - R + R₀*δ - R₀) + k*(-R*δ + R - R₀*δ + R₀))/(k*x*y)
-end
+end #function to help calculate the resource isocline of the Yodzis-Innes model
 
 function iso_plot_YodInn(resrange, par)
     data = [res_iso_yodinn(R, par) for R in resrange]
     plot(collect(resrange), data)
     return vlines(con_iso_yodinn(par), 0, 0.5, colors="orange")
-end
+end #plots the isoclines of the Yodzis-Innes model
 
 function YodInn_pert(ep, R0, freq, r, seed, tsend, tvals)
     Random.seed!(seed)
@@ -77,8 +77,16 @@ function YodInn_pert(ep, R0, freq, r, seed, tsend, tvals)
     prob = ODEProblem(yod_inn_scale_II!, u0, tspan, par)
     sol = DifferentialEquations.solve(prob, callback = cb, reltol = 1e-8)
     return solend = sol(tvals)
-end
+end #function to numerically solve the Yodzis-Innes consumer-resource model with added noise to the consumer
 
+function pert_YodInn_phase_plot(ep, R0, freq, r, seed, tsend, tvals)
+    sol = YodInn_pert(ep, R0, freq, r, seed, tsend, tvals)
+    plot(sol[1, :], sol[2, :], color = "green")
+    xlabel("Resource")
+    return ylabel("Consumer")
+end #plot a phase space time series for the Yodzis-Innes model
+
+### Below are functions to help calculate the feasible R₀ values, the isocline functions, and the Hopf bifurcation values for the Yodzis-Innes model
 # #Feasible R₀
 # function feasibleR0(p)
 #     @unpack y, k = p
@@ -88,24 +96,6 @@ end
 # end
 
 # feasibleR0(YodInnScalePar()) #0.699849 1.82557
-
-# function iso_plot(resrange, par)
-#     plot(collect(resrange), [res_iso_yodinn(R, par) for R in resrange])
-#     return plot(repeat([con_iso_yodinn(par)], length(resrange)),collect(resrange))
-# end
-
-# let
-#     isoclines = figure()
-#     iso_plot(0.0:0.1:3.0, YodInnScalePar(R₀ = 0.8))
-#     return isoclines
-# end
-
-# function pert_YodInn_phase_plot(ep, R0, freq, r, seed, tsend, tvals)
-#     sol = YodInn_pert(ep, R0, freq, r, seed, tsend, tvals)
-#     plot(sol[1, :], sol[2, :])
-#     xlabel("Resource")
-#     return ylabel("Consumer")
-# end
 
 ## isoclines
 # using SymPy
@@ -129,12 +119,12 @@ end
 
 # SymPy.solve(r(R), R)
 
-# function hopf(p)
+# function hopf_YodInn(p)
 #     @unpack k, R₀, δ, x, y= p
 #     hopf_R = -R₀/2 + k/2
 #     hopf_C = (hopf_R*(hopf_R*δ - hopf_R + R₀*δ - R₀) + k*(-hopf_R*δ + hopf_R - R₀*δ + R₀))/(k*x*y)
 #     return vcat(hopf_R,hopf_C)
 # end
 
-# hopf(YodInnScalePar()) #R=1.1, C=6.651085519687272
+# hopf_YodInn(YodInnScalePar()) #R=1.1, C=6.651085519687272
 

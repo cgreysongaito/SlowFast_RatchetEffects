@@ -1,6 +1,9 @@
+#### Functions to simulate the Rosenzweig-MacArthur models with red noise
+#### "Slow organisms exhibit sudden population disappearances in a reddened world" by Greyson-Gaito, Gellner, & McCann.
+
+# Note - Increase the number of threads by going to Julia Extension settings in VS Code or setting the environment variable in bash
 include("packages.jl")
 include("slowfast_commoncode.jl")
-include("slowfast_metabolicmodel.jl")
 include("slowfast_canardfinder.jl")
 
 function prop_canard_rednoise(model, ep, effR0, r, reps)
@@ -19,7 +22,7 @@ function prop_canard_rednoise(model, ep, effR0, r, reps)
         end
     end
     return vcat(count_canard / reps, count_axial / reps, count_nothing / reps)
-end
+end #function to run reps number of simulations and count the number of simulations exhibiting a quasicanard, axial solution, or nothing.
 
 function prop_canard_rednoise_data(model, ep, effR0, reps)
     r_range = 0.0:0.01:0.9
@@ -29,9 +32,9 @@ function prop_canard_rednoise_data(model, ep, effR0, reps)
     end
 
     return prep_data(data, r_range)
-end
+end #function to parallelize quasicanard simulations over multiple values of noise correlation
 
-### RozMac model
+### Rosenzweig-MacArthur model
 begin
     rn_ep0079eff05_RozMac = prop_canard_rednoise_data("RozMac", 0.079, 0.5, 1000)
     CSV.write(joinpath(abpath(), "data/rn_ep0079eff05_RozMac.csv"), rn_ep0079eff05_RozMac)
@@ -48,23 +51,4 @@ begin
     CSV.write(joinpath(abpath(), "data/rn_ep0004eff065_RozMac.csv"), rn_ep0004eff065_RozMac)
     rn_ep0004eff07_RozMac = prop_canard_rednoise_data("RozMac",0.004, 0.7, 1000)
     CSV.write(joinpath(abpath(), "data/rn_ep0004eff07_RozMac.csv"), rn_ep0004eff07_RozMac)
-end
-
-### YodInn model
-begin
-    rn_ep00079R12_YodInn = prop_canard_rednoise_data("YodInn", 0.0000002, 1.2, 100)
-    CSV.write(joinpath(abpath(), "data/rn_ep00079eR12_YodInn.csv"), rn_ep00079R12_YodInn)
-    rn_ep00079R10_YodInn = prop_canard_rednoise_data("YodInn", 0.0000002, 1.0, 100)
-    CSV.write(joinpath(abpath(), "data/rn_ep00079eR10_YodInn.csv"), rn_ep00079R10_YodInn)
-    rn_ep00079R08_YodInn = prop_canard_rednoise_data("YodInn", 0.0000004, 0.8, 100)
-    CSV.write(joinpath(abpath(), "data/rn_ep00079R08_YodInn.csv"), rn_ep00079R08_YodInn)
-end
-
-begin
-    rn_ep0004R12_YodInn = prop_canard_rednoise_data("YodInn", 0.0000001, 1.2, 100)
-    CSV.write(joinpath(abpath(), "data/rn_ep0004R12_YodInn.csv"), rn_ep0004R12_YodInn)
-    rn_ep0004R10_YodInn = prop_canard_rednoise_data("YodInn", 0.0000001, 1.0, 100)
-    CSV.write(joinpath(abpath(), "data/rn_ep0004R10_YodInn.csv"), rn_ep0004R10_YodInn)
-    rn_ep0004R08_YodInn = prop_canard_rednoise_data("YodInn", 0.0000001, 0.8, 100)
-    CSV.write(joinpath(abpath(), "data/rn_ep0004R08_YodInn.csv"), rn_ep0004R08_YodInn)
 end

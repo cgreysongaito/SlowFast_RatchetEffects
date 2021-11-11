@@ -1,7 +1,50 @@
+#### Code to create figures
+#### "Slow organisms exhibit sudden population disappearances in a reddened world" by Greyson-Gaito, Gellner, & McCann.
+
 include("packages.jl")
 include("slowfast_commoncode.jl")
-include("slowfast_eigen.jl")
-include("slowfast_quasicycle.jl")
+
+# Box 1 Figure 1 (Quasicycles versus quasicanards)
+let 
+    detqcyep = 1
+    qcaep = 0.01
+    eff = 0.7
+    u0 = [1.75,1.75]
+    detqcy_tend = 120.0
+    tspan = (0.0, detqcy_tend)
+    qca_tend = 1200.0
+
+    detprob = ODEProblem(roz_mac_II!, u0, tspan, RozMacPar(ε = detqcyep, e = eff))
+    detsol = DifferentialEquations.solve(detprob, reltol = 1e-8)
+    qcysol = RozMac_pert(detqcyep, eff, 1.0, 0.0, 1, detqcy_tend, 0.0:1.0:detqcy_tend)
+    qcasol = RozMac_pert(qcaep, eff, 1.0, 0.0, 123, qca_tend, 0.0:1.0:qca_tend)
+
+    box1figure = figure(figsize = (11, 3))
+    subplot(1,3,1)
+    plot(detsol.t, detsol.u)
+    xlabel("Time", fontsize = 15)
+    ylabel("Density", fontsize = 15)
+    ylim(0.5, 2.75)
+    xticks([0,20,40,60,80,100,120],fontsize=12)
+    yticks([0.5,1.0, 1.5, 2.0, 2.5], fontsize=12)
+    subplot(1,3,2)
+    plot(qcysol.t, qcysol.u)
+    xlabel("Time", fontsize = 15)
+    ylabel("Density", fontsize = 15)
+    ylim(0.5, 2.75)
+    yticks([0.5,1.0, 1.5, 2.0, 2.5], fontsize=12)
+    xticks([0,20,40,60,80,100,120], fontsize=12)
+    subplot(1,3,3)
+    plot(qcasol.t, qcasol.u)
+    xlabel("Time", fontsize = 15)
+    ylabel("Density", fontsize = 15)
+    ylim(0, 2.75)
+    xticks([0,200,400,600,800,1000,1200], fontsize=12)
+    yticks(fontsize=12)
+    tight_layout()
+    # return box1figure
+    savefig(joinpath(abpath(), "figs/box1figure.pdf"))
+end
 
 # Figure 2 (primer of different trajectories)
 let
@@ -47,49 +90,7 @@ let
     # savefig(joinpath(abpath(), "figs/phase_timeseries_examples.pdf"))
 end
 
-#Box 1 figure
-let 
-    detqcyep = 1
-    qcaep = 0.01
-    eff = 0.7
-    u0 = [1.75,1.75]
-    detqcy_tend = 120.0
-    tspan = (0.0, detqcy_tend)
-    qca_tend = 1200.0
-
-    detprob = ODEProblem(roz_mac_II!, u0, tspan, RozMacPar(ε = detqcyep, e = eff))
-    detsol = DifferentialEquations.solve(detprob, reltol = 1e-8)
-    qcysol = RozMac_pert(detqcyep, eff, 1.0, 0.0, 1, detqcy_tend, 0.0:1.0:detqcy_tend)
-    qcasol = RozMac_pert(qcaep, eff, 1.0, 0.0, 123, qca_tend, 0.0:1.0:qca_tend)
-
-    box1figure = figure(figsize = (11, 3))
-    subplot(1,3,1)
-    plot(detsol.t, detsol.u)
-    xlabel("Time", fontsize = 15)
-    ylabel("Density", fontsize = 15)
-    ylim(0.5, 2.75)
-    xticks([0,20,40,60,80,100,120],fontsize=12)
-    yticks([0.5,1.0, 1.5, 2.0, 2.5], fontsize=12)
-    subplot(1,3,2)
-    plot(qcysol.t, qcysol.u)
-    xlabel("Time", fontsize = 15)
-    ylabel("Density", fontsize = 15)
-    ylim(0.5, 2.75)
-    yticks([0.5,1.0, 1.5, 2.0, 2.5], fontsize=12)
-    xticks([0,20,40,60,80,100,120], fontsize=12)
-    subplot(1,3,3)
-    plot(qcasol.t, qcasol.u)
-    xlabel("Time", fontsize = 15)
-    ylabel("Density", fontsize = 15)
-    ylim(0, 2.75)
-    xticks([0,200,400,600,800,1000,1200], fontsize=12)
-    yticks(fontsize=12)
-    tight_layout()
-    # return box1figure
-    savefig(joinpath(abpath(), "figs/box1figure.pdf"))
-end
-
-#Figure 3 Proportion Real & ACF plots of quasi-cycles.
+# Figure 3 (Proportion Real with small delta ε & ACF plots of quasi-cycles)
 RCdividedata = findRCdivide_epx_data()
 let
     prop_real_smalldelep = figure(figsize=(4,3))
@@ -132,7 +133,7 @@ end
 
 
 
-# Figure 4 (white noise and prop real large delta ep)
+# Figure 4 (Proportion real with large delta ε & quasi-canard proportions with white noise )
 wn_data05_short_RozMac = CSV.read(joinpath(abpath(),"data/wn_eff05_short_RozMac.csv"), DataFrame)
 wn_data06_short_RozMac = CSV.read(joinpath(abpath(),"data/wn_eff06_short_RozMac.csv"), DataFrame)
 wn_data07_short_RozMac = CSV.read(joinpath(abpath(),"data/wn_eff07_short_RozMac.csv"), DataFrame)
@@ -187,7 +188,7 @@ let
 end
 
 
-# Figure 5 Red Noise
+# Figure 5 (Proportion quasicanard/axial solution with red noise)
 
 rn_data_ep0004eff05_RozMac = CSV.read(joinpath(abpath(),"data/rn_ep0004eff05_RozMac.csv"), DataFrame)
 rn_data_ep0004eff06_RozMac = CSV.read(joinpath(abpath(),"data/rn_ep0004eff06_RozMac.csv"), DataFrame)
@@ -257,7 +258,7 @@ end
 
 
 
-# Figure 6 (schematic B)
+# Box 2 Figure 1
 let 
     figure6 = figure(figsize = (3,4))
     subplot(2,1,1)
@@ -286,7 +287,7 @@ let
     savefig(joinpath(abpath(), "figs/quasicanardfinder.pdf"))
 end
 
-#SI Figure 2  Isoclines
+#SI Figure 2  (Isoclines for Rosenzweig-MacArthur consumer-resource model)
 let
     isoclines = figure(figsize = (6,2.5))
     subplot(1,3,1)
@@ -320,7 +321,7 @@ let
 end
 
 
-# Figure 3 (white noise Yodiz & Innes model)
+# SI Figure 3 (Yodiz & Innes model with white noise)
 wn_R12_short_YodInn = CSV.read(joinpath(abpath(),"data/wn_R12_short_YodInn.csv"), DataFrame)
 wn_R10_short_YodInn = CSV.read(joinpath(abpath(),"data/wn_R10_short_YodInn.csv"), DataFrame)
 wn_R08_short_YodInn = CSV.read(joinpath(abpath(),"data/wn_R08_short_YodInn.csv"), DataFrame)
@@ -381,65 +382,7 @@ let
     savefig(joinpath(abpath(), "figs/canard_whitenoise_prop_YodInn.pdf"))
 end
 
-# SI Figure 4 Red Noise (Yodzis Innes model)
-
-rn_ep00079R12_YodInn = CSV.read(joinpath(abpath(),"data/rn_ep00079R12_YodInn.csv"), DataFrame)
-rn_ep00079R10_YodInn = CSV.read(joinpath(abpath(),"data/rn_ep00079R10_YodInn.csv"), DataFrame)
-rn_ep00079R08_YodInn = CSV.read(joinpath(abpath(),"data/rn_ep00079R08_YodInn.csv"), DataFrame)
-rn_ep0004R12_YodInn = CSV.read(joinpath(abpath(),"data/rn_ep0004R12_YodInn.csv"), DataFrame)
-rn_ep0004R10_YodInn = CSV.read(joinpath(abpath(),"data/rn_ep0004R10_YodInn.csv"), DataFrame)
-rn_ep0004R08_YodInn = CSV.read(joinpath(abpath(),"data/rn_ep0004R08_YodInn.csv"), DataFrame)
-
-
-let
-    figure5 = figure(figsize = (8,4))
-    subplot(2,3,1)
-    fill_between(rn_ep00079R12_YodInn.xrange, rn_ep00079R12_YodInn.canard, color="#440154FF")
-    fill_between(rn_ep00079R12_YodInn.xrange, rn_ep00079R12_YodInn.canard, rn_ep00079R12_YodInn.canard_plus_axial, color="#73D055FF")
-    fill_between(rn_ep00079R12_YodInn.xrange, fill(1.0,91), rn_ep00079R12_YodInn.canard_plus_axial, color="#FDE725FF")
-    ylabel("Proportion")
-    ylim(0,1)
-    subplot(2,3,2)
-    fill_between(rn_ep00079R10_YodInn.xrange, rn_ep00079R10_YodInn.canard, color="#440154FF")
-    fill_between(rn_ep00079R10_YodInn.xrange, rn_ep00079R10_YodInn.canard, rn_ep00079R10_YodInn.canard_plus_axial, color="#73D055FF")
-    fill_between(rn_ep00079R10_YodInn.xrange, fill(1.0,91), rn_ep00079R10_YodInn.canard_plus_axial, color="#FDE725FF")
-    xlabel("Noise correlation (t = -1)")
-    ylim(0,1)
-    subplot(2,3,3)
-    fill_between(rn_ep00079R08_YodInn.xrange, rn_ep00079R08_YodInn.canard, color="#440154FF")
-    fill_between(rn_ep00079R08_YodInn.xrange, rn_ep00079R08_YodInn.canard, rn_ep00079R08_YodInn.canard_plus_axial, color="#73D055FF")
-    fill_between(rn_ep00079R08_YodInn.xrange, fill(1.0,91), rn_ep00079R08_YodInn.canard_plus_axial, color="#FDE725FF")
-    ylim(0,1)
-
-    subplot(2,3,4)
-    fill_between(rn_ep0004R12_YodInn.xrange, rn_ep0004R12_YodInn.canard, color="#440154FF")
-    fill_between(rn_ep0004R12_YodInn.xrange, rn_ep0004R12_YodInn.canard, rn_ep0004R12_YodInn.canard_plus_axial, color="#73D055FF")
-    fill_between(rn_ep0004R12_YodInn.xrange, fill(1.0,91), rn_ep0004R12_YodInn.canard_plus_axial, color="#FDE725FF")
-    ylabel("Proportion")
-    ylim(0,1)
-    subplot(2,3,5)
-    fill_between(rn_ep0004R10_YodInn.xrange, rn_ep0004R10_YodInn.canard, color="#440154FF")
-    fill_between(rn_ep0004R10_YodInn.xrange, rn_ep0004R10_YodInn.canard, rn_ep0004R10_YodInn.canard_plus_axial, color="#73D055FF")
-    fill_between(rn_ep0004R10_YodInn.xrange, fill(1.0,91), rn_ep0004R10_YodInn.canard_plus_axial, color="#FDE725FF")
-    xlabel("Noise correlation (t = -1)")
-    ylim(0,1)
-    subplot(2,3,6)
-    fill_between(rn_ep0004R08_YodInn.xrange, rn_ep0004R08_YodInn.canard, color="#440154FF")
-    fill_between(rn_ep0004R08_YodInn.xrange, rn_ep0004R08_YodInn.canard, rn_ep0004R08_YodInn.canard_plus_axial, color="#73D055FF")
-    fill_between(rn_ep0004R08_YodInn.xrange, fill(1.0,91), rn_ep0004R08_YodInn.canard_plus_axial, color="#FDE725FF")
-    ylim(0,1)
-    tight_layout()
-    annotate("a)", (20, 280), xycoords = "figure points", fontsize = 15)
-    annotate("b)", (205, 280), xycoords = "figure points", fontsize = 15)
-    annotate("c)", (385, 280), xycoords = "figure points", fontsize = 15)
-    annotate("d)", (20, 140), xycoords = "figure points", fontsize = 15)
-    annotate("e)", (205, 140), xycoords = "figure points", fontsize = 15)
-    annotate("f)", (385, 140), xycoords = "figure points", fontsize = 15)
-    return figure5
-    # savefig(joinpath(abpath(), "figs/canard_rednoise_prop.pdf"))
-end
-
-# Make resource isocline data for quasipotential figure
+# Code to make resource isocline data for quasipotential figures (created in R)
 resiso_data_05 = DataFrame(xrange = 0.0:0.01:3.0, resiso = [res_iso_roz_mac(R, RozMacPar(e = 0.5)) for R in 0.0:0.01:3.0])
 CSV.write(joinpath(abpath(), "data/resiso_data_05.csv"), resiso_data_05)
 con_iso_roz_mac(RozMacPar(e = 0.5))

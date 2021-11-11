@@ -1,4 +1,5 @@
-# Functions for quasi-canard finder
+#### Functions for quasi-canard finder
+#### "Slow organisms exhibit sudden population disappearances in a reddened world" by Greyson-Gaito, Gellner, & McCann.
 
 function orientation(p1, p2, p3)
     val = (p2[2] - p1[2]) * (p3[1] - p2[1]) - (p3[2] - p2[2]) * (p2[1] - p1[1])
@@ -9,9 +10,9 @@ function orientation(p1, p2, p3)
     else
         return -1 #anticlockwise
     end
-end
+end # Part 1 function from https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
 
-function dointersect(p1, p2, q1, q2) # https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
+function dointersect(p1, p2, q1, q2) 
     o1 = orientation(p1, p2, q1)
     o2 = orientation(p1, p2, q2)
     o3 = orientation(q1, q2, p1)
@@ -22,7 +23,7 @@ function dointersect(p1, p2, q1, q2) # https://www.geeksforgeeks.org/check-if-tw
     else
         return false
     end
-end
+end # Part 2 function from https://www.geeksforgeeks.org/check-if-two-given-line-segments-intersect/
 
 function cf_returnmap_check(sol, pass_points, rm_point1, rm_point2, which_pass)
     if which_pass ∈ ["first", "second"] == false
@@ -48,7 +49,7 @@ function cf_returnmap_check(sol, pass_points, rm_point1, rm_point2, which_pass)
     else
         return [true, rm_pass_points]
     end
-end
+end #First (and last) check in canard finder (Steps 1 and 5 in SI). Whether trajectory intersects small line at the maximum of the resource isocline.
 
 function cf_resaxis_check(sol, pass_points, res_Hopf_point, res_lims, con_lims)
     resaxis_pass_points = []
@@ -69,7 +70,7 @@ function cf_resaxis_check(sol, pass_points, res_Hopf_point, res_lims, con_lims)
     else
         return [true, resaxis_pass_points]
     end
-end
+end #Second check in canard finder (Step 2 in SI). Whether trajectory enters thin box on the consumer axis from just above the intersection of the resource isocline and the consumer axis up to the maximum of the resource isocline
 
 function cf_box_check(sol, pass_points, res_lims, con_lims)
     new_pass_points = []
@@ -86,7 +87,7 @@ function cf_box_check(sol, pass_points, res_lims, con_lims)
     else
         return [true, new_pass_points]
     end
-end
+end #Third check in canard finder (Step 3 in SI). Whether trajectory enters thin box on the consumer axis from 0.0 up to specified point on consumer axis.
 
 function res_iso(model, R, p)
     if model == "RozMac"
@@ -96,7 +97,7 @@ function res_iso(model, R, p)
         @unpack x, y, δ, R₀, k  = p
         return (R*(R*δ - R + R₀*δ - R₀) + k*(-R*δ + R - R₀*δ + R₀))/(k*x*y)
     end
-end
+end #function to help calculate the resource isocline for both the Rosenzweig-MacArthur and Yodzis-Innes models
 
 function cf_ressiocline_check(model, sol, pass_points, res_Hopf_point, par) #TODO maybe do it so checks whether stays within bubble for certain period of time?
     new_pass_points = []
@@ -114,7 +115,7 @@ function cf_ressiocline_check(model, sol, pass_points, res_Hopf_point, par) #TOD
     else
         return [true, new_pass_points]
     end
-end
+end #Fourth check in canard finder (Step 4 in SI). Whether trajectory crosses the resource isocline.
 
 function axial_checker(sol)
     if isapprox(sol.u[end][1], 3.0; atol = 1e-2)  && isapprox(sol.u[end][2], 0.00; atol = 1e-2)
@@ -122,7 +123,7 @@ function axial_checker(sol)
         else
             return "nothing"
     end
-end
+end #Function to check whether trajectory lands on the axial solution or not
 
 function hopfpointsfinder(model, effR0)
     if model == "RozMac"
@@ -139,9 +140,8 @@ function hopfpointsfinder(model, effR0)
         error("model must be either RozMac or YodInn")
     end
     return vcat(hopf_R, hopf_C, zero_C)
-end
+end #function to find the resource and consumer values of the maximum point on the resource isocline. Also returns the consumer value of the intersection of the resource isocline with the consumer axis.
 
-#### NEED TO FIX AXIAL CHECKER - must check after finding any false not just at the end.
 function cf_returnmap(model, ep, effR0, freq, r, seed, tsend, tvals)
     if model == "RozMac"
         sol = RozMac_pert(ep, effR0, freq, r, seed, tsend, tvals)
@@ -183,4 +183,4 @@ function cf_returnmap(model, ep, effR0, freq, r, seed, tsend, tvals)
     else
         return "canard"
     end
-end
+end #Function to run through each checker and returns either "canard", "axial", or "nothing" for a single simulation of the Rosenzweig-MacArthur or Yodzis-Innes models.
