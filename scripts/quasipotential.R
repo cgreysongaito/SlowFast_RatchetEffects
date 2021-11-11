@@ -2,10 +2,14 @@ rm(list=ls())
 
 library(QPot)
 library(zeallot)
-library(plot3D)
+library(tidyverse)
 library(viridis)
 
 setwd("/home/chrisgg/Documents/Guelph/PhD/TimeDelays/")
+
+## Set up isoclines
+resiso_data_05 <- read_csv("data/resiso_data_05.csv")
+resiso_data_07 <- read_csv("data/resiso_data_07.csv")
 
 #Model Set Up - NOTE g and f parameters added to allow for differential stochastic noise
 res_model <- "( r * x * (1 - ( ( x * g ) / k ) ) ) - ( a * x * y * f ) / ( 1 +  ( a * h * x * g ) ) "
@@ -46,17 +50,22 @@ qp_symnoise_ep127_eff05 <- QPotential(x.rhs = param_model(param_symnoise_ep127_e
                                       y.start = u0_symnoise_ep127_eff05[2],
                                       y.bound = bounds.y,
                                       y.num.steps = step.number.y)
-par(mfrow=c(1,1))
-
+par(mfrow=c(1,1), mgp = c(2.6,1,0))
+png("figs/qp_symnoise_ep127_eff05.png")
 filled.contour(x = seq(0,4, length.out = nrow(qp_symnoise_ep127_eff05)),
                y = seq(0,4, length.out = nrow(qp_symnoise_ep127_eff05)),
                qp_symnoise_ep127_eff05,
                xlim = c(0,3),
                ylim = c(0,3),
+               cex.lab = 2,
                color.palette = viridis,
                nlevels = 8,
                xlab = "Resource",
-               ylab = "Consumer")
+               ylab = "Consumer",
+               plot.axes = { axis(1, cex.axis=1.5); axis(2, cex.axis=1.5); lines(resiso_data_05$xrange, resiso_data_05$resiso, col = "blue", lwd = 3);
+                 axis(1, cex.axis=1.5); axis(2, cex.axis=1.5); lines(c(2.02,2.02), c(0.0, 3.0), col = "orange", lwd = 3);
+                 })
+dev.off()
 
 #Quasi-potential with different noise (1:4) for epsilon of 1/12.7 & efficiency of 0.7
 param_symnoise_ep127_eff07 <- list(eff = 0.7,
@@ -75,15 +84,20 @@ qp_symnoise_ep127_eff07 <- QPotential(x.rhs = param_model(param_symnoise_ep127_e
                                       y.bound = bounds.y,
                                       y.num.steps = step.number.y)
 
+
 filled.contour(x = seq(0,4, length.out = nrow(qp_symnoise_ep127_eff07)),
                y = seq(0,4, length.out = nrow(qp_symnoise_ep127_eff07)),
                qp_symnoise_ep127_eff07,
                xlim = c(0,3),
                ylim = c(0,3),
+               cex.lab = 2,
                color.palette = viridis,
                nlevels = 8,
                xlab = "Resource",
-               ylab = "Consumer")
+               ylab = "Consumer",
+               plot.axes = { axis(1, cex.axis=1.5); axis(2, cex.axis=1.5); lines(resiso_data_07$xrange, resiso_data_07$resiso, col = "blue", lwd = 3);
+                 axis(1, cex.axis=1.5); axis(2, cex.axis=1.5); lines(c(0.96, 0.96), c(0.0, 3.0), col = "orange", lwd = 3)})
+
 
 #Quasi-potential with different noise (1:4) for epsilon of 1/250 & efficiency of 0.5
 param_symnoise_ep0004_eff05 <- list(eff = 0.5,
@@ -107,10 +121,13 @@ filled.contour(x = seq(0,4, length.out = nrow(qp_symnoise_ep0004_eff05)),
                qp_symnoise_ep0004_eff05,
                xlim = c(0,3),
                ylim = c(0,3),
+               cex.lab = 2,
                color.palette = viridis,
                nlevels = 8,
                xlab = "Resource",
-               ylab = "Consumer")
+               ylab = "Consumer",
+               plot.axes = { axis(1, cex.axis=1.5); axis(2, cex.axis=1.5); lines(resiso_data_05$xrange, resiso_data_05$resiso, col = "blue", lwd = 3);
+                 axis(1, cex.axis=1.5); axis(2, cex.axis=1.5); lines(c(2.02, 2.02), c(0.0, 3.0), col = "orange", lwd = 3)})
 
 #Quasi-potential with different noise (1:4) for epsilon of 1/250 & efficiency of 0.7
 param_symnoise_ep0004_eff07 <- list(eff = 0.7,
@@ -134,9 +151,10 @@ filled.contour(x = seq(0,4, length.out = nrow(qp_symnoise_ep0004_eff07)),
                qp_symnoise_ep0004_eff07,
                xlim = c(0,3),
                ylim = c(0,3),
+               cex.lab = 2,
                color.palette = viridis,
                nlevels = 8,
                xlab = "Resource",
-               ylab = "Consumer")
-plot()
-abline(v = 2.0)
+               ylab = "Consumer",
+               plot.axes = { axis(1, cex.axis=1.5); axis(2, cex.axis=1.5); lines(resiso_data_05$xrange, resiso_data_05$resiso, col = "blue", lwd = 3);
+                 axis(1, cex.axis=1.5); axis(2, cex.axis=1.5); lines(c(0.96, 0.96), c(0.0, 3.0), col = "orange", lwd = 3)})

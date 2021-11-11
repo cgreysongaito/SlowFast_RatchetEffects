@@ -438,3 +438,12 @@ let
     return figure5
     # savefig(joinpath(abpath(), "figs/canard_rednoise_prop.pdf"))
 end
+
+# Make resource isocline data for quasipotential figure
+resiso_data_05 = DataFrame(xrange = 0.0:0.01:3.0, resiso = [res_iso_roz_mac(R, RozMacPar(e = 0.5)) for R in 0.0:0.01:3.0])
+CSV.write(joinpath(abpath(), "data/resiso_data_05.csv"), resiso_data_05)
+con_iso_roz_mac(RozMacPar(e = 0.5))
+
+resiso_data_07 = DataFrame(xrange = 0.0:0.01:3.0, resiso = [res_iso_roz_mac(R, RozMacPar(e = 0.7)) for R in 0.0:0.01:3.0])
+CSV.write(joinpath(abpath(), "data/resiso_data_07.csv"), resiso_data_07)
+con_iso_roz_mac(RozMacPar(e = 0.7))
