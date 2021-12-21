@@ -4,48 +4,6 @@
 include("packages.jl")
 include("slowfast_commoncode.jl")
 
-# Box 1 Figure 1 (Quasicycles versus quasicanards)
-let 
-    detqcyep = 1
-    qcaep = 0.01
-    eff = 0.7
-    u0 = [1.75,1.75]
-    detqcy_tend = 120.0
-    tspan = (0.0, detqcy_tend)
-    qca_tend = 1200.0
-
-    detprob = ODEProblem(roz_mac_II!, u0, tspan, RozMacPar(ε = detqcyep, e = eff))
-    detsol = DifferentialEquations.solve(detprob, reltol = 1e-8)
-    qcysol = RozMac_pert(detqcyep, eff, 1.0, 0.0, 1, detqcy_tend, 0.0:1.0:detqcy_tend)
-    qcasol = RozMac_pert(qcaep, eff, 1.0, 0.0, 123, qca_tend, 0.0:1.0:qca_tend)
-
-    box1figure = figure(figsize = (11, 3))
-    subplot(1,3,1)
-    plot(detsol.t, detsol.u)
-    xlabel("Time", fontsize = 15)
-    ylabel("Density", fontsize = 15)
-    ylim(0.5, 2.75)
-    xticks([0,20,40,60,80,100,120],fontsize=12)
-    yticks([0.5,1.0, 1.5, 2.0, 2.5], fontsize=12)
-    subplot(1,3,2)
-    plot(qcysol.t, qcysol.u)
-    xlabel("Time", fontsize = 15)
-    ylabel("Density", fontsize = 15)
-    ylim(0.5, 2.75)
-    yticks([0.5,1.0, 1.5, 2.0, 2.5], fontsize=12)
-    xticks([0,20,40,60,80,100,120], fontsize=12)
-    subplot(1,3,3)
-    plot(qcasol.t, qcasol.u)
-    xlabel("Time", fontsize = 15)
-    ylabel("Density", fontsize = 15)
-    ylim(0, 2.75)
-    xticks([0,200,400,600,800,1000,1200], fontsize=12)
-    yticks(fontsize=12)
-    tight_layout()
-    # return box1figure
-    savefig(joinpath(abpath(), "figs/box1figure.pdf"))
-end
-
 # Figure 2 (primer of different trajectories)
 let
     sol_axial = RozMac_pert(0.01, 0.48, 1, 0.8, 9, 2500.0, 0.0:2.0:2500.0)
@@ -86,8 +44,8 @@ let
     ylabel("Biomass")
     ylim(0,3.0)
     tight_layout()
-    return figure3
-    # savefig(joinpath(abpath(), "figs/phase_timeseries_examples.pdf"))
+    # return figure2
+    savefig(joinpath(abpath(), "figs/phase_timeseries_examples.pdf"))
 end
 
 # Figure 3 (Proportion Real with small delta ε & ACF plots of quasi-cycles)
