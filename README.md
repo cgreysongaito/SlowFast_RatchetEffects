@@ -15,7 +15,7 @@ Christopher J. Greyson-Gaito<sup>*1</sup>, Gabriel Gellner<sup>1</sup>, Kevin S.
 * GG &ndash; 0000-0001-8170-1463
 * KSM &ndash; 0000-0001-6031-7913
 
-<!-- [![DOI](https://zenodo.org/badge/DOI/.svg)](https://doi.org/) -->
+[![DOI](https://zenodo.org/badge/5796524.svg)](https://doi.org/10.5281/zenodo.5796524)
 
 ## Julia scripts and datasets
 
