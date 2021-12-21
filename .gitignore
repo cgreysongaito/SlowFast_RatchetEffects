@@ -1,4 +1,5 @@
 *.mkv
+doc/
 *.pptx
 Audio/
 *.docx
