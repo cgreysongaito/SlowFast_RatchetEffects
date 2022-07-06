@@ -90,13 +90,13 @@ end
 
 # CV
 function CVcalc(conres, ep, eff, r, rep, tsend)
-    sol = RozMac_pert(ep, eff, 1.0, r, rep, tsend, 9000.0:1.0:tsend)
+    sol = RozMac_pert(ep, eff, 1.0, r, rep, tsend, 2000.0:1.0:tsend)
     if conres == "Consumer"
         cv = std(sol[2,1:end])/mean(sol[2,1:end])
     else
         cv = std(sol[1,1:end])/mean(sol[1,1:end])
     end
-    return cv
+    return cv/(log10(1/ep))
 end
 
 function CVdata(conres, ep, eff, r, reps, tsend)
@@ -112,7 +112,15 @@ function epcvdata(conres, eprange, eff, r, reps, tsend)
     for (epi, epval) in enumerate(eprange)
         epdata[epi] = CVdata(conres, epval, eff, r, reps, tsend)
     end
-    return epdata
+    return reverse(epdata)
 end
 
-epcvdata("Resource", 0.8:0.01:1.0, 0.6, 0.0, 10, 10000)
+let 
+    eprangeslow = 0.001:0.001:0.05
+    eprangemed = 0.05:0.01:0.2
+    eprangefast = 0.2:0.05:1.0
+    data = vcat(epcvdata("Resource", eprangefast, 0.6, 0.0, 5, 24000), epcvdata("Resource", eprangemed, 0.6, 0.0, 5, 24000), epcvdata("Resource", eprangeslow, 0.6, 0.0, 5, 24000))
+    test = figure()
+    plot( log10.(vcat(1 ./ reverse(eprangefast), 1 ./ reverse(eprangemed), 1 ./ reverse(eprangeslow))), data)
+    return test
+end
