@@ -89,28 +89,32 @@ end
 
 
 # CV
-function CVcalc(conres, ep, eff, r, rep, tsend)
+function CVcalc(conres, standard, ep, eff, r, rep, tsend)
     sol = RozMac_pert(ep, eff, 1.0, r, rep, tsend, 2000.0:1.0:tsend)
     if conres == "Consumer"
         cv = std(sol[2,1:end])/mean(sol[2,1:end])
     else
         cv = std(sol[1,1:end])/mean(sol[1,1:end])
     end
-    return cv/(log10(1/ep))
+    if standard == "Standard"
+        return cv/(1/ep)
+    else
+        return cv
+    end
 end
 
-function CVdata(conres, ep, eff, r, reps, tsend)
+function CVdata(conres, standard, ep, eff, r, reps, tsend)
     cvdata = zeros(reps)
     @threads for i in 1:reps
-        @inbounds cvdata[i] = CVcalc(conres, ep, eff, r, i, tsend)
+        @inbounds cvdata[i] = CVcalc(conres, standard, ep, eff, r, i, tsend)
     end
     return mean(cvdata)
 end
 
-function epcvdata(conres, eprange, eff, r, reps, tsend)
+function epcvdata(conres, standard, eprange, eff, r, reps, tsend)
     epdata = zeros(length(eprange))
     for (epi, epval) in enumerate(eprange)
-        epdata[epi] = CVdata(conres, epval, eff, r, reps, tsend)
+        epdata[epi] = CVdata(conres, standard, epval, eff, r, reps, tsend)
     end
     return reverse(epdata)
 end
@@ -119,8 +123,20 @@ let
     eprangeslow = 0.001:0.001:0.05
     eprangemed = 0.05:0.01:0.2
     eprangefast = 0.2:0.05:1.0
-    data = vcat(epcvdata("Resource", eprangefast, 0.6, 0.0, 5, 24000), epcvdata("Resource", eprangemed, 0.6, 0.0, 5, 24000), epcvdata("Resource", eprangeslow, 0.6, 0.0, 5, 24000))
+    data1CV = vcat(epcvdata("Consumer", "CV", eprangefast, 0.6, 0.0, 5, 10000), epcvdata("Consumer", "CV", eprangemed, 0.6, 0.0, 5, 10000), epcvdata("Consumer", "CV", eprangeslow, 0.6, 0.0, 5, 10000))
+    data2CV = vcat(epcvdata("Consumer", "CV", eprangefast, 0.6, 0.0, 5, 35000), epcvdata("Consumer", "CV", eprangemed, 0.6, 0.0, 5, 35000), epcvdata("Consumer", "CV", eprangeslow, 0.6, 0.0, 5, 35000))
+    data1standard = vcat(epcvdata("Consumer", "Standard", eprangefast, 0.6, 0.0, 5, 10000), epcvdata("Consumer", "Standard", eprangemed, 0.6, 0.0, 5, 10000), epcvdata("Consumer", "Standard", eprangeslow, 0.6, 0.0, 5, 10000))
+    data2standard = vcat(epcvdata("Consumer", "Standard", eprangefast, 0.6, 0.0, 5, 35000), epcvdata("Consumer", "Standard", eprangemed, 0.6, 0.0, 5, 35000), epcvdata("Consumer", "Standard", eprangeslow, 0.6, 0.0, 5, 35000))
     test = figure()
-    plot( log10.(vcat(1 ./ reverse(eprangefast), 1 ./ reverse(eprangemed), 1 ./ reverse(eprangeslow))), data)
-    return test
+    subplot(2,1,1)
+    plot( log10.(vcat(1 ./ reverse(eprangefast), 1 ./ reverse(eprangemed), 1 ./ reverse(eprangeslow))), data1CV)
+    plot( log10.(vcat(1 ./ reverse(eprangefast), 1 ./ reverse(eprangemed), 1 ./ reverse(eprangeslow))), data2CV)
+    subplot(2,1,2)
+    plot( log10.(vcat(1 ./ reverse(eprangefast), 1 ./ reverse(eprangemed), 1 ./ reverse(eprangeslow))), data1standard)
+    plot( log10.(vcat(1 ./ reverse(eprangefast), 1 ./ reverse(eprangemed), 1 ./ reverse(eprangeslow))), data2standard)
+    xlabel("Log10 of 1/ϵ")
+    ylabel("CV/(1/ϵ)")
+    tight_layout()
+    # return test
+    savefig(joinpath(abpath(), "figs/greysongaitoparameters_CV_C.pdf"))
 end
