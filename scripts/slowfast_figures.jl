@@ -48,6 +48,23 @@ let
     savefig(joinpath(abpath(), "figs/phase_timeseries_examples.pdf"))
 end
 
+#Figure 3
+CVresult_eff05 = CSV.read(joinpath(abpath(),"data/CVresult_eff05.csv"), DataFrame)
+CVresult_eff071 = CSV.read(joinpath(abpath(),"data/CVresult_eff071.csv"), DataFrame)
+
+let
+    CVresult = figure()
+    plot(CVresult_eff05.eprange, CVresult_eff05.CV, color="black", linestyle="dashed")
+    plot(CVresult_eff071.eprange, CVresult_eff071.CV, color="black")
+    xlabel("Log10 of 1/ϵ", fontsize=12)
+    ylabel("CV", fontsize=12)
+    xticks(fontsize=12)
+    yticks(fontsize=12)
+    yticks(0.00:0.05:0.35)
+    # return CVresult
+    savefig(joinpath(abpath(), "figs/Fig3_CVresult.pdf"))
+end
+
 # Figure 3 (Proportion Real with small delta ε & ACF plots of quasi-cycles)
 RCdividedata = findRCdivide_epx_data()
 let
