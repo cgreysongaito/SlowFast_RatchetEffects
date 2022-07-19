@@ -32,7 +32,7 @@ eprangemed = 0.05:0.01:0.2;
 eprangefast = 0.2:0.05:1.0;
 eff_real = 0.5;
 eff_complex = 0.71;
-reps = 5;
+reps = 50;
 
 let 
     CV_real = vcat(epcvdata(eprangefast, eff_real, 0.0, reps, 24000), epcvdata(eprangemed, eff_real, 0.0, reps, 24000), epcvdata(eprangeslow, eff_real, 0.0, reps, 24000))
