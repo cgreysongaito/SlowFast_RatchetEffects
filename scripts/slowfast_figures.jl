@@ -206,7 +206,43 @@ end
 
 
 ## Supporting Information
-#SI Figure 1 (Moderately excitable consumer-resource interaction)
+#SI Figure 1  (Isoclines for Rosenzweig-MacArthur consumer-resource model)
+let
+    isoclines = figure(figsize = (7,2.5))
+    subplot(1,3,1)
+    iso_plot(0.0:0.1:3.0, RozMacPar(e = 0.5))
+    title("e = 0.5\nNon-excitable", fontsize=15)
+    ylim(0,2.5)
+    xlim(0.0,3.0)
+    xticks(fontsize=12)
+    yticks(fontsize=12)
+    ylabel("Consumer", fontsize=15)
+    xlabel("Resource", fontsize=15)
+    vlines(0.9, 0.0, 2.5, linestyles="dashed", color = "black", linewidth = 1)
+    subplot(1,3,2)
+    iso_plot(0.0:0.1:3.0, RozMacPar(e = 0.65))
+    title("e = 0.6\nModerately Excitable", fontsize=15)
+    xlabel("Resource", fontsize=15)
+    ylim(0,2.5)
+    xlim(0.0,3.0)
+    xticks(fontsize=12)
+    yticks(fontsize=12)
+    vlines(0.9, 0.0, 2.5, linestyles="dashed", color = "black", linewidth = 1)
+    subplot(1,3,3)
+    iso_plot(0.0:0.1:3.0, RozMacPar(e = 0.7))
+    title("e = 0.71\nHighly Excitable", fontsize=15)
+    xlabel("Resource", fontsize=15)
+    ylim(0,2.5)
+    xlim(0.0,3.0)
+    xticks(fontsize=12)
+    yticks(fontsize=12)
+    vlines(0.9, 0.0, 2.5, linestyles="dashed", color = "black", linewidth = 1)
+    tight_layout()
+    # return isoclines
+    savefig(joinpath(abpath(), "figs/isoclinesSI.pdf"))
+end
+
+#SI Figure 2 (Moderately excitable consumer-resource interaction)
 CVresult_eff06 = CSV.read(joinpath(abpath(),"data/CVresult_eff06.csv"), DataFrame)
 acffast_eff06 = quasicycle_data(1.0, 0.6, 5)
 acfslow_eff06 = quasicycle_data(0.1, 0.6, 5)
@@ -216,7 +252,7 @@ rn_data_ep0079eff06_RozMac = CSV.read(joinpath(abpath(),"data/rn_ep0079eff06_Roz
 
 let ####NEED TO REDO AFTER INCREASE SIMULATIONS
     lrange = 0:1:40
-    SIFig1 = figure(figsize = (4, 10))
+    SIFig2 = figure(figsize = (4, 10))
     subplot(5, 1, 1)
     plot(CVresult_eff06.eprange, CVresult_eff06.CV, color="black")
     xlabel("Log10 of 1/ϵ", fontsize=15)
@@ -262,7 +298,7 @@ let ####NEED TO REDO AFTER INCREASE SIMULATIONS
     xticks(fontsize=12)
     yticks(fontsize=12)
     tight_layout()
-    return SIFig1
+    return SIFig2
     # savefig(joinpath(abpath(), "figs/SIFig1_ModExcitable.pdf"))
 end
 
@@ -295,39 +331,6 @@ let
     xlim(0, 3)
     # return SIfigure3
     savefig(joinpath(abpath(), "figs/quasicanardfinder.pdf"))
-end
-
-#SI Figure 4  (Isoclines for Rosenzweig-MacArthur consumer-resource model)
-let
-    isoclines = figure(figsize = (6,2.5))
-    subplot(1,3,1)
-    iso_plot(0.0:0.1:3.0, RozMacPar(e = 0.5))
-    title("Non-excitable\n(Real λ)", fontsize=15)
-    ylim(0,2.5)
-    xlim(0.0,3.0)
-    xticks(fontsize=12)
-    yticks(fontsize=12)
-    ylabel("Consumer", fontsize=15)
-    xlabel("Resource", fontsize=15)
-    subplot(1,3,2)
-    iso_plot(0.0:0.1:3.0, RozMacPar(e = 0.65))
-    title("Excitable\n(Complex λ)", fontsize=15)
-    xlabel("Resource", fontsize=15)
-    ylim(0,2.5)
-    xlim(0.0,3.0)
-    xticks(fontsize=12)
-    yticks(fontsize=12)
-    subplot(1,3,3)
-    iso_plot(0.0:0.1:3.0, RozMacPar(e = 0.7))
-    title("Excitable\n(Near Hopf)", fontsize=15)
-    xlabel("Resource", fontsize=15)
-    ylim(0,2.5)
-    xlim(0.0,3.0)
-    xticks(fontsize=12)
-    yticks(fontsize=12)
-    tight_layout()
-    # return isoclines
-    savefig(joinpath(abpath(), "figs/isoclinesSI.pdf"))
 end
 
 # SI Figure 5 (Yodiz & Innes model with white noise)
