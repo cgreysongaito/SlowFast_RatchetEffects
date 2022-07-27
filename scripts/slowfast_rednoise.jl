@@ -35,20 +35,28 @@ function prop_canard_rednoise_data(model, ep, effR0, reps)
 end #function to parallelize quasicanard simulations over multiple values of noise correlation
 
 ### Rosenzweig-MacArthur model
+#Non-excitable consumer-resource interaction
 begin
     rn_ep0079eff05_RozMac = prop_canard_rednoise_data("RozMac", 0.079, 0.5, 1000)
     CSV.write(joinpath(abpath(), "data/rn_ep0079eff05_RozMac.csv"), rn_ep0079eff05_RozMac)
-end
-begin
-    rn_ep0079eff071_RozMac = prop_canard_rednoise_data("RozMac",0.079, 0.71, 1000)
-    CSV.write(joinpath(abpath(), "data/rn_ep0079eff071_RozMac.csv"), rn_ep0079eff071_RozMac)
-end
-
-begin
     rn_ep0004eff05_RozMac = prop_canard_rednoise_data("RozMac",0.004, 0.5, 1000)
     CSV.write(joinpath(abpath(), "data/rn_ep0004eff05_RozMac.csv"), rn_ep0004eff05_RozMac)
 end
+#Highly excitable consumer-resource interaction
 begin
+    rn_ep0079eff071_RozMac = prop_canard_rednoise_data("RozMac",0.079, 0.71, 1000)
+    CSV.write(joinpath(abpath(), "data/rn_ep0079eff071_RozMac.csv"), rn_ep0079eff071_RozMac)
     rn_ep0004eff071_RozMac = prop_canard_rednoise_data("RozMac",0.004, 0.71, 1000)
     CSV.write(joinpath(abpath(), "data/rn_ep0004eff071_RozMac.csv"), rn_ep0004eff071_RozMac)
 end
+
+#Moderately excitable consumer-resource interaction (in Supporting Information)
+begin
+    rn_ep0079eff06_RozMac = prop_canard_rednoise_data("RozMac",0.079, 0.6, 10)
+    CSV.write(joinpath(abpath(),"data/rn_ep0079eff06_RozMac.csv"), rn_ep0079eff06_RozMac)
+    rn_ep0004eff06_RozMac = prop_canard_rednoise_data("RozMac",0.004, 0.6, 10)
+    CSV.write(joinpath(abpath(), "data/rn_ep0004eff065_RozMac.csv"), rn_ep0004eff06_RozMac)
+end
+
+
+

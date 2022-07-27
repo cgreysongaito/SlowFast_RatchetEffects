@@ -1,10 +1,10 @@
 #### Code to create figures
-#### "Slow organisms exhibit sudden population disappearances in a reddened world" by Greyson-Gaito, Gellner, & McCann.
+#### "Stability gradient along a continuum of fast to slow consumer life history" by Greyson-Gaito, Gellner, & McCann.
 
 include("packages.jl")
 include("slowfast_commoncode.jl")
 
-# Figure 2 (primer of different trajectories)
+# Figure 2 (primer of different dynamical outcomes of quasi-cycles, stretched wandering, and quasi-canards)
 let
     sol_qcyc = RozMac_pert(1.0, 0.71, 1, 0.0, 1234, 5000.0, 2500:2.0:5000.0)
     sol_equil = RozMac_pert(0.1, 0.71, 1, 0.0, 1234, 5000.0, 2500:2.0:5000.0)
@@ -51,10 +51,10 @@ let
     ylim(0,3.0)
     tight_layout()
     # return figure2
-    savefig(joinpath(abpath(), "figs/phase_timeseries_examples.pdf"))
+    savefig(joinpath(abpath(), "figs/Fig2_phase_timeseries_examples.pdf"))
 end
 
-#Figure 3
+#Figure 3 (coefficient of variation result figure)
 CVresult_eff05 = CSV.read(joinpath(abpath(),"data/CVresult_eff05.csv"), DataFrame)
 CVresult_eff071 = CSV.read(joinpath(abpath(),"data/CVresult_eff071.csv"), DataFrame)
 
@@ -71,7 +71,7 @@ let
     savefig(joinpath(abpath(), "figs/Fig3_CVresult.pdf"))
 end
 
-# Figure 4 (ACF plots of quasi-cycles)
+# Figure 4 (ACF plots and time series plots for non-excitable and excitable consumer-resource interaction)
 let 
     lrange = 0:1:40
     acffast_eff071 = quasicycle_data(1.0, 0.71, 100)
@@ -82,7 +82,7 @@ let
     eff05fast_timeseries = RozMac_pert(1.0, 0.5, 1, 0.0, 1234, 5000.0, 4000:2.0:5000.0)
     acfslow_eff05 = quasicycle_data(0.1, 0.5, 100)
     eff05slow_timeseries = RozMac_pert(0.1, 0.5, 1, 0.0, 1234, 5000.0, 4000:2.0:5000.0)
-    acffigure = figure(figsize = (6,6.5))
+    figure4 = figure(figsize = (6,6.5))
     subplot(3,2,1)
     plot(collect(lrange), acffast_eff05, color = "black")
     plot(collect(lrange), acfslow_eff05, color = "black", linestyle="dotted")
@@ -124,13 +124,11 @@ let
     ylabel("Density")
     tick_params(axis="x", which="both", bottom=False, labelbottom=False)
     tight_layout()
-    # return acffigure
-    savefig(joinpath(abpath(), "figs/quasicycles_ACF.pdf"))
+    # return figure4
+    savefig(joinpath(abpath(), "figs/Fig4_quasicycles_ACF.pdf"))
 end
 
-
-
-# Figure 5 (Proportion real with large delta ε & quasi-canard proportions with white noise )
+# Figure 5 (Proportion of simulations with quasi-canarda proportions. White noise & red noise)
 wn_data05_long_RozMac = CSV.read(joinpath(abpath(),"data/wn_eff05_long_RozMac.csv"), DataFrame)
 wn_data071_long_RozMac = CSV.read(joinpath(abpath(),"data/wn_eff071_long_RozMac.csv"), DataFrame)
 rn_data_ep0004eff05_RozMac = CSV.read(joinpath(abpath(),"data/rn_ep0004eff05_RozMac.csv"), DataFrame)
@@ -191,7 +189,7 @@ let
     yticks(fontsize=12)
     tight_layout()
     # return figure5
-    savefig(joinpath(abpath(), "figs/canard_whiterednoise_prop.pdf"))
+    savefig(joinpath(abpath(), "figs/Fig5_canard_whiterednoise_prop.pdf"))
 end
 
 # Figure 6 (Ratchet)
@@ -203,27 +201,103 @@ let
     roz_mac_plot(0.01, 0.48, 2, 0.3)
     tight_layout()
     # return figure6
-    savefig(joinpath(abpath(), "figs/ratchet_schematic.pdf"))
+    savefig(joinpath(abpath(), "figs/Fig6_ratchet_schematic.pdf"))
 end
 
 
 ## Supporting Information
+#SI Figure 1 (Moderately excitable consumer-resource interaction)
+CVresult_eff06 = CSV.read(joinpath(abpath(),"data/CVresult_eff06.csv"), DataFrame)
+acffast_eff06 = quasicycle_data(1.0, 0.6, 5)
+acfslow_eff06 = quasicycle_data(0.1, 0.6, 5)
+wn_data06_long_RozMac = CSV.read(joinpath(abpath(),"data/wn_eff06_long_RozMac.csv"), DataFrame)
+rn_data_ep0004eff06_RozMac = CSV.read(joinpath(abpath(),"data/rn_ep0004eff06_RozMac.csv"), DataFrame)
+rn_data_ep0079eff06_RozMac = CSV.read(joinpath(abpath(),"data/rn_ep0079eff06_RozMac.csv"), DataFrame)
 
-#SI Figure 1 (illustration of quasi-canard finder algorithm)
+let ####NEED TO REDO AFTER INCREASE SIMULATIONS
+    lrange = 0:1:40
+    SIFig1 = figure(figsize = (4, 10))
+    subplot(5, 1, 1)
+    plot(CVresult_eff06.eprange, CVresult_eff06.CV, color="black")
+    xlabel("Log10 of 1/ϵ", fontsize=15)
+    ylabel("CV", fontsize=15)
+    xticks(fontsize=12)
+    yticks(fontsize=12)
+    yticks(0.00:0.05:0.35)
+    subplot(5, 1, 2)
+    plot(collect(lrange), acffast_eff06, color = "black")
+    plot(collect(lrange), acfslow_eff06, color = "black", linestyle="dotted")
+    hlines(0.0,0.0,40.0, color = "black", linestyles=`dashed`, linewidths=0.5)
+    ylim(-1,1)
+    xlim(0,40)
+    xlabel("Lag", fontsize=15)
+    ylabel("Average ACF", fontsize=15)
+    xticks(fontsize=12)
+    yticks(fontsize=12)
+    subplot(5,1,3)
+    plot(log10.(1 ./ wn_data06_long_RozMac.xrange), wn_data06_long_RozMac.canard, color = "black", linewidth=2)
+    vlines(1.10, 0.0, 1.0, color = "black", linestyle = "dashed", linewidth = 1)
+    vlines(2.40, 0.0, 1.0, color = "black", linestyle = "dashed", linewidth = 1)
+    ylabel("Proportion with\nquasi-canard", fontsize = 15)
+    xlabel("Log10 of 1/ϵ", fontsize = 15)
+    ylim(0,1)
+    xticks(fontsize=12)
+    yticks(fontsize=12)
+    subplot(5,1,4)
+    fill_between(rn_data_ep0079eff06_RozMac.xrange, rn_data_ep0079eff06_RozMac.canard, color="#440154FF")
+    fill_between(rn_data_ep0079eff06_RozMac.xrange, rn_data_ep0079eff06_RozMac.canard, rn_data_ep0079eff06_RozMac.canard_plus_axial, color="#404788FF")
+    fill_between(rn_data_ep0079eff06_RozMac.xrange, fill(1.0,91), rn_data_ep0079eff06_RozMac.canard_plus_axial, color="#73D055FF")
+    ylim(0,1)
+    ylabel("Proportion", fontsize=15)
+    xlabel("Noise correlation", fontsize=15)
+    xticks(fontsize=12)
+    yticks(fontsize=12)
+    subplot(5,1,5)
+    fill_between(rn_data_ep0004eff06_RozMac.xrange, rn_data_ep0004eff06_RozMac.canard, color="#440154FF")
+    fill_between(rn_data_ep0004eff06_RozMac.xrange, rn_data_ep0004eff06_RozMac.canard, rn_data_ep0004eff06_RozMac.canard_plus_axial, color="#404788FF")
+    fill_between(rn_data_ep0004eff06_RozMac.xrange, fill(1.0,91), rn_data_ep0004eff06_RozMac.canard_plus_axial, color="#73D055FF")
+    ylabel("Proportion", fontsize=15)
+    xlabel("Noise correlation", fontsize=15)
+    ylim(0,1)
+    xticks(fontsize=12)
+    yticks(fontsize=12)
+    tight_layout()
+    return SIFig1
+    # savefig(joinpath(abpath(), "figs/SIFig1_ModExcitable.pdf"))
+end
+
+#SI Figure 2 (Proportion Real)
+RCdividedata = findRCdivide_epx_data()
+let
+    prop_real = figure()
+    plot(log10.(RCdividedata[:,1]), RCdividedata[:,2], color = "black")
+    # fill_between(data[:,1], data[:,2], color = "blue", alpha=0.3)
+    # fill_between(data[:,1], fill(1.0, length(data[:,2])), data[:,2], color = >
+    xlim(0,3.0)
+    ylim(0.0,1.0)
+    xticks(fontsize=12)
+    yticks(fontsize=12)
+    ylabel("Proportion Real", fontsize = 12)
+    xlabel("Log10 of 1/ε", fontsize = 12)
+    # return prop_real
+    savefig(joinpath(abpath(), "figs/epsilonxaxis_propReal.png"))
+end
+
+#SI Figure 3 (illustration of quasi-canard finder algorithm)
 let
     sol_qc = RozMac_pert(0.01, 0.55, 1, 0.7, 45, 1500.0, 0.0:1.0:1500.0)
-    figure2 = figure(figsize=(7,5))
+    SIfigure3 = figure(figsize=(7,5))
     iso_plot(0.0:0.1:3.0, RozMacPar(e = 0.55))  
     plot(sol_qc[1, :], sol_qc[2, :], color = "#440154FF", linewidth=5)
     xlabel("Resource", fontsize=15)
     ylabel("Consumer", fontsize=15)
     ylim(0, 2.5)
     xlim(0, 3)
-    # return figure2
+    # return SIfigure3
     savefig(joinpath(abpath(), "figs/quasicanardfinder.pdf"))
 end
 
-#SI Figure 2  (Isoclines for Rosenzweig-MacArthur consumer-resource model)
+#SI Figure 4  (Isoclines for Rosenzweig-MacArthur consumer-resource model)
 let
     isoclines = figure(figsize = (6,2.5))
     subplot(1,3,1)
@@ -256,8 +330,7 @@ let
     savefig(joinpath(abpath(), "figs/isoclinesSI.pdf"))
 end
 
-
-# SI Figure 3 (Yodiz & Innes model with white noise)
+# SI Figure 5 (Yodiz & Innes model with white noise)
 wn_R12_short_YodInn = CSV.read(joinpath(abpath(),"data/wn_R12_short_YodInn.csv"), DataFrame)
 wn_R10_short_YodInn = CSV.read(joinpath(abpath(),"data/wn_R10_short_YodInn.csv"), DataFrame)
 wn_R08_short_YodInn = CSV.read(joinpath(abpath(),"data/wn_R08_short_YodInn.csv"), DataFrame)
@@ -266,7 +339,7 @@ wn_R10_long_YodInn = CSV.read(joinpath(abpath(),"data/wn_R10_long_YodInn.csv"), 
 wn_R08_long_YodInn = CSV.read(joinpath(abpath(),"data/wn_R08_long_YodInn.csv"), DataFrame)
 
 let
-    SIfigure3 = figure(figsize = (10,6))
+    SIfigure5 = figure(figsize = (10,6))
     subplot(2,3,1)
     iso_plot_YodInn(0.0:0.1:3.0, YodInnScalePar(R₀ = 1.2))
     ylim(0,0.5)
@@ -314,7 +387,7 @@ let
     xticks(fontsize=12)
     yticks(fontsize=12)
     tight_layout()
-    # return SIfigure3
+    # return SIfigure5
     savefig(joinpath(abpath(), "figs/canard_whitenoise_prop_YodInn.pdf"))
 end
 

@@ -41,20 +41,24 @@ function prop_canard_whitenoise_data(model, effR0, iter, tsend)
 end #function to parallelize quasicanard simulations over multiple values of ε
 
 ### Rosenzweig-MacArthur model
+#Non-excitable consumer-resource interaction
 begin
     wn_eff05_long_RozMac = prop_canard_whitenoise_data("RozMac", 0.5, 1000, 24000.0)
     CSV.write(joinpath(abpath(), "data/wn_eff05_long_RozMac.csv"), wn_eff05_long_RozMac)
 end
-begin
-    wn_eff06_long_RozMac = prop_canard_whitenoise_data("RozMac", 0.6, 1000, 24000.0)
-    CSV.write(joinpath(abpath(), "data/wn_eff06_long_RozMac.csv"), wn_eff06_long_RozMac)
-end
+#Highly excitable consumer-resource interaction
 begin
     wn_eff071_long_RozMac = prop_canard_whitenoise_data("RozMac", 0.71, 1000, 24000.0)
     CSV.write(joinpath(abpath(), "data/wn_eff071_long_RozMac.csv"), wn_eff071_long_RozMac)
 end
 
-### Yodzis-Innes model
+#Moderately excitable consumer-resource interaction (in Supporting Information)
+begin
+    wn_eff06_long_RozMac = prop_canard_whitenoise_data("RozMac", 0.6, 1000, 24000.0)
+    CSV.write(joinpath(abpath(), "data/wn_eff06_long_RozMac.csv"), wn_eff06_long_RozMac)
+end
+
+### Yodzis-Innes model (in Supporting Information)
 begin
     wn_R12_short_YodInn = prop_canard_whitenoise_data("YodInn", 1.2, 1000, 6000.0)
     CSV.write(joinpath(abpath(), "data/wn_R12_short_YodInn.csv"), wn_R12_short_YodInn)
