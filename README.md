@@ -1,4 +1,4 @@
-Stability gradient along a continuum of fast to slow consumer life history
+Bicycles, ducks, & ratchets: A stability gradient along the slow-fast consumer life history continuum
 =========
 
 #### Authors

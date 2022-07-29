@@ -74,13 +74,13 @@ end
 # Figure 4 (ACF plots and time series plots for non-excitable and excitable consumer-resource interaction)
 let 
     lrange = 0:1:40
-    acffast_eff071 = quasicycle_data(1.0, 0.71, 100)
+    acffast_eff071 = quasicycle_data(1.0, 0.71, 2, lrange)
     eff071fast_timeseries = RozMac_pert(1.0, 0.71, 1, 0.0, 1234, 5000.0, 4000:2.0:5000.0)
-    acfslow_eff071 = quasicycle_data(0.1, 0.71, 100)
+    acfslow_eff071 = quasicycle_data(0.1, 0.71, 2, lrange)
     eff071slow_timeseries = RozMac_pert(0.1, 0.71, 1, 0.0, 1234, 5000.0, 4000:2.0:5000.0)
-    acffast_eff05 = quasicycle_data(1.0, 0.5, 100)
+    acffast_eff05 = quasicycle_data(1.0, 0.5, 2, lrange)
     eff05fast_timeseries = RozMac_pert(1.0, 0.5, 1, 0.0, 1234, 5000.0, 4000:2.0:5000.0)
-    acfslow_eff05 = quasicycle_data(0.1, 0.5, 100)
+    acfslow_eff05 = quasicycle_data(0.1, 0.5, 2, lrange)
     eff05slow_timeseries = RozMac_pert(0.1, 0.5, 1, 0.0, 1234, 5000.0, 4000:2.0:5000.0)
     figure4 = figure(figsize = (6,6.5))
     subplot(3,2,1)
@@ -124,8 +124,8 @@ let
     ylabel("Density")
     tick_params(axis="x", which="both", bottom=False, labelbottom=False)
     tight_layout()
-    # return figure4
-    savefig(joinpath(abpath(), "figs/Fig4_quasicycles_ACF.pdf"))
+    return figure4
+    # savefig(joinpath(abpath(), "figs/Fig4_quasicycles_ACF.pdf"))
 end
 
 # Figure 5 (Proportion of simulations with quasi-canarda proportions. White noise & red noise)

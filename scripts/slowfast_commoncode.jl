@@ -201,8 +201,7 @@ function findRCdivide_epx_data()
 end # Function to calculate the proportion of real in efficiency "parameter space" for multiple values of ε.
 
 
-function quasicycle_data(ep, eff, reps)
-    lrange = 0:1:40
+function quasicycle_data(ep, eff, reps, lrange)
     ACFdata = Vector{Vector{Float64}}(undef,reps)
     avprep = zeros(reps)
     avfinal = zeros(length(lrange))
