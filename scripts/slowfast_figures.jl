@@ -5,10 +5,53 @@ include("packages.jl")
 include("slowfast_commoncode.jl")
 
 # Figure 2 (primer of different dynamical outcomes of quasi-cycles, stretched wandering, and quasi-canards)
+function noise_creation_largenoise(r, len)
+    white = rand(Normal(0.0, 0.04), Int64(len))
+    intnoise = [white[1]]
+    for i in 2:Int64(len)
+        intnoise = append!(intnoise, r * intnoise[i-1] + white[i] )
+    end
+    c = std(white)/std(intnoise)
+    meanintnoise = mean(intnoise)
+    scalednoise = zeros(Int64(len))
+    for i in 1:Int64(len)
+        scalednoise[i] = c * (intnoise[i] - meanintnoise)
+    end
+    return scalednoise
+end #produces noise with a certain autocorrelation. variance of the noise is scaled using method in Wichmann et al. 2005
+
+function RozMac_pert_largenoise(ep, eff, freq, r, seed, tsend, tvals)
+    Random.seed!(seed)
+    par = RozMacPar()
+    par.ε = ep
+    par.e = eff
+    noise = noise_creation_largenoise(r, tsend / freq)
+    count = 1
+    u0 = [eq_II(par)[1], eq_II(par)[2] + noise[1]]
+    tspan = (0.0, tsend)
+
+    function pert_cb2(integrator)
+        count += 1
+        if isapprox(integrator.u[2], 0.00000000; atol = 1e-8)
+            integrator.u[2] = 0.00000000
+        else
+            integrator.u[2] = maximum([integrator.u[2] + noise[count], 0.0])
+        end
+    end
+
+    cb = PeriodicCallback(pert_cb2, freq, initial_affect = false) #as of may 29th - initial_affect does not actually do the affect on the first time point
+    prob = ODEProblem(roz_mac_II!, u0, tspan, par)
+    sol = DifferentialEquations.solve(prob, callback = cb, reltol = 1e-8)
+    return solend = sol(tvals)
+end #function to numerically solve the Rosenzweig-MacArthur consumer-resource model with added noise to the consumer
+
+
+
+
 let
-    sol_qcyc = RozMac_pert(1.0, 0.65, 1, 0.0, 1234, 5000.0, 2500:2.0:5000.0)
-    sol_equil = RozMac_pert(0.1, 0.5, 1, 0.0, 1234, 5000.0, 2500:2.0:5000.0)
-    sol_qcan = RozMac_pert(0.01, 0.65, 1, 0.0, 6, 5000.0, 4200.0:1.0:5000.0)
+    sol_qcyc = RozMac_pert_largenoise(1.0, 0.65, 1, 0.0, 1234, 5000.0, 4800.0:1.0:5000.0)
+    sol_qcan = RozMac_pert_largenoise(0.01, 0.65, 1, 0.0, 6, 5000.0, 1000.0:1.0:2000.0)
+    sol_equil = RozMac_pert_largenoise(0.1, 0.5, 1, 0.0, 1234, 5000.0, 1500.0:2.0:2500.0)
     figure2 = figure(figsize=(9,4))
     subplot(2,3,1)
     iso_plot(0.0:0.1:3.0, RozMacPar(e = 0.65))  
