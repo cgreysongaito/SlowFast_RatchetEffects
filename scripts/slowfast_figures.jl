@@ -4,7 +4,7 @@
 include("packages.jl")
 include("slowfast_commoncode.jl")
 
-# Figure 2 (primer of different dynamical outcomes of quasi-cycles, stretched wandering, and quasi-canards)
+# Figure 2 (primer of different dynamical outcomes of quasi-cycles, quasi-canards, and stretched wandering)
 function noise_creation_largenoise(r, len)
     white = rand(Normal(0.0, 0.04), Int64(len))
     intnoise = [white[1]]
@@ -44,9 +44,6 @@ function RozMac_pert_largenoise(ep, eff, freq, r, seed, tsend, tvals)
     sol = DifferentialEquations.solve(prob, callback = cb, reltol = 1e-8)
     return solend = sol(tvals)
 end #function to numerically solve the Rosenzweig-MacArthur consumer-resource model with added noise to the consumer
-
-
-
 
 let
     sol_qcyc = RozMac_pert_largenoise(1.0, 0.65, 1, 0.0, 1234, 5000.0, 4800.0:1.0:5000.0)
@@ -174,7 +171,7 @@ let
     # savefig(joinpath(abpath(), "figs/Fig4_quasicycles_ACF.pdf"))
 end
 
-# Figure 5 (Proportion of simulations with quasi-canarda proportions. White noise & red noise)
+# Figure 5 (Proportion of simulations with quasi-canards. White noise & red noise)
 wn_data05_long_RozMac = CSV.read(joinpath(abpath(),"data/wn_eff05_long_RozMac.csv"), DataFrame)
 wn_data071_long_RozMac = CSV.read(joinpath(abpath(),"data/wn_eff071_long_RozMac.csv"), DataFrame)
 rn_data_ep0004eff05_RozMac = CSV.read(joinpath(abpath(),"data/rn_ep0004eff05_RozMac.csv"), DataFrame)
@@ -252,7 +249,7 @@ end
 
 
 ## Supporting Information
-#SI Figure 1  (Isoclines for Rosenzweig-MacArthur consumer-resource model)
+#S.I. Figure 1  (Isoclines for Rosenzweig-MacArthur consumer-resource model)
 let
     isoclines = figure(figsize = (7,2.5))
     subplot(1,3,1)
@@ -288,15 +285,15 @@ let
     savefig(joinpath(abpath(), "figs/isoclinesSI.pdf"))
 end
 
-#SI Figure 2 (Moderately excitable consumer-resource interaction)
+#S.I. Figure 2 (Moderately excitable consumer-resource interaction)
 CVresult_eff06 = CSV.read(joinpath(abpath(),"data/CVresult_eff06.csv"), DataFrame)
-acffast_eff06 = quasicycle_data(1.0, 0.6, 5)
-acfslow_eff06 = quasicycle_data(0.1, 0.6, 5)
+acffast_eff06 = quasicycle_data(1.0, 0.6, 50, 0:1:40)
+acfslow_eff06 = quasicycle_data(0.1, 0.6, 50, 0:1:40)
 wn_data06_long_RozMac = CSV.read(joinpath(abpath(),"data/wn_eff06_long_RozMac.csv"), DataFrame)
 rn_data_ep0004eff06_RozMac = CSV.read(joinpath(abpath(),"data/rn_ep0004eff06_RozMac.csv"), DataFrame)
 rn_data_ep0079eff06_RozMac = CSV.read(joinpath(abpath(),"data/rn_ep0079eff06_RozMac.csv"), DataFrame)
 
-let ####NEED TO REDO AFTER INCREASE SIMULATIONS
+let
     lrange = 0:1:40
     SIFig2 = figure(figsize = (4, 10))
     subplot(5, 1, 1)
@@ -344,11 +341,11 @@ let ####NEED TO REDO AFTER INCREASE SIMULATIONS
     xticks(fontsize=12)
     yticks(fontsize=12)
     tight_layout()
-    return SIFig2
-    # savefig(joinpath(abpath(), "figs/SIFig1_ModExcitable.pdf"))
+    # return SIFig2
+    savefig(joinpath(abpath(), "figs/SIFig2_ModExcitable.pdf"))
 end
 
-#SI Figure 2 (Proportion Real)
+#S.I. Figure 3 (Proportion Real)
 RCdividedata = findRCdivide_epx_data()
 let
     prop_real = figure()
@@ -365,7 +362,7 @@ let
     savefig(joinpath(abpath(), "figs/epsilonxaxis_propReal.png"))
 end
 
-#SI Figure 3 (illustration of quasi-canard finder algorithm)
+#S.I. Figure 4 (illustration of quasi-canard finder algorithm)
 let
     sol_qc = RozMac_pert(0.01, 0.55, 1, 0.7, 45, 1500.0, 0.0:1.0:1500.0)
     SIfigure3 = figure(figsize=(7,5))
@@ -379,7 +376,7 @@ let
     savefig(joinpath(abpath(), "figs/quasicanardfinder.pdf"))
 end
 
-# SI Figure 5 (Yodiz & Innes model with white noise)
+# S.I. Figure 5 (Yodiz & Innes model with white noise)
 wn_R12_short_YodInn = CSV.read(joinpath(abpath(),"data/wn_R12_short_YodInn.csv"), DataFrame)
 wn_R10_short_YodInn = CSV.read(joinpath(abpath(),"data/wn_R10_short_YodInn.csv"), DataFrame)
 wn_R08_short_YodInn = CSV.read(joinpath(abpath(),"data/wn_R08_short_YodInn.csv"), DataFrame)
@@ -440,7 +437,7 @@ let
     savefig(joinpath(abpath(), "figs/canard_whitenoise_prop_YodInn.pdf"))
 end
 
-# Code to make resource isocline data for quasipotential figures (created in R)
+# S.I. Figure 6 (Code to make resource isocline data for quasipotential figures (created in R) )
 resiso_data_05 = DataFrame(xrange = 0.0:0.01:3.0, resiso = [res_iso_roz_mac(R, RozMacPar(e = 0.5)) for R in 0.0:0.01:3.0])
 CSV.write(joinpath(abpath(), "data/resiso_data_05.csv"), resiso_data_05)
 con_iso_roz_mac(RozMacPar(e = 0.5))

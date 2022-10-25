@@ -32,7 +32,7 @@ eprangemed = 0.05:0.01:0.2;
 eprangefast = 0.2:0.05:1.0;
 eff_real = 0.5;
 eff_complex = 0.71;
-reps = 5;
+reps = 50;
 
 #Non-excitable
 let 

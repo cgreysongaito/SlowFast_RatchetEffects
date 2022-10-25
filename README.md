@@ -1,4 +1,4 @@
-Bicycles, ducks, & ratchets: A stability gradient along the slow-fast consumer life history continuum
+Life history speed, population disappearances and noise-induced ratchet effects
 =========
 
 #### Authors
@@ -41,5 +41,5 @@ Christopher J. Greyson-Gaito<sup>*1</sup>, Gabriel Gellner<sup>1</sup>, Kevin S.
 1. Download the GitHub/Zenodo repo
 2. Open the repo in Visual Studio Code (if you haven't already done so, set up [Julia in Visual Studio Code](https://www.julia-vscode.org/))
 3. Most of the analysis here requires multiple cores. Thus to set up multiple cores on your computer, in Visual Studio Code find the Julia: Num Threads setting in the Extension Settings of the Visual Studio Code Julia Extension. Change this setting to at most the number of logical cores in your computer. Restart Julia. All parallel computing will run automatically regardless of the number of cores selected.
-4. Run slowfast_CV.jl, slowfast_whitenoise.jl and slowfast_rednoise.jl to create the data required for slowfast_figures.jl. Note, depending on the number of cores in your computer, this will take a long time.
+4. Run slowfast_CV.jl, slowfast_whitenoise.jl, and slowfast_rednoise.jl to create the data required for slowfast_figures.jl. Note, depending on the number of cores in your computer, this will take a long time.
 5. Run slowfast_figures.jl to produce the figures in the manuscript.

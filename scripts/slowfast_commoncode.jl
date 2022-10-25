@@ -13,7 +13,7 @@ end #function to create a absolute path as a character string
     e = 0.7
     m = 0.4
     ε = 1.0
-end
+end #default parameters
 
 par_rozmac = RozMacPar()
 
